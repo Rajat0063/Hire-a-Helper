@@ -50,7 +50,7 @@ const MyTasksContent = () => {
     queryKey: ['mytasks', user?._id],
     queryFn: async () => {
       if (!user) return [];
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/mytasks/${user._id}`);
+      const res = await fetch(`/api/mytasks/${user._id}`);
       if (!res.ok) throw new Error('Failed to fetch tasks');
       return res.json();
     },
@@ -63,7 +63,7 @@ const MyTasksContent = () => {
   const updateTaskMutation = useMutation({
     mutationFn: async ({ taskId, status }) => {
       setUpdating(true);
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/mytasks/${taskId}`, {
+      const res = await fetch(`/api/mytasks/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
