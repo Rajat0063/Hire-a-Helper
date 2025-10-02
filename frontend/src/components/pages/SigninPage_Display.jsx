@@ -44,7 +44,7 @@ export default function SignupPage() {
     try {
       // API call to the backend registration endpoint
       const response = await axios.post(
-        "http://localhost:5001/api/auth/register",
+  `${import.meta.env.VITE_API_URL}/auth/register`,
         {
           name,
           email,

@@ -91,7 +91,7 @@ const DashboardLayout = () => {
     const fetchTasks = useCallback(async (isInitial = false) => {
         if (isInitial) setFeedLoading(true);
         try {
-            const response = await fetch('/api/tasks');
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tasks`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             // Debug: Log raw backend response
@@ -183,7 +183,7 @@ const DashboardLayout = () => {
                     .filter(r => !(r.seenBy && r.seenBy.includes(user._id)))
                     .map(r => r._id || r.id);
                 if (unseenRequestIds.length) {
-                    fetch('/api/incoming-requests/mark-seen', {
+                    fetch(`${import.meta.env.VITE_API_URL}/incoming-requests/mark-seen`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId: user._id, requestIds: unseenRequestIds }),
@@ -199,7 +199,7 @@ const DashboardLayout = () => {
         if (!user) return;
         setRequestsLoading(true);
         try {
-            const response = await fetch(`/api/incoming-requests/received/${user._id}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/incoming-requests/received/${user._id}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setRequests(data);
@@ -231,7 +231,7 @@ const DashboardLayout = () => {
                 }
             }
             if (!token) throw new Error('No auth token found. Please log in again.');
-            const response = await fetch('/api/auth/profile', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/profile`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -273,7 +273,7 @@ const DashboardLayout = () => {
                 startTime: startTimeISO,
                 endTime: endTimeISO,
             };
-            const response = await fetch('/api/tasks', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/tasks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -295,7 +295,7 @@ const DashboardLayout = () => {
     const fetchMyRequests = useCallback(async () => {
         if (!user) return;
         try {
-            const response = await fetch(`/api/incoming-requests-sent/sent/${user._id}`);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/incoming-requests-sent/sent/${user._id}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setMyRequests(data);
@@ -311,7 +311,7 @@ const DashboardLayout = () => {
         fetchIncomingRequests();
         // Fetch notifications for requester
         if (user) {
-            fetch(`/api/incoming-requests/notifications/${user._id}`)
+            fetch(`${import.meta.env.VITE_API_URL}/incoming-requests/notifications/${user._id}`)
                 .then(res => res.json())
                 .then(data => {
                     // Show the latest unread accepted or declined notification
@@ -338,7 +338,7 @@ const DashboardLayout = () => {
                 taskOwnerName,
                 message,
             };
-            const response = await fetch('/api/incoming-requests', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/incoming-requests`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -380,7 +380,7 @@ const DashboardLayout = () => {
     const handleAcceptRequest = useCallback(async (requestToAccept) => {
         try {
             // Call backend to accept the request
-            const response = await fetch(`/api/incoming-requests/accept/${requestToAccept._id || requestToAccept.id}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/incoming-requests/accept/${requestToAccept._id || requestToAccept.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -398,7 +398,7 @@ const DashboardLayout = () => {
     const handleDeclineRequest = useCallback(async (requestToDeclineId) => {
         try {
             // Call backend to decline the request
-            const response = await fetch(`/api/incoming-requests/decline/${requestToDeclineId}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/incoming-requests/decline/${requestToDeclineId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
             });
@@ -473,14 +473,14 @@ const DashboardLayout = () => {
                     onClick={async () => {
                         if (requesterNotification) {
                             // Mark as read in backend
-                            await fetch(`/api/incoming-requests/notifications/read/${requesterNotification._id}`, { method: 'PATCH' });
+                            await fetch(`${import.meta.env.VITE_API_URL}/incoming-requests/notifications/read/${requesterNotification._id}`, { method: 'PATCH' });
                             setRequesterNotification(null);
                             navigate('/dashboard/my-requests');
                         }
                     }}
                     onClose={async () => {
                         if (requesterNotification) {
-                            await fetch(`/api/incoming-requests/notifications/read/${requesterNotification._id}`, { method: 'PATCH' });
+                            await fetch(`${import.meta.env.VITE_API_URL}/incoming-requests/notifications/read/${requesterNotification._id}`, { method: 'PATCH' });
                             setRequesterNotification(null);
                         }
                     }}
