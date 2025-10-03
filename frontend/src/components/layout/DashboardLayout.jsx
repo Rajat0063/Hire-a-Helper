@@ -221,11 +221,7 @@ const DashboardLayout = () => {
 
     const handleUserUpdate = useCallback(async (updatedUserData) => {
         // Optimistic UI: update user context immediately
-        const optimisticUser = { ...user, ...updatedUserData };
-        setUser(optimisticUser);
-        localStorage.setItem('userInfo', JSON.stringify(optimisticUser));
-        setToast({ show: true, type: 'success', message: 'Profile updated!' });
-        setTimeout(() => setToast(t => ({ ...t, show: false })), 2000);
+    // Only show success toast after backend confirms
         try {
             // Remove email from update payload to avoid backend rejection
             const { email: _email, ...safeData } = updatedUserData;
@@ -266,7 +262,8 @@ const DashboardLayout = () => {
             setUser(updatedUser);
             localStorage.setItem('userInfo', JSON.stringify(updatedUser));
             if (updatedUser.token) localStorage.setItem('userToken', updatedUser.token);
-            // Optionally show a second toast for backend confirmation
+            setToast({ show: true, type: 'success', message: 'Profile updated!' });
+            setTimeout(() => setToast(t => ({ ...t, show: false })), 2000);
         } catch (error) {
             setToast({ show: true, type: 'error', message: 'Failed to update profile: ' + (error.message || '') });
             setTimeout(() => setToast(t => ({ ...t, show: false })), 3500);

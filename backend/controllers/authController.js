@@ -1,3 +1,4 @@
+const User = require('../models/User');
 const UserProfileHistory = require('../models/userProfileHistoryModel');
 const UserProfile = require('../models/userProfileModel');
 const Task = require('../models/taskModel');
@@ -96,7 +97,6 @@ const updateUserProfile = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 const crypto = require('crypto'); // Added for generating secure tokens
