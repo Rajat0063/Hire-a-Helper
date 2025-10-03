@@ -86,7 +86,7 @@ const updateUserProfile = async (req, res) => {
         // Update all tasks posted by this user (by userId) with new name/image
         await Task.updateMany(
             { $or: [ { postedByName: user.name }, { userId: user._id } ] },
-            { $set: { userImageUrl: user.image, postedByName: user.name } }
+            { $set: { userImageUrl: user.image, postedByName: user.name, userId: user._id } }
         );
 
         // Emit real-time event to notify other clients about user profile update

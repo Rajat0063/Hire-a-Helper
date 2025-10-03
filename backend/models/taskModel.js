@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const taskSchema = mongoose.Schema(
   {
     postedByName: { type: String, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     title: { type: String, required: [true, 'Please add a title'] },
     description: { type: String, required: [true, 'Please add a description'] },
     category: { type: String, required: true },

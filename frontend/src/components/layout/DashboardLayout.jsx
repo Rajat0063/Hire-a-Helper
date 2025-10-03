@@ -329,6 +329,7 @@ const DashboardLayout = () => {
                 category: newTaskData.type || 'other',
                 location: newTaskData.location,
                 postedByName: user.name,
+                userId: user._id,
                 imageUrl: newTaskData.image || '',
                 userImageUrl: user.image || '',
                 startTime: startTimeISO,
@@ -388,6 +389,9 @@ const DashboardLayout = () => {
             // Connect to socket server using env config with sensible fallback
             const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5001';
             socket = io(socketUrl);
+            socket.on('connect', () => console.debug('socket connected', socket.id, 'to', socketUrl));
+            socket.on('connect_error', (err) => console.error('socket connect_error', err));
+            socket.on('disconnect', (reason) => console.debug('socket disconnected', reason));
             // Listen for real-time updates to incoming requests (for task owner)
             socket.on(`requests-update-${user._id}`, (updatedRequests) => {
                 setRequests(updatedRequests);
@@ -398,6 +402,7 @@ const DashboardLayout = () => {
             });
             // Real-time task events to update feed instantly
             socket.on('task:new', (newTask) => {
+                console.debug('socket event task:new', newTask);
                 try {
                     const mapped = {
                         id: newTask._id || newTask.id,
@@ -413,12 +418,19 @@ const DashboardLayout = () => {
                         userImage: newTask.userImageUrl || newTask.userImage || '',
                         image: newTask.imageUrl || newTask.image || '',
                     };
-                    setFeedTasks(prev => [mapped, ...prev]);
+                    setFeedTasks(prev => {
+                        // avoid duplicates
+                        if (prev.some(t => t.id === mapped.id)) {
+                            return prev.map(t => t.id === mapped.id ? mapped : t);
+                        }
+                        return [mapped, ...prev];
+                    });
                 } catch (err) {
                     console.error('Failed to handle task:new socket event:', err);
                 }
             });
             socket.on('task:update', (updatedTask) => {
+                console.debug('socket event task:update', updatedTask);
                 try {
                     setFeedTasks(prev => prev.map(t => (t.id === (updatedTask._id || updatedTask.id) ? ({ ...t, title: updatedTask.title, description: updatedTask.description, image: updatedTask.imageUrl || updatedTask.image }) : t)));
                     setTasksData(prev => {
@@ -433,6 +445,7 @@ const DashboardLayout = () => {
                 }
             });
             socket.on('task:delete', ({ _id }) => {
+                console.debug('socket event task:delete', _id);
                 try {
                     setFeedTasks(prev => prev.filter(t => t.id !== _id));
                     setTasksData(prev => {
@@ -448,6 +461,7 @@ const DashboardLayout = () => {
             });
             // When any user updates their profile, update local lists where their name/image appears
             socket.on('user:profileUpdated', (u) => {
+                console.debug('socket event user:profileUpdated', u);
                 try {
                     if (!u || !u._id) return;
                     // Update feed tasks where postedBy userId or userId matches
