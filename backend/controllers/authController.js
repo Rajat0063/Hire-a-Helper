@@ -1,4 +1,3 @@
-const User = require('../models/User');
 const UserProfileHistory = require('../models/userProfileHistoryModel');
 const UserProfile = require('../models/userProfileModel');
 const Task = require('../models/taskModel');
@@ -9,6 +8,9 @@ const Task = require('../models/taskModel');
  */
 const updateUserProfile = async (req, res) => {
     try {
+        console.log('PATCH /api/auth/profile called');
+        console.log('req.user:', req.user);
+        console.log('req.body:', req.body);
         const userId = req.user._id;
         const { name, image, phoneNumber } = req.body;
 
@@ -94,6 +96,9 @@ const updateUserProfile = async (req, res) => {
         });
     } catch (error) {
         console.error('Update profile error:', error);
+        if (error && error.stack) {
+            console.error('Stack:', error.stack);
+        }
         res.status(500).json({ message: 'Server error', error: error.message });
     }
 };
