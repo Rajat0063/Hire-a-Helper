@@ -247,10 +247,22 @@ const DashboardLayout = () => {
                 body: JSON.stringify(safeData)
             });
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to update profile');
+                let errorMessage = 'Failed to update profile';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch {
+                    // If not JSON, keep default message
+                }
+                throw new Error(errorMessage);
             }
-            const updatedUser = await response.json();
+            let updatedUser = null;
+            try {
+                updatedUser = await response.json();
+            } catch {
+                // If no JSON, fallback to optimistic update
+                updatedUser = { ...user, ...updatedUserData };
+            }
             setUser(updatedUser);
             localStorage.setItem('userInfo', JSON.stringify(updatedUser));
             if (updatedUser.token) localStorage.setItem('userToken', updatedUser.token);
