@@ -55,7 +55,7 @@ export default function VerifyOtpPage() {
         setLoading(true);
         try {
             const { data } = await axios.post(
-                'http://localhost:5001/api/auth/verify-otp',
+                `${import.meta.env.VITE_API_URL}/api/auth/verify-otp`,
                 { email, otp: otpValue }
             );
             localStorage.setItem('userInfo', JSON.stringify(data));

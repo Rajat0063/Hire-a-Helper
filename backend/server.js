@@ -19,7 +19,9 @@ const { initSocket } = require('./socket');
 const server = http.createServer(app);
 
 // --- Middleware Setup ---
-app.use(cors());
+// Allow CORS from frontend domain specified in environment variable
+const allowedOrigin = process.env.FRONTEND_URL || '*';
+app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 
 // --- API Routes ---
@@ -53,7 +55,7 @@ app.use('/api/mytasks', require('./routes/myTaskRoutes'));
 
 
 // Define the port the server will listen on.
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 
 // Initialize socket.io
 initSocket(server);

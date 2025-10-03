@@ -60,7 +60,7 @@ const MyRequestsContent = () => {
 
   useEffect(() => {
     if (!context.user || !context.user._id) return;
-    const socket = io('http://localhost:5001');
+  const socket = io(import.meta.env.VITE_API_URL);
     socket.on(`notification-update-${context.user._id}`, (notification) => {
       // When a notification is received, update the status of the relevant request in myRequests
       setMyRequests(prev => prev.map(req => {

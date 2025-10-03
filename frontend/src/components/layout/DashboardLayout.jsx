@@ -92,7 +92,7 @@ const DashboardLayout = () => {
     const fetchTasks = useCallback(async (isInitial = false) => {
         if (isInitial) setFeedLoading(true);
         try {
-            const response = await fetch('/api/tasks');
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tasks`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             // Debug: Log raw backend response
@@ -200,7 +200,7 @@ const DashboardLayout = () => {
         if (!user) return;
         setRequestsLoading(true);
         try {
-            const response = await fetch(`/api/incoming-requests/received/${user._id}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/incoming-requests/received/${user._id}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setRequests(data);
@@ -302,7 +302,7 @@ const DashboardLayout = () => {
     const fetchMyRequests = useCallback(async () => {
         if (!user) return;
         try {
-            const response = await fetch(`/api/incoming-requests-sent/sent/${user._id}`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/incoming-requests-sent/sent/${user._id}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setMyRequests(data);
@@ -317,13 +317,14 @@ const DashboardLayout = () => {
         fetchMyRequests();
         fetchIncomingRequests();
         // Fetch notifications for requester
+
         if (user) {
-            fetch(`/api/incoming-requests/notifications/${user._id}`)
+            fetch(`${import.meta.env.VITE_API_URL}/api/incoming-requests/notifications/${user._id}`)
                 .then(res => res.json())
-                .then(data => {
+                .then(() => {
                     // Show the latest unread accepted or declined notification
-                    const latest = data.find(n => (n.type === 'request-accepted' || n.type === 'request-declined') && !n.isRead);
-                    setRequesterNotification(latest || null);
+                    // const latest = data.find(n => (n.type === 'request-accepted' || n.type === 'request-declined') && !n.isRead);
+                    // You can handle the latest notification here if needed
                 });
         }
 
@@ -417,7 +418,7 @@ const DashboardLayout = () => {
             setToast({ show: true, type: 'error', message: 'Could not accept request. ' + (error.message || '') });
             setTimeout(() => setToast(t => ({ ...t, show: false })), 3500);
         }
-    }, [fetchIncomingRequests]);
+    }, [fetchIncomingRequests, requests]);
     
     const handleDeclineRequest = useCallback(async (requestToDeclineId) => {
         try {
