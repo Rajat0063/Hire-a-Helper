@@ -1,9 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import hireHelperImg from "../../assets/Hire_A_Healper_img.png"; // Ensure this path is correct
 
-// Renamed component to LoginPage for clarity
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,108 +10,101 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // This hook checks if a user is already logged in.
-  // If 'userInfo' exists in localStorage, it redirects them to the dashboard
-  // so they don't have to log in again.
   useEffect(() => {
     if (localStorage.getItem("userInfo")) {
       navigate("/dashboard/feed");
     }
   }, [navigate]);
 
-  // This function handles the form submission
   const onSubmit = async (e) => {
-    e.preventDefault(); // Prevent the default form refresh
+    e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
-      // Use the environment variable for the API endpoint
-  const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/login`;
-
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/login`;
       const { data } = await axios.post(apiUrl, { email, password });
-
-      // After a successful login, save the user data from the API response
-      // to localStorage. This is the data our dashboard will use.
       localStorage.setItem("userInfo", JSON.stringify(data));
-      
-      // Redirect the user to the main dashboard feed
       navigate("/dashboard/feed");
-
     } catch (err) {
-      // If the API returns an error, display it to the user
       setError(
         err.response?.data?.message || "Login failed. Please check your credentials."
       );
     } finally {
-      // Ensure the loading state is turned off, whether the login succeeds or fails
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="max-w-6xl w-full bg-white rounded-2xl shadow-lg grid md:grid-cols-2 overflow-hidden">
-        <div className="hidden md:flex items-center justify-center bg-gray-50 p-6">
-          <img
-            src={hireHelperImg}
-            alt="A diverse group of helpers"
-            className="rounded-xl w-full h-auto object-cover max-w-lg"
-          />
-        </div>
-
-        <div className="flex flex-col justify-center p-8 sm:p-12">
-          <h2 className="text-3xl font-bold text-indigo-600 mb-4">Hire-a-Helper</h2>
-          <h3 className="text-2xl font-semibold text-gray-900 mb-2">Welcome Back!</h3>
-          <p className="text-gray-500 text-sm mb-8">Enter your details to log in.</p>
-
-          <form className="space-y-5" onSubmit={onSubmit}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-            />
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center text-gray-600 cursor-pointer">
-                <input type="checkbox" className="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-                Remember me
-              </label>
-              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline">
-                Forgot Password?
-              </Link>
-            </div>
-
-            {error && <p className="text-sm text-red-600 text-center">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-semibold text-base transition disabled:bg-indigo-300 disabled:cursor-not-allowed"
-            >
-              {loading ? "Signing in..." : "Sign in"}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-gray-600 mt-8">
-            Dont have an account yet?{" "}
-            <Link to="/signup" className="text-indigo-600 font-semibold hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-white to-teal-100 relative overflow-hidden">
+      {/* Animated gradient blob background */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="loginBlob1" cx="50%" cy="50%" r="80%">
+              <stop offset="0%" stopColor="#a5b4fc" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#818cf8" stopOpacity="0.2" />
+            </radialGradient>
+          </defs>
+          <ellipse cx="70%" cy="-10%" rx="40%" ry="30%" fill="url(#loginBlob1)" className="animate-blob" />
+          <ellipse cx="-10%" cy="80%" rx="30%" ry="20%" fill="#5eead4" className="animate-blob animation-delay-2000" />
+        </svg>
       </div>
+      <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 sm:p-10 flex flex-col items-center">
+        <h2 className="text-3xl font-extrabold text-indigo-700 mb-2 tracking-tight">Sign in to Hire-a-Helper</h2>
+        <p className="text-zinc-500 mb-8 text-center">Welcome back! Enter your details to log in.</p>
+        <form className="w-full space-y-5" onSubmit={onSubmit}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full border border-zinc-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white/90"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full border border-zinc-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white/90"
+          />
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center text-zinc-600 cursor-pointer">
+              <input type="checkbox" className="mr-2 h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
+              Remember me
+            </label>
+            <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline">
+              Forgot Password?
+            </Link>
+          </div>
+          {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg font-semibold text-base transition disabled:bg-indigo-300 disabled:cursor-not-allowed shadow-md"
+          >
+            {loading ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
+        <p className="text-center text-sm text-zinc-600 mt-8">
+          Dont have an account yet?{" "}
+          <Link to="/signup" className="text-indigo-600 font-semibold hover:underline">
+            Sign up
+          </Link>
+        </p>
+      </div>
+      {/* Animation styles */}
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -20px) scale(1.05); }
+          66% { transform: translate(-20px, 30px) scale(0.95); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 8s infinite; transform-origin: center; }
+        .animation-delay-2000 { animation-delay: 2s; }
+      `}</style>
     </div>
   );
 }
