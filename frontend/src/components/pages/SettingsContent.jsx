@@ -31,14 +31,21 @@ const SettingsContent = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const [errorMsg, setErrorMsg] = useState('');
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        handleUserUpdate(formData);
-        
-        setShowSuccess(true);
-        setTimeout(() => {
-            setShowSuccess(false);
-        }, 3000);
+        setErrorMsg('');
+        try {
+            await handleUserUpdate(formData);
+            setShowSuccess(true);
+            setTimeout(() => {
+                setShowSuccess(false);
+            }, 3000);
+        } catch (err) {
+            // handleUserUpdate sets toasts, but also reject so we can show inline error
+            setErrorMsg(err?.message || 'Failed to update profile');
+        }
     };
 
     const handleImageUpload = (e) => {
@@ -63,7 +70,8 @@ const SettingsContent = () => {
             setFormData(prev => ({ ...prev, image: croppedImg }));
             setCropModalOpen(false);
             setSelectedImage(null);
-        } catch (e) {
+        } catch (err) {
+            console.error('Crop failed:', err);
             alert('Failed to crop image');
         }
     };
@@ -142,6 +150,9 @@ const SettingsContent = () => {
                         </div>
                         
                         <div className="flex justify-end items-center space-x-4 pt-4">
+                            {errorMsg && (
+                                <div className="text-sm text-red-600 mr-4">{errorMsg}</div>
+                            )}
                             {showSuccess && (
                                 <div className="flex items-center text-sm text-green-600">
                                     <Icon path="M22 11.08V12a10 10 0 1 1-5.93-9.14" className="h-5 w-5 mr-2"/>

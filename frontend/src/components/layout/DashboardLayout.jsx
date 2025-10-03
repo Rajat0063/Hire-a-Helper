@@ -234,7 +234,7 @@ const DashboardLayout = () => {
                 }
             }
             if (!token) throw new Error('No auth token found. Please log in again.');
-            const response = await fetch('/api/auth/profile', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
