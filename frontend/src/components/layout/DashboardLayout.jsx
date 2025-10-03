@@ -445,11 +445,21 @@ const DashboardLayout = () => {
     const handleAcceptRequest = useCallback(async (requestToAccept) => {
         try {
             // Call backend to accept the request
-            const response = await fetch(`/api/incoming-requests/accept/${requestToAccept._id || requestToAccept.id}`, {
+            const url = `${import.meta.env.VITE_API_URL}/api/incoming-requests/accept/${requestToAccept._id || requestToAccept.id}`;
+            const response = await fetch(url, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
             });
-            if (!response.ok) throw new Error('Failed to accept request');
+            if (!response.ok) {
+                let errorMessage = 'Failed to accept request';
+                try {
+                    const errData = await response.json();
+                    errorMessage = errData.message || errorMessage;
+                } catch (e) {
+                    console.warn('Non-JSON/empty error response on accept:', e);
+                }
+                throw new Error(errorMessage);
+            }
             await fetchIncomingRequests();
             const userName = requestToAccept.requesterName || requestToAccept.name || 'the user';
             setToast({ show: true, type: 'success', message: `You accepted the request of ${userName}. A new task has been added!` });
@@ -463,11 +473,21 @@ const DashboardLayout = () => {
     const handleDeclineRequest = useCallback(async (requestToDeclineId) => {
         try {
             // Call backend to decline the request
-            const response = await fetch(`/api/incoming-requests/decline/${requestToDeclineId}`, {
+            const url = `${import.meta.env.VITE_API_URL}/api/incoming-requests/decline/${requestToDeclineId}`;
+            const response = await fetch(url, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
             });
-            if (!response.ok) throw new Error('Failed to decline request');
+            if (!response.ok) {
+                let errorMessage = 'Failed to decline request';
+                try {
+                    const errData = await response.json();
+                    errorMessage = errData.message || errorMessage;
+                } catch (e) {
+                    console.warn('Non-JSON/empty error response on decline:', e);
+                }
+                throw new Error(errorMessage);
+            }
             await fetchIncomingRequests();
             // Try to get the user name from the requests array
             let declinedUserName = 'the user';
