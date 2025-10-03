@@ -396,6 +396,56 @@ const DashboardLayout = () => {
             socket.on(`notification-update-${user._id}`, (notification) => {
                 setRequesterNotification(notification);
             });
+            // Real-time task events to update feed instantly
+            socket.on('task:new', (newTask) => {
+                try {
+                    const mapped = {
+                        id: newTask._id || newTask.id,
+                        title: newTask.title,
+                        type: newTask.category || newTask.type || 'other',
+                        description: newTask.description,
+                        date: `Posted ${newTask.createdAt ? new Date(newTask.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}`,
+                        startTime: newTask.startTime || '',
+                        endTime: newTask.endTime || '',
+                        location: newTask.location || '',
+                        user: newTask.postedByName || newTask.user || (user && user.name) || 'Unknown',
+                        userId: newTask.userId || newTask.ownerId || newTask.postedById || '',
+                        userImage: newTask.userImageUrl || newTask.userImage || '',
+                        image: newTask.imageUrl || newTask.image || '',
+                    };
+                    setFeedTasks(prev => [mapped, ...prev]);
+                } catch (err) {
+                    console.error('Failed to handle task:new socket event:', err);
+                }
+            });
+            socket.on('task:update', (updatedTask) => {
+                try {
+                    setFeedTasks(prev => prev.map(t => (t.id === (updatedTask._id || updatedTask.id) ? ({ ...t, title: updatedTask.title, description: updatedTask.description, image: updatedTask.imageUrl || updatedTask.image }) : t)));
+                    setTasksData(prev => {
+                        const newData = { ...prev };
+                        ['todo','inProgress','done'].forEach(col => {
+                            newData[col] = newData[col].map(t => t.id === (updatedTask._id || updatedTask.id) ? ({ ...t, title: updatedTask.title, description: updatedTask.description, image: updatedTask.imageUrl || updatedTask.image }) : t);
+                        });
+                        return newData;
+                    });
+                } catch (err) {
+                    console.error('Failed to handle task:update socket event:', err);
+                }
+            });
+            socket.on('task:delete', ({ _id }) => {
+                try {
+                    setFeedTasks(prev => prev.filter(t => t.id !== _id));
+                    setTasksData(prev => {
+                        const newData = { ...prev };
+                        ['todo','inProgress','done'].forEach(col => {
+                            newData[col] = newData[col].filter(t => t.id !== _id);
+                        });
+                        return newData;
+                    });
+                } catch (err) {
+                    console.error('Failed to handle task:delete socket event:', err);
+                }
+            });
             // Listen for profile updates for the current user and apply them
             socket.on(`user-updated-${user._id}`, (updatedUser) => {
                 try {
