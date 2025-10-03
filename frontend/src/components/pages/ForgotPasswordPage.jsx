@@ -17,16 +17,19 @@ const ForgotPasswordPage = () => {
 
     try {
       // Construct the full API URL from the .env variable
-  const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/forgot-password`;
-      
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/forgot-password`;
       // Use axios to make the POST request
       const { data } = await axios.post(apiUrl, { email });
-
       setMessage(data.message || 'If an account with that email exists, a password reset link has been sent.');
       setEmail('');
     } catch (err) {
-      // Handle errors from axios
-      setError(err.response?.data?.message || 'An unexpected error occurred.');
+      // If the backend returns a 200 with a message, show it as success
+      if (err.response && err.response.status === 200 && err.response.data?.message) {
+        setMessage(err.response.data.message);
+        setError('');
+      } else {
+        setError(err.response?.data?.message || 'An unexpected error occurred.');
+      }
     } finally {
       setIsLoading(false);
     }
