@@ -495,6 +495,14 @@ const DashboardLayout = () => {
                         }
                         return mr;
                     }));
+
+                    // Force a feed refresh to guarantee UI update
+                    if (typeof fetchTasks === 'function') {
+                        fetchTasks();
+                    }
+                    // Show a toast to confirm update
+                    setToast({ show: true, type: 'success', message: `Profile updated: ${u.name}` });
+                    setTimeout(() => setToast(t => ({ ...t, show: false })), 2000);
                 } catch (err) {
                     console.error('Failed to handle user:profileUpdated socket event:', err);
                 }
@@ -525,7 +533,7 @@ const DashboardLayout = () => {
         return () => {
             if (socket) socket.disconnect();
         };
-    }, [user, fetchMyRequests, fetchIncomingRequests]);
+    }, [user, fetchMyRequests, fetchIncomingRequests, fetchTasks]);
 
 
     // Send a new request and persist to incomingrequests collection
