@@ -466,7 +466,12 @@ const DashboardLayout = () => {
                     if (!u || !u._id) return;
                     // Update feed tasks where postedBy userId or userId matches
                     setFeedTasks(prev => prev.map(t => {
+                        // match by userId
                         if (t.userId === u._id || (t.user && t.user._id === u._id)) {
+                            return { ...t, user: u.name || t.user, userImage: u.image || t.userImage };
+                        }
+                        // fallback: match by previousName against t.user string
+                        if (u.previousName && typeof t.user === 'string' && t.user === u.previousName) {
                             return { ...t, user: u.name || t.user, userImage: u.image || t.userImage };
                         }
                         return t;
