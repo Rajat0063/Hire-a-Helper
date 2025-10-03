@@ -139,28 +139,33 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User with this email already exists' });
         }
 
-        // Case 3: User does not exist, create a new one
+        // Case 3: User does not exist, send OTP first, then create user only if email sent
         const userImage = `https://placehold.co/100x100/52525b/ffffff?text=${name.charAt(0).toUpperCase()}`;
-        user = await User.create({ name, email, password, phoneNumber, image: userImage });
-        
-        // Generate and save a 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        user.otp = otp;
-        user.otpExpires = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
-        await user.save();
-
-        // Send the OTP email
+        const otpExpires = Date.now() + 10 * 60 * 1000; // OTP expires in 10 minutes
         const message = `Your One-Time Password (OTP) for Hire-a-Helper is: ${otp}\nThis code will expire in 10 minutes.`;
+
+        // Try to send the OTP email first
         await sendEmail({
-            email: user.email,
+            email,
             subject: 'Your Verification Code',
             message,
         });
 
-        // Respond that OTP has been sent, prompting user to verify
+        // Only create the user if email sent successfully
+        user = await User.create({
+            name,
+            email,
+            password,
+            phoneNumber,
+            image: userImage,
+            otp,
+            otpExpires
+        });
+
         res.status(201).json({ 
             success: true, 
-            message: `An OTP has been sent to ${user.email}. Please verify to continue.` 
+            message: `An OTP has been sent to ${email}. Please verify to continue.` 
         });
 
     } catch (error) {
