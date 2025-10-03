@@ -154,6 +154,32 @@ const DashboardLayout = () => {
         }
     }, [navigate, handleLogout]);
 
+    // Disable browser Back navigation while user is logged in
+    useEffect(() => {
+        if (!user) return;
+        // Push initial state so back returns to same location
+        try {
+            window.history.pushState(null, null, window.location.href);
+        } catch (err) {
+            // some environments may throw, ignore — log for debugging
+            console.debug('history.pushState not supported or failed:', err);
+        }
+
+        const onPopState = () => {
+            // Push state again to prevent going back
+            try {
+                window.history.pushState(null, null, window.location.href);
+            } catch (e) {
+                console.error('Failed to push history state to disable back:', e);
+            }
+        };
+
+        window.addEventListener('popstate', onPopState);
+        return () => {
+            window.removeEventListener('popstate', onPopState);
+        };
+    }, [user]);
+
     // FIXED: useEffect for polling
     useEffect(() => {
         fetchTasks(true); // Initial load shows skeleton
