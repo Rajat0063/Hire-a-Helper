@@ -91,18 +91,18 @@ const FeedContent = () => {
             <span>Post a Task</span>
         </button>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {activeTasks.map((item) => (
-          <div key={item.id || item._id} className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group transform hover:-translate-y-1 transition-transform duration-200">
-            <img src={item.image} alt={item.title} className="w-full h-36 sm:h-40 md:h-48 object-cover" />
+          <div key={item.id || item._id} className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group transform hover:-translate-y-2 transition-transform duration-300">
+            <img src={item.image} alt={item.title} className="w-full h-48 object-cover" />
             <div className="p-4 flex flex-col flex-grow">
               <div className="flex-grow">
                 <div className="flex justify-between items-center mb-2">
                   <span className={`text-sm font-semibold px-2.5 py-0.5 rounded-full ${getCategoryClass(item.type)}`}>{item.type}</span>
                   <span className="text-sm text-zinc-500">{item.date}</span>
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-zinc-900 mb-2 truncate">{item.title}</h3>
-                <p className="text-sm text-zinc-500 mb-4 break-words line-clamp-3">{item.description}</p>
+                <h3 className="text-xl font-bold text-zinc-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-zinc-500 mb-4 break-words">{item.description}</p>
                 <div className="text-zinc-500 text-sm space-y-2 mb-4">
                   <div className="flex items-center space-x-2">
                     <Icon className="h-4 w-4" path="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -114,14 +114,14 @@ const FeedContent = () => {
                   </div>
                 </div>
               </div>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-auto pt-4 border-t border-zinc-100">
+              <div className="flex justify-between items-center mt-auto pt-4 border-t border-zinc-100">
                 <div className="flex items-center space-x-2">
                   <img src={item.userImage} alt={item.user} className="h-8 w-8 rounded-full object-cover" />
                   <span className="text-sm font-semibold text-zinc-700">{item.user}</span>
                 </div>
                 <button 
                     onClick={() => handleOpenRequestModal(item)}
-                    className={`mt-3 sm:mt-0 px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${item.user === (user && user.name) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                    className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${item.user === (user && user.name) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
                     disabled={item.user === (user && user.name)}
                 >
                   Send Request

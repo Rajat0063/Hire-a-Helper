@@ -15,8 +15,8 @@ const RequestModal = ({ isOpen, onClose, task, onSendRequest }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4 sm:p-8">
-            <div className="bg-white rounded-xl sm:rounded-xl shadow-2xl p-6 w-full max-w-md sm:max-w-md m-0 sm:m-4 sm:mx-auto sm:my-auto sm:overflow-hidden sm:shadow-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md m-4">
                 <h2 className="text-2xl font-bold text-zinc-800 mb-2">Send Request</h2>
                 <p className="text-zinc-600 mb-4">You are sending a request for: <span className="font-semibold">{task.title}</span></p>
                 

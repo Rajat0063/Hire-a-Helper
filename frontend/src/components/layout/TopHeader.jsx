@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import { Icon, AddTaskIcon } from '../ui/Icon';
 import Avatar from '../ui/Avatar'; // 1. Import the new Avatar component
 
-const TopHeader = ({ requestCount, user, toggleSidebar }) => (
-    <header className="sticky top-0 z-10 flex items-center justify-between h-16 sm:h-20 px-3 sm:px-8 bg-white border-b border-zinc-200 shadow-sm">
+const TopHeader = ({ requestCount, user }) => (
+    <header className="sticky top-0 z-10 flex items-center justify-between h-20 px-4 sm:px-8 bg-white border-b border-zinc-200 shadow-sm">
         {/* Search Bar */}
-        <div className="relative flex-1 max-w-lg hidden sm:block">
+        <div className="relative flex-1 max-w-lg">
             <input
                 type="text"
                 placeholder="Search..."
@@ -15,11 +15,7 @@ const TopHeader = ({ requestCount, user, toggleSidebar }) => (
         </div>
 
         {/* Right Side Icons & Profile */}
-        <div className="flex items-center space-x-2 sm:space-x-6">
-            {/* Mobile menu button */}
-            <button className="sm:hidden p-2 rounded-md text-zinc-600 hover:bg-zinc-100" onClick={toggleSidebar} aria-label="Toggle sidebar">
-                <Icon className="h-5 w-5" path="M4 6h16M4 12h16M4 18h16" />
-            </button>
+        <div className="flex items-center space-x-4 sm:space-x-6">
             <Link to="/dashboard/requests" className="relative p-2 rounded-full text-zinc-600 hover:bg-zinc-100 transition-colors">
                 <Icon className="h-6 w-6" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 {requestCount > 0 && (
