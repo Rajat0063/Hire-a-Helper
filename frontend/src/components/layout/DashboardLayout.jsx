@@ -54,7 +54,12 @@ const DashboardLayout = () => {
     const [requesterNotification, setRequesterNotification] = useState(null);
     
     // --- STATE MANAGEMENT (No changes here) ---
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    // Initialize sidebar open state based on viewport width: collapsed on small screens
+    const getInitialSidebarState = () => {
+        if (typeof window === 'undefined') return true;
+        return window.innerWidth > 768; // >768px open, <=768px collapsed (mobile)
+    };
+    const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState);
     const [feedTasks, setFeedTasks] = useState([]);
     const [tasksData, setTasksData] = useState({ todo: [], inProgress: [], done: [] });
     const [requests, setRequests] = useState([]);
@@ -213,6 +218,20 @@ const DashboardLayout = () => {
 
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+    // Keep sidebar responsive: collapse when screen is small
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const onResize = () => {
+            if (window.innerWidth <= 768 && isSidebarOpen) {
+                setIsSidebarOpen(false);
+            } else if (window.innerWidth > 768 && !isSidebarOpen) {
+                setIsSidebarOpen(true);
+            }
+        };
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, [isSidebarOpen]);
 
     const handleOpenRequestModal = useCallback((task) => {
         setSelectedTask(task);
