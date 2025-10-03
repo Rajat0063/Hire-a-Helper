@@ -34,7 +34,7 @@ const ResetPasswordPage = () => {
         setIsLoading(true);
 
         try {
-            const apiUrl = `${import.meta.env.VITE_API_URL}/auth/reset-password/${token}`;
+            const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/reset-password/${token}`;
             const { data } = await axios.post(apiUrl, { password });
 
             setSuccess(data.message);

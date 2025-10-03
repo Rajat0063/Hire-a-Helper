@@ -28,7 +28,7 @@ export default function LoginPage() {
 
     try {
       // Use the environment variable for the API endpoint
-      const apiUrl = `${import.meta.env.VITE_API_URL}/auth/login`;
+  const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/login`;
 
       const { data } = await axios.post(apiUrl, { email, password });
 

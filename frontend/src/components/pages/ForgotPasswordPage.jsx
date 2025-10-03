@@ -17,7 +17,7 @@ const ForgotPasswordPage = () => {
 
     try {
       // Construct the full API URL from the .env variable
-      const apiUrl = `${import.meta.env.VITE_API_URL}/auth/forgot-password`;
+  const apiUrl = `${import.meta.env.VITE_API_URL}/api/auth/forgot-password`;
       
       // Use axios to make the POST request
       const { data } = await axios.post(apiUrl, { email });
