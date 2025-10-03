@@ -7,6 +7,7 @@ import { io } from 'socket.io-client';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 // Layout Components
+
 import Sidebar from './Sidebar';
 import TopHeader from './TopHeader';
 
@@ -61,6 +62,7 @@ const DashboardLayout = () => {
     };
     const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState);
     const [feedTasks, setFeedTasks] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [tasksData, setTasksData] = useState({ todo: [], inProgress: [], done: [] });
     const [requests, setRequests] = useState([]);
     const [myRequests, setMyRequests] = useState([]);
@@ -646,6 +648,8 @@ const DashboardLayout = () => {
                 <TopHeader 
                     requestCount={requestCount}
                     user={user}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
                 />
                 {/* Notification Bar for requester when their request is accepted */}
                 <RequesterNotificationBar
@@ -692,6 +696,7 @@ const DashboardLayout = () => {
                     handleDeclineRequest,
                     requestsLoading,
                     feedLoading,
+                    searchQuery,
                 }} />
             </div>
             <RequestModal 

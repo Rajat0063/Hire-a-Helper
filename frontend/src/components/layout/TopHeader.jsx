@@ -2,13 +2,16 @@ import { Link } from 'react-router-dom';
 import { Icon, AddTaskIcon } from '../ui/Icon';
 import Avatar from '../ui/Avatar'; // 1. Import the new Avatar component
 
-const TopHeader = ({ requestCount, user }) => (
+
+const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => (
     <header className="sticky top-0 z-10 flex items-center justify-between h-20 px-4 sm:px-8 bg-white border-b border-zinc-200 shadow-sm">
         {/* Search Bar */}
         <div className="relative flex-1 max-w-lg">
             <input
                 type="text"
                 placeholder="Search..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 pl-10 rounded-full bg-zinc-100 border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
             />
             <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 h-5 w-5" path="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -31,7 +34,6 @@ const TopHeader = ({ requestCount, user }) => (
             </Link>
 
             <Link to="/dashboard/settings" className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                {/* 2. Replace the old <img> tag with the Avatar component */}
                 <Avatar user={user} className="h-10 w-10" />
             </Link>
         </div>

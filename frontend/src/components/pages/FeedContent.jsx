@@ -59,16 +59,30 @@ const formatDateTime = (dt) => {
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
+
 const FeedContent = () => {
   const context = useOutletContext() || {};
   const activeTasks = Array.isArray(context.feedTasks) ? context.feedTasks : [];
   const feedLoading = context.feedLoading;
   const handleOpenRequestModal = context.handleOpenRequestModal;
   const user = context.user;
+  const searchQuery = context.searchQuery || '';
   const navigate = useNavigate();
 
+  // Filter tasks by search query (title, description, location, type)
+  const filteredTasks = activeTasks.filter(task => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (task.title && task.title.toLowerCase().includes(q)) ||
+      (task.description && task.description.toLowerCase().includes(q)) ||
+      (task.location && task.location.toLowerCase().includes(q)) ||
+      (task.type && task.type.toLowerCase().includes(q))
+    );
+  });
+
   if (feedLoading) return <FeedSkeleton />;
-  if (!Array.isArray(activeTasks) || activeTasks.length === 0) {
+  if (!Array.isArray(filteredTasks) || filteredTasks.length === 0) {
     return (
       <main className="flex-1 flex items-center justify-center bg-zinc-100 p-4 sm:p-6 md:p-8">
         <div className="text-center">
@@ -92,7 +106,7 @@ const FeedContent = () => {
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {activeTasks.map((item) => (
+        {filteredTasks.map((item) => (
           <div key={item.id || item._id} className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group transform hover:-translate-y-2 transition-transform duration-300">
             <img src={item.image} alt={item.title} className="w-full h-48 object-cover" />
             <div className="p-4 flex flex-col flex-grow">
