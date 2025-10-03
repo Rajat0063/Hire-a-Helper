@@ -418,7 +418,7 @@ const DashboardLayout = () => {
             setToast({ show: true, type: 'error', message: 'Could not accept request. ' + (error.message || '') });
             setTimeout(() => setToast(t => ({ ...t, show: false })), 3500);
         }
-    }, [fetchIncomingRequests, requests]);
+    }, [fetchIncomingRequests]);
     
     const handleDeclineRequest = useCallback(async (requestToDeclineId) => {
         try {
@@ -441,7 +441,7 @@ const DashboardLayout = () => {
             setToast({ show: true, type: 'error', message: 'Could not decline request. ' + (error.message || '') });
             setTimeout(() => setToast(t => ({ ...t, show: false })), 3500);
         }
-    }, [fetchIncomingRequests]);
+    }, [fetchIncomingRequests, requests]);
     
     const navItems = [
         // ... your navItems array is unchanged ...
