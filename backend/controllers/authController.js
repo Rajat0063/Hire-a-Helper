@@ -16,12 +16,9 @@ const updateUserProfile = async (req, res) => {
         const userId = req.user._id;
         const { name, image, phoneNumber } = req.body;
 
-    // Find user
-    const user = await User.findById(userId);
+        // Find user
+        const user = await User.findById(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
-
-    // Capture the previous name before any modifications so we can update tasks that reference it
-    const previousName = user.name;
 
         // Only allow updating name, image, phoneNumber
         // Log name change only if changed
@@ -86,13 +83,11 @@ const updateUserProfile = async (req, res) => {
                 { upsert: true, new: true, setDefaultsOnInsert: true }
             );
 
-        // Update all tasks posted by this user (by userId OR by previous postedByName) with new name/image
-        // This ensures older tasks that were created before we stored userId get updated too
-        const updateResult = await Task.updateMany(
-            { $or: [ { postedByName: previousName }, { userId: user._id } ] },
-            { $set: { userImageUrl: user.image, postedByName: user.name, userId: user._id } }
+        // Update all tasks posted by this user (by userId) with new name/image
+        await Task.updateMany(
+            { $or: [ { postedByName: user.name }, { userId: user._id } ] },
+            { $set: { userImageUrl: user.image, postedByName: user.name } }
         );
-        console.log('Task updateMany result:', updateResult && updateResult.nModified ? updateResult.nModified : updateResult);
 
         // Emit real-time event to notify other clients about user profile update
         try {
@@ -105,15 +100,6 @@ const updateUserProfile = async (req, res) => {
                 image: user.image,
                 phoneNumber: user.phoneNumber,
             });
-            // Also emit a generic event so clients can update lists (feed/requests/myRequests) where this user's name appears
-            io.emit('user:profileUpdated', {
-                _id: user._id,
-                name: user.name,
-                previousName,
-                image: user.image,
-                phoneNumber: user.phoneNumber,
-            });
-            console.log('Emitted user:profileUpdated for user', user._id);
         } catch (socketErr) {
             console.error('Failed to emit socket event for profile update:', socketErr);
         }

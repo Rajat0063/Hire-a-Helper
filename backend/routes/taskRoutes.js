@@ -89,7 +89,6 @@ router.post('/', async (req, res) => {
       category,
       location,
       postedByName,
-      userId: req.body.userId || undefined,
       startTime,
       endTime,
       imageUrl,
