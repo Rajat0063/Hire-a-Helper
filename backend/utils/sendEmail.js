@@ -1,38 +1,14 @@
-const nodemailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 
 const sendEmail = async (options) => {
-    let transporter;
-    // Use SendGrid SMTP if configured
-    if (process.env.EMAIL_HOST === 'smtp.sendgrid.net') {
-        transporter = nodemailer.createTransport({
-            host: 'smtp.sendgrid.net',
-            port: 587,
-            secure: false,
-            auth: {
-                user: 'apikey',
-                pass: process.env.EMAIL_PASSWORD,
-            },
-        });
-    } else {
-        transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
-            port: process.env.EMAIL_PORT,
-            secure: false,
-            auth: {
-                user: process.env.EMAIL_USERNAME,
-                pass: process.env.EMAIL_PASSWORD,
-            },
-        });
-    }
-
-    const mailOptions = {
-        from: `Hire-a-Helper <${process.env.EMAIL_FROM}>`,
+    sgMail.setApiKey(process.env.EMAIL_PASSWORD); // Use EMAIL_PASSWORD for SendGrid API key
+    const msg = {
         to: options.email,
+        from: process.env.EMAIL_FROM,
         subject: options.subject,
         text: options.message,
     };
-
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
 };
 
 module.exports = sendEmail;
