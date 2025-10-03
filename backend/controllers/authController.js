@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { getIO } = require('../socket');
 const UserProfileHistory = require('../models/userProfileHistoryModel');
 const UserProfile = require('../models/userProfileModel');
 const Task = require('../models/taskModel');
@@ -87,6 +88,21 @@ const updateUserProfile = async (req, res) => {
             { $or: [ { postedByName: user.name }, { userId: user._id } ] },
             { $set: { userImageUrl: user.image, postedByName: user.name } }
         );
+
+        // Emit real-time event to notify other clients about user profile update
+        try {
+            const io = getIO();
+            // Emit a namespaced event per user id so clients can listen to updates for the current user
+            io.emit(`user-updated-${user._id}`, {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                image: user.image,
+                phoneNumber: user.phoneNumber,
+            });
+        } catch (socketErr) {
+            console.error('Failed to emit socket event for profile update:', socketErr);
+        }
 
         res.json({
             _id: user._id,

@@ -340,7 +340,9 @@ const DashboardLayout = () => {
         // --- SOCKET.IO REAL-TIME REQUESTS & NOTIFICATIONS ---
         let socket;
         if (user && user._id) {
-            socket = io('http://localhost:5001');
+            // Connect to socket server using env config with sensible fallback
+            const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:5001';
+            socket = io(socketUrl);
             // Listen for real-time updates to incoming requests (for task owner)
             socket.on(`requests-update-${user._id}`, (updatedRequests) => {
                 setRequests(updatedRequests);
@@ -348,6 +350,28 @@ const DashboardLayout = () => {
             // Listen for notifications for requester (when their request is accepted/declined)
             socket.on(`notification-update-${user._id}`, (notification) => {
                 setRequesterNotification(notification);
+            });
+            // Listen for profile updates for the current user and apply them
+            socket.on(`user-updated-${user._id}`, (updatedUser) => {
+                try {
+                    if (updatedUser && updatedUser._id === user._id) {
+                        setUser(prev => ({ ...prev, ...updatedUser }));
+                        // update stored value as well
+                        const stored = localStorage.getItem('userInfo');
+                        if (stored) {
+                            try {
+                                const parsed = JSON.parse(stored);
+                                const newVal = { ...parsed, ...updatedUser };
+                                localStorage.setItem('userInfo', JSON.stringify(newVal));
+                                if (newVal.token) localStorage.setItem('userToken', newVal.token);
+                            } catch (e) {
+                                console.error('Failed to update localStorage after user-updated socket:', e);
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error handling user-updated socket event:', err);
+                }
             });
         }
         return () => {
