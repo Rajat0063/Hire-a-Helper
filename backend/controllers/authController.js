@@ -1,3 +1,4 @@
+const User = require('../models/User');
 const UserProfileHistory = require('../models/userProfileHistoryModel');
 const UserProfile = require('../models/userProfileModel');
 const Task = require('../models/taskModel');
