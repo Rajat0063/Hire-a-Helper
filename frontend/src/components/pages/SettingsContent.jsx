@@ -63,7 +63,7 @@ const SettingsContent = () => {
             setFormData(prev => ({ ...prev, image: croppedImg }));
             setCropModalOpen(false);
             setSelectedImage(null);
-        } catch {
+        } catch (e) {
             alert('Failed to crop image');
         }
     };

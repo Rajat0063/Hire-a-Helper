@@ -8,7 +8,7 @@ router.get('/sent/:userId', async (req, res) => {
         const requests = await IncomingRequest.find({ requester: req.params.userId })
             .sort({ createdAt: -1 })
             .populate({ path: 'task', select: 'title description location category imageUrl' })
-            .populate({ path: 'taskOwner', select: 'name email' });
+            .populate({ path: 'taskOwner', select: 'name email image' });
 
         // Attach useful fields for frontend
         const requestsWithDetails = requests.map(req => {
@@ -20,6 +20,7 @@ router.get('/sent/:userId', async (req, res) => {
             reqObj.taskImage = reqObj.task && reqObj.task.imageUrl ? reqObj.task.imageUrl : '';
             reqObj.taskOwnerName = reqObj.taskOwner && reqObj.taskOwner.name ? reqObj.taskOwner.name : reqObj.taskOwnerName;
             reqObj.taskOwnerEmail = reqObj.taskOwner && reqObj.taskOwner.email ? reqObj.taskOwner.email : '';
+            reqObj.taskOwnerImage = reqObj.taskOwner && reqObj.taskOwner.image ? reqObj.taskOwner.image : '';
             return reqObj;
         });
         res.json(requestsWithDetails);

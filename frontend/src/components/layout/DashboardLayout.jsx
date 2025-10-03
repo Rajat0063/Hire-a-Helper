@@ -3,6 +3,7 @@ import SkeletonLoader from '../ui/SkeletonLoader';
 
 // FIXED: Imported 'useCallback'
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { io } from 'socket.io-client';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 // Layout Components
@@ -219,6 +220,12 @@ const DashboardLayout = () => {
     }, []);
 
     const handleUserUpdate = useCallback(async (updatedUserData) => {
+        // Optimistic UI: update user context immediately
+        const optimisticUser = { ...user, ...updatedUserData };
+        setUser(optimisticUser);
+        localStorage.setItem('userInfo', JSON.stringify(optimisticUser));
+        setToast({ show: true, type: 'success', message: 'Profile updated!' });
+        setTimeout(() => setToast(t => ({ ...t, show: false })), 2000);
         try {
             // Remove email from update payload to avoid backend rejection
             const { email: _email, ...safeData } = updatedUserData;
@@ -247,12 +254,12 @@ const DashboardLayout = () => {
             setUser(updatedUser);
             localStorage.setItem('userInfo', JSON.stringify(updatedUser));
             if (updatedUser.token) localStorage.setItem('userToken', updatedUser.token);
-            alert('Profile updated successfully!');
-            navigate('/dashboard/settings');
+            // Optionally show a second toast for backend confirmation
         } catch (error) {
-            alert('Failed to update profile: ' + (error.message || ''));
+            setToast({ show: true, type: 'error', message: 'Failed to update profile: ' + (error.message || '') });
+            setTimeout(() => setToast(t => ({ ...t, show: false })), 3500);
         }
-    }, [user, navigate]);
+    }, [user]);
 
 
     // Add a new task and persist to backend
@@ -319,6 +326,23 @@ const DashboardLayout = () => {
                     setRequesterNotification(latest || null);
                 });
         }
+
+        // --- SOCKET.IO REAL-TIME REQUESTS & NOTIFICATIONS ---
+        let socket;
+        if (user && user._id) {
+            socket = io('http://localhost:5001');
+            // Listen for real-time updates to incoming requests (for task owner)
+            socket.on(`requests-update-${user._id}`, (updatedRequests) => {
+                setRequests(updatedRequests);
+            });
+            // Listen for notifications for requester (when their request is accepted/declined)
+            socket.on(`notification-update-${user._id}`, (notification) => {
+                setRequesterNotification(notification);
+            });
+        }
+        return () => {
+            if (socket) socket.disconnect();
+        };
     }, [user, fetchMyRequests, fetchIncomingRequests]);
 
 

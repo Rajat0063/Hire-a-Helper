@@ -69,7 +69,10 @@ router.post('/', async (req, res) => {
         });
         await request.save();
 
-        res.status(201).json(incomingRequest);
+    // Emit real-time update to the task owner for new request
+    const { emitRequestsToOwner } = require('../utils/requestSocketEvents');
+    emitRequestsToOwner(owner._id.toString());
+    res.status(201).json(incomingRequest);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
@@ -81,7 +84,7 @@ router.get('/received/:userId', async (req, res) => {
     try {
         const requests = await IncomingRequest.find({ taskOwner: req.params.userId, status: 'pending' })
             .sort({ createdAt: -1 })
-            .populate({ path: 'requester', select: 'name email' })
+            .populate({ path: 'requester', select: 'name email image' })
             .populate({ path: 'task', select: 'title description location category imageUrl' });
 
         // Attach useful fields for frontend, including seenBy
@@ -89,6 +92,7 @@ router.get('/received/:userId', async (req, res) => {
             const reqObj = req.toObject();
             reqObj.requesterName = reqObj.requester && reqObj.requester.name ? reqObj.requester.name : reqObj.requesterName;
             reqObj.requesterEmail = reqObj.requester && reqObj.requester.email ? reqObj.requester.email : '';
+            reqObj.requesterImage = reqObj.requester && reqObj.requester.image ? reqObj.requester.image : '';
             reqObj.taskTitle = reqObj.task && reqObj.task.title ? reqObj.task.title : reqObj.taskTitle;
             reqObj.taskDescription = reqObj.task && reqObj.task.description ? reqObj.task.description : '';
             reqObj.taskLocation = reqObj.task && reqObj.task.location ? reqObj.task.location : '';
@@ -119,6 +123,7 @@ router.get('/notifications/:userId', async (req, res) => {
 
 // Accept an incoming request (set status to 'accepted')
 const Notification = require('../models/notificationModel');
+const { emitRequestsToOwner } = require('../utils/requestSocketEvents');
 router.patch('/accept/:requestId', async (req, res) => {
     try {
         const { requestId } = req.params;
@@ -130,13 +135,16 @@ router.patch('/accept/:requestId', async (req, res) => {
         if (!updated) return res.status(404).json({ message: 'Request not found' });
 
         // Create notification for requester
-        await Notification.create({
+    const notification = await Notification.create({
             user: updated.requester,
             type: 'request-accepted',
             message: `Your request for task '${updated.taskTitle}' was accepted! Click to view.`,
             requestId: updated._id,
             taskId: updated.task,
-        });
+    });
+    // Emit notification to requester in real time
+    const { emitNotificationToRequester } = require('../utils/requestSocketEvents');
+    emitNotificationToRequester(updated.requester.toString(), notification);
 
         // Add to mytask collection for the requester
         await MyTask.create({
@@ -147,7 +155,9 @@ router.patch('/accept/:requestId', async (req, res) => {
             status: 'assigned',
         });
 
-        res.json({ message: 'Request accepted', request: updated });
+    // Emit real-time update to the task owner
+    emitRequestsToOwner(updated.taskOwner.toString());
+    res.json({ message: 'Request accepted', request: updated });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
@@ -165,15 +175,20 @@ router.patch('/decline/:requestId', async (req, res) => {
         if (!updated) return res.status(404).json({ message: 'Request not found' });
 
         // Create notification for requester (declined)
-        await Notification.create({
+    const notification = await Notification.create({
             user: updated.requester,
             type: 'request-declined',
             message: `Your request for task '${updated.taskTitle}' was declined. Click to view.`,
             requestId: updated._id,
             taskId: updated.task,
-        });
+    });
+    // Emit notification to requester in real time
+    const { emitNotificationToRequester } = require('../utils/requestSocketEvents');
+    emitNotificationToRequester(updated.requester.toString(), notification);
 
-        res.json({ message: 'Request declined', request: updated });
+    // Emit real-time update to the task owner
+    emitRequestsToOwner(updated.taskOwner.toString());
+    res.json({ message: 'Request declined', request: updated });
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }

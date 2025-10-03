@@ -79,9 +79,13 @@ const RequestsContent = () => {
           return (
             <div key={request._id || request.id} className="bg-white rounded-xl shadow p-6 flex flex-col gap-2 border border-zinc-100">
               <div className="flex items-center gap-4 mb-2">
-                <div className="flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 text-zinc-600 font-bold text-xl">
-                  {getInitials(request.requesterName)}
-                </div>
+                {request.requesterImage ? (
+                  <img src={request.requesterImage} alt={request.requesterName || 'Requester'} className="h-12 w-12 rounded-full object-cover border border-zinc-200" />
+                ) : (
+                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-zinc-200 text-zinc-600 font-bold text-xl">
+                    {getInitials(request.requesterName)}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-lg text-zinc-800 truncate">{request.requesterName || 'Unknown'}</span>

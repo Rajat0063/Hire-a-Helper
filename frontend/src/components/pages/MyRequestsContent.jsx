@@ -1,6 +1,8 @@
 // src/components/pages/MyRequestsContent.jsx
 
 import { useOutletContext } from 'react-router-dom'; // 1. Import the hook
+import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 import { Icon } from '../ui/Icon';
 
 // Professional skeleton for My Requests page
@@ -49,7 +51,27 @@ const PLACEHOLDER_IMG = "https://placehold.co/600x300?text=No+Image";
 
 const MyRequestsContent = () => {
   const context = useOutletContext() || {};
-  const myRequests = Array.isArray(context.myRequests) ? context.myRequests : [];
+  const [myRequests, setMyRequests] = useState(Array.isArray(context.myRequests) ? context.myRequests : []);
+
+  // Listen for real-time notification updates and update myRequests status
+  useEffect(() => {
+    setMyRequests(Array.isArray(context.myRequests) ? context.myRequests : []);
+  }, [context.myRequests]);
+
+  useEffect(() => {
+    if (!context.user || !context.user._id) return;
+    const socket = io('http://localhost:5001');
+    socket.on(`notification-update-${context.user._id}`, (notification) => {
+      // When a notification is received, update the status of the relevant request in myRequests
+      setMyRequests(prev => prev.map(req => {
+        if (req._id === notification.requestId || req.id === notification.requestId) {
+          return { ...req, status: notification.type === 'request-accepted' ? 'accepted' : notification.type === 'request-declined' ? 'declined' : req.status };
+        }
+        return req;
+      }));
+    });
+    return () => socket.disconnect();
+  }, [context.user]);
 
   if (context.myRequests === undefined) return <MyRequestsSkeleton />;
   if (!Array.isArray(myRequests) || myRequests.length === 0) {
@@ -84,9 +106,13 @@ const MyRequestsContent = () => {
             return (
               <div key={request._id || request.id} className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 border border-zinc-100">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-zinc-200 text-zinc-600 font-bold text-lg">
-                    {request.taskOwnerName ? request.taskOwnerName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U'}
-                  </div>
+                  {request.taskOwnerImage ? (
+                    <img src={request.taskOwnerImage} alt={request.taskOwnerName || 'Owner'} className="h-10 w-10 rounded-full object-cover border border-zinc-200" />
+                  ) : (
+                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-zinc-200 text-zinc-600 font-bold text-lg">
+                      {request.taskOwnerName ? request.taskOwnerName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U'}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-lg text-zinc-800 truncate">{request.taskTitle || request.title || 'Untitled Task'}</span>
