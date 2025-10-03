@@ -100,6 +100,13 @@ const updateUserProfile = async (req, res) => {
                 image: user.image,
                 phoneNumber: user.phoneNumber,
             });
+            // Also emit a generic event so clients can update lists (feed/requests/myRequests) where this user's name appears
+            io.emit('user:profileUpdated', {
+                _id: user._id,
+                name: user.name,
+                image: user.image,
+                phoneNumber: user.phoneNumber,
+            });
         } catch (socketErr) {
             console.error('Failed to emit socket event for profile update:', socketErr);
         }

@@ -446,6 +446,40 @@ const DashboardLayout = () => {
                     console.error('Failed to handle task:delete socket event:', err);
                 }
             });
+            // When any user updates their profile, update local lists where their name/image appears
+            socket.on('user:profileUpdated', (u) => {
+                try {
+                    if (!u || !u._id) return;
+                    // Update feed tasks where postedBy userId or userId matches
+                    setFeedTasks(prev => prev.map(t => {
+                        if (t.userId === u._id || (t.user && t.user._id === u._id)) {
+                            return { ...t, user: u.name || t.user, userImage: u.image || t.userImage };
+                        }
+                        return t;
+                    }));
+
+                    // Update incoming requests (task owner view) where requester matches
+                    setRequests(prev => prev.map(r => {
+                        if (r.requester == u._id || (r.requester && r.requester._id === u._id)) {
+                            return { ...r, requesterName: u.name || r.requesterName, requesterImage: u.image || r.requesterImage };
+                        }
+                        if (r.taskOwner == u._id || (r.taskOwner && r.taskOwner._id === u._id)) {
+                            return { ...r, taskOwnerName: u.name || r.taskOwnerName };
+                        }
+                        return r;
+                    }));
+
+                    // Update myRequests (requests sent by current user view)
+                    setMyRequests(prev => prev.map(mr => {
+                        if (mr.requester == u._id || (mr.requester && mr.requester._id === u._id)) {
+                            return { ...mr, requesterName: u.name || mr.requesterName, requesterImage: u.image || mr.requesterImage };
+                        }
+                        return mr;
+                    }));
+                } catch (err) {
+                    console.error('Failed to handle user:profileUpdated socket event:', err);
+                }
+            });
             // Listen for profile updates for the current user and apply them
             socket.on(`user-updated-${user._id}`, (updatedUser) => {
                 try {
