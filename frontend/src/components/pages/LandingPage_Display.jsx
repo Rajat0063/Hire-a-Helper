@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import logoImg from '../../assets/logo (2).png';
 
 export default function LandingPage() {
   return (
@@ -69,8 +70,8 @@ export default function LandingPage() {
           </div>
 
           <div className="relative">
-            {/* Animated mockup card */}
-              <div className="relative w-full max-w-md mx-auto">
+            {/* Logo mockup card */}
+            <div className="relative w-full max-w-md mx-auto">
               <div className="rounded-2xl shadow-2xl overflow-hidden bg-white/80 backdrop-blur p-6 transform transition duration-700 scale-102-hover">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -79,26 +80,9 @@ export default function LandingPage() {
                   </div>
                   <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">3</div>
                 </div>
-                <ul className="space-y-3">
-                  <li className="p-3 bg-white rounded-lg shadow-sm">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium">Paint living room</p>
-                        <p className="text-sm text-zinc-500">Dehradun · Oct 3</p>
-                      </div>
-                      <div className="text-sm text-indigo-600">$30</div>
-                    </div>
-                  </li>
-                  <li className="p-3 bg-white rounded-lg shadow-sm">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium">Assemble furniture</p>
-                        <p className="text-sm text-zinc-500">Dehradun · Oct 2</p>
-                      </div>
-                      <div className="text-sm text-indigo-600">$20</div>
-                    </div>
-                  </li>
-                </ul>
+                <div className="flex items-center justify-center py-6">
+                  <img src={logoImg} alt="Hire-a-Helper logo" className="w-40 h-40 object-contain" />
+                </div>
               </div>
               <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-2xl bg-gradient-to-tr from-indigo-400 to-teal-300 opacity-80 blur-2xl animate-blob animation-delay-2000"></div>
             </div>
