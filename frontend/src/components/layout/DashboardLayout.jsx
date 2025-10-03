@@ -396,14 +396,21 @@ const DashboardLayout = () => {
                 taskOwnerName,
                 message,
             };
-            const response = await fetch('/api/incoming-requests', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/incoming-requests`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to send request');
+                // Try to parse JSON body, but guard against empty responses
+                let errorMessage = 'Failed to send request';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    console.warn('Non-JSON or empty error response when sending request:', e);
+                }
+                throw new Error(errorMessage);
             }
             setIsRequestModalOpen(false);
             navigate('/dashboard/my-requests');
