@@ -141,7 +141,15 @@ const MyRequestsContent = () => {
                 {request.status && request.status.toLowerCase() === 'accepted' && (
                   <button
                     className="mt-4 self-end bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                    onClick={() => navigate(`/dashboard/messages/${request.taskId || request.task_id || request.task || request._id}/${request.taskOwnerId || request.taskOwner || request.ownerId || ''}`)}
+                    onClick={() => {
+                      // Ensure taskId and taskOwnerId are strings, not objects
+                      let taskId = request.taskId || request.task_id || request.task || request._id;
+                      let taskOwnerId = request.taskOwnerId || request.taskOwner || request.ownerId || '';
+                      // If either is an object, extract the _id property
+                      if (typeof taskId === 'object' && taskId !== null) taskId = taskId._id || '';
+                      if (typeof taskOwnerId === 'object' && taskOwnerId !== null) taskOwnerId = taskOwnerId._id || '';
+                      navigate(`/dashboard/messages/${taskId}/${taskOwnerId}`);
+                    }}
                   >
                     Message
                   </button>
