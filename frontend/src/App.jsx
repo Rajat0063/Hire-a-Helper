@@ -1,4 +1,5 @@
 import Messages from './components/pages/Messages';
+import MessagesList from './components/pages/MessagesList';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // --- Page Imports ---
@@ -51,7 +52,8 @@ function App() {
             <Route path="my-requests" element={<MyRequestsContent />} />
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />
-            {/* Move Messages route inside dashboard */}
+            {/* Messages list and chat routes inside dashboard */}
+            <Route path="messages" element={<MessagesList />} />
             <Route path="messages/:taskId/:userId" element={<Messages />} />
           </Route>
         </Route>
