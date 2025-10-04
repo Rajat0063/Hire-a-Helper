@@ -1,6 +1,6 @@
 // src/components/pages/MyRequestsContent.jsx
 
-import { useOutletContext, useNavigate } from 'react-router-dom'; // 1. Import the hook
+import { useOutletContext } from 'react-router-dom'; // 1. Import the hook
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Icon } from '../ui/Icon';
@@ -51,7 +51,6 @@ const PLACEHOLDER_IMG = "https://placehold.co/600x300?text=No+Image";
 
 const MyRequestsContent = () => {
   const context = useOutletContext() || {};
-  const navigate = useNavigate();
   const [myRequests, setMyRequests] = useState(Array.isArray(context.myRequests) ? context.myRequests : []);
 
   // Listen for real-time notification updates and update myRequests status
@@ -74,7 +73,6 @@ const MyRequestsContent = () => {
     return () => socket.disconnect();
   }, [context.user]);
 
-  // Move useNavigate to top level to avoid conditional hook call
   if (context.myRequests === undefined) return <MyRequestsSkeleton />;
   if (!Array.isArray(myRequests) || myRequests.length === 0) {
     return (
@@ -96,7 +94,6 @@ const MyRequestsContent = () => {
     return 'bg-gray-100 text-gray-700';
   };
 
-  // useNavigate is already declared at the top level
   return (
     <main className="flex-1 overflow-y-auto bg-zinc-50 p-4 sm:p-6 md:p-8">
       <div className="max-w-3xl mx-auto">
@@ -137,23 +134,6 @@ const MyRequestsContent = () => {
                 <div className="mt-2">
                   <img src={imgSrc} alt="Task" className="rounded-lg w-full object-cover max-h-72 border border-zinc-200" />
                 </div>
-                {/* Message button for accepted requests */}
-                {request.status && request.status.toLowerCase() === 'accepted' && (
-                  <button
-                    className="mt-4 self-end bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                    onClick={() => {
-                      // Ensure taskId and taskOwnerId are strings, not objects
-                      let taskId = request.taskId || request.task_id || request.task || request._id;
-                      let taskOwnerId = request.taskOwnerId || request.taskOwner || request.ownerId || '';
-                      // If either is an object, extract the _id property
-                      if (typeof taskId === 'object' && taskId !== null) taskId = taskId._id || '';
-                      if (typeof taskOwnerId === 'object' && taskOwnerId !== null) taskOwnerId = taskOwnerId._id || '';
-                      navigate(`/dashboard/messages/${taskId}/${taskOwnerId}`);
-                    }}
-                  >
-                    Message
-                  </button>
-                )}
               </div>
             );
           })}

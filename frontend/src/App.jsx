@@ -1,5 +1,3 @@
-import Messages from './components/pages/Messages';
-import MessagesList from './components/pages/MessagesList';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // --- Page Imports ---
@@ -42,9 +40,11 @@ function App() {
         {/* ============================================= */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
+            
             {/* ⭐️ UPDATED: This now explicitly redirects to the feed route. */}
             {/* This ensures the URL is always `/dashboard/feed` for clarity. */}
             <Route index element={<Navigate to="feed" replace />} />
+            
             {/* Other nested dashboard pages */}
             <Route path="feed" element={<FeedContent />} />
             <Route path="my-tasks" element={<MyTasksContent />} />
@@ -52,9 +52,6 @@ function App() {
             <Route path="my-requests" element={<MyRequestsContent />} />
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />
-            {/* Messages list and chat routes inside dashboard */}
-            <Route path="messages" element={<MessagesList />} />
-            <Route path="messages/:taskId/:userId" element={<Messages />} />
           </Route>
         </Route>
 
