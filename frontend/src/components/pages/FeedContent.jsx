@@ -65,7 +65,6 @@ const FeedContent = () => {
   const activeTasks = Array.isArray(context.feedTasks) ? context.feedTasks : [];
   const feedLoading = context.feedLoading;
   const handleOpenRequestModal = context.handleOpenRequestModal;
-  const user = context.user;
   const searchQuery = context.searchQuery || '';
   const navigate = useNavigate();
 
@@ -135,8 +134,7 @@ const FeedContent = () => {
                 </div>
                 <button 
                     onClick={() => handleOpenRequestModal(item)}
-                    className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${item.user === (user && user.name) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
-                    disabled={item.user === (user && user.name)}
+                    className="px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 bg-indigo-600 text-white hover:bg-indigo-700"
                 >
                   View Details
                 </button>
