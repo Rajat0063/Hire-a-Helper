@@ -56,11 +56,13 @@
 
 ---
 
+
 ## ✨ Features
 
 - **Real-Time Collaboration:** Instant updates for tasks, requests, and notifications using Socket.io.
 - **User Authentication:** Secure signup, login, password reset, and OTP verification with JWT.
 - **Task Management:** Post, view, accept, and manage tasks with live feed updates.
+- **Task Details Modal:** Click "View Details" on any task to open a large, professional modal with all task information and image, plus a "Send Request" button and a close icon for easy dismissal.
 - **Request System:** Send, accept, or decline requests for tasks, with real-time feedback.
 - **Profile Management:** Update user profiles and view history.
 - **Responsive Design:** Mobile-first, adaptive layouts with Tailwind CSS.
@@ -183,20 +185,19 @@ Hire-a-Helper/
 
 
 
+
 <div align="center">
 	<table>
 		<tr>
 			<td align="center">
 				<b>Desktop View</b><br/>
 				<img src="frontend/src/assets/image.png" alt="Desktop Screenshot" width="420" style="border:2px solid #888;border-radius:16px;box-shadow:0 2px 12px #0002;" />
-                <img src="frontend/src/assets/image.png" alt="Desktop Screenshot" width="420" style="border:2px solid #888;border-radius:16px;box-shadow:0 2px 12px #0002;" />
-                <img src="frontend/src/assets/image.png" alt="Desktop Screenshot" width="420" style="border:2px solid #888;border-radius:16px;box-shadow:0 2px 12px #0002;" />
-				<br/><sub>Landing page, dashboard, or feed on desktop</sub>
+				<br/><sub>Landing page, dashboard, feed, and the new View Details modal</sub>
 			</td>
 			<td align="center">
 				<b>Mobile View</b><br/>
 				<img src="frontend/src/assets/image01.png" alt="Mobile Screenshot" width="220" style="border:2px solid #888;border-radius:32px;box-shadow:0 2px 12px #0002;" />
-				<br/><sub>Mobile view of the same page</sub>
+				<br/><sub>Mobile view of the same page and modal</sub>
 			</td>
 		</tr>
 	</table>
