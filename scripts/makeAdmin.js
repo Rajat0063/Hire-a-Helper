@@ -16,7 +16,7 @@ if (!MONGO_URI) {
 
 const email = process.argv[2];
 if (!email) {
-  console.error('Usage: node scripts/makeAdmin.js raajyadav5641@gmail.com');
+  console.error('Usage: node scripts/makeAdmin.js codeartistry0063@gmail.com');
   process.exit(1);
 }
 
