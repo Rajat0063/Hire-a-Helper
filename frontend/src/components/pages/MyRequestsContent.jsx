@@ -141,7 +141,7 @@ const MyRequestsContent = () => {
                 {request.status && request.status.toLowerCase() === 'accepted' && (
                   <button
                     className="mt-4 self-end bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                    onClick={() => navigate(`/messages/${request.taskId || request.task_id || request.task || request._id}/${request.taskOwnerId || request.taskOwner || request.ownerId || ''}`)}
+                    onClick={() => navigate(`/dashboard/messages/${request.taskId || request.task_id || request.task || request._id}/${request.taskOwnerId || request.taskOwner || request.ownerId || ''}`)}
                   >
                     Message
                   </button>

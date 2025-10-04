@@ -99,7 +99,7 @@ const Messages = () => {
               <div
                 key={conv.taskId}
                 className={`px-4 py-3 cursor-pointer hover:bg-indigo-50 flex items-center gap-3 ${conv.taskId === taskId ? 'bg-indigo-100' : ''}`}
-                onClick={() => navigate(`/messages/${conv.taskId}/${user._id}`)}
+                onClick={() => navigate(`/dashboard/messages/${conv.taskId}/${user._id}`)}
               >
                 <img src={conv.taskImage || 'https://placehold.co/40x40'} alt="Task" className="h-10 w-10 rounded-full object-cover border" />
                 <div className="flex-1 min-w-0">

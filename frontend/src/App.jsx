@@ -51,9 +51,9 @@ function App() {
             <Route path="my-requests" element={<MyRequestsContent />} />
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />
+            {/* Move Messages route inside dashboard */}
+            <Route path="messages/:taskId/:userId" element={<Messages />} />
           </Route>
-          {/* Chat route outside dashboard layout for full-screen chat */}
-          <Route path="/messages/:taskId/:userId" element={<Messages />} />
         </Route>
 
         {/* ============================================= */}
