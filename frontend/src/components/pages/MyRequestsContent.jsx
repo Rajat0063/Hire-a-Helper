@@ -51,7 +51,7 @@ const PLACEHOLDER_IMG = "https://placehold.co/600x300?text=No+Image";
 
 const MyRequestsContent = () => {
   const context = useOutletContext() || {};
-  // useNavigate is now declared only once at the top
+  const navigate = useNavigate();
   const [myRequests, setMyRequests] = useState(Array.isArray(context.myRequests) ? context.myRequests : []);
 
   // Listen for real-time notification updates and update myRequests status
@@ -74,6 +74,7 @@ const MyRequestsContent = () => {
     return () => socket.disconnect();
   }, [context.user]);
 
+  // Move useNavigate to top level to avoid conditional hook call
   if (context.myRequests === undefined) return <MyRequestsSkeleton />;
   if (!Array.isArray(myRequests) || myRequests.length === 0) {
     return (
@@ -95,7 +96,7 @@ const MyRequestsContent = () => {
     return 'bg-gray-100 text-gray-700';
   };
 
-  const navigate = useNavigate();
+  // useNavigate is already declared at the top level
   return (
     <main className="flex-1 overflow-y-auto bg-zinc-50 p-4 sm:p-6 md:p-8">
       <div className="max-w-3xl mx-auto">
