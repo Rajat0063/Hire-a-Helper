@@ -62,10 +62,6 @@ const RequestsContent = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
   };
 
-  // Dummy rating for demo (replace with real data if available)
-  const getRating = () => {
-    return { value: 4.8, count: 13 };
-  };
 
   return (
     <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 p-4 sm:p-6 md:p-8">
@@ -75,7 +71,6 @@ const RequestsContent = () => {
       </div>
       <div className="space-y-6">
         {requests.map((request) => {
-          const rating = getRating(request);
           return (
             <div key={request._id || request.id} className="bg-white rounded-xl shadow p-6 flex flex-col gap-2 border border-zinc-100">
               <div className="flex items-center gap-4 mb-2">
@@ -89,11 +84,6 @@ const RequestsContent = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-lg text-zinc-800 truncate">{request.requesterName || 'Unknown'}</span>
-                    <span className="flex items-center gap-1 text-yellow-500 text-sm font-semibold">
-                      <svg className="w-4 h-4 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.38-2.454a1 1 0 00-1.175 0l-3.38 2.454c-.784.57-1.838-.196-1.54-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.05 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.286-3.967z" /></svg>
-                      {rating.value}
-                    </span>
-                    <span className="text-xs text-zinc-500">({rating.count} reviews)</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
