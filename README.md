@@ -190,12 +190,12 @@ Hire-a-Helper/
 		<tr>
 			<td>
 				<!-- Desktop screenshot example -->
-				<img src="frontend/src/assets/screenshot-desktop.png" alt="Desktop Screenshot" width="420" style="border-radius:12px;box-shadow:0 2px 12px #0002;" />
+				<img src="frontend/src/assets/image.png" alt="Desktop Screenshot" width="420" style="border-radius:12px;box-shadow:0 2px 12px #0002;" />
 				<br/><sub>Landing page, dashboard, or feed on desktop</sub>
 			</td>
 			<td>
 				<!-- Mobile screenshot example -->
-				<img src="frontend/src/assets/screenshot-mobile.png" alt="Mobile Screenshot" width="220" style="border-radius:12px;box-shadow:0 2px 12px #0002;" />
+				<img src="frontend/src/assets/image01.png" alt="Mobile Screenshot" width="220" style="border-radius:12px;box-shadow:0 2px 12px #0002;" />
 				<br/><sub>Mobile view of the same page</sub>
 			</td>
 		</tr>
