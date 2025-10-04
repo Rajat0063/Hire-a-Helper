@@ -187,8 +187,10 @@ Hire-a-Helper/
 	<table>
 		<tr>
 			<td align="center">
-				<b>Laptop View</b><br/>
+				<b>Desktop View</b><br/>
 				<img src="frontend/src/assets/image.png" alt="Desktop Screenshot" width="420" style="border:2px solid #888;border-radius:16px;box-shadow:0 2px 12px #0002;" />
+                <img src="frontend/src/assets/image.png" alt="Desktop Screenshot" width="420" style="border:2px solid #888;border-radius:16px;box-shadow:0 2px 12px #0002;" />
+                <img src="frontend/src/assets/image.png" alt="Desktop Screenshot" width="420" style="border:2px solid #888;border-radius:16px;box-shadow:0 2px 12px #0002;" />
 				<br/><sub>Landing page, dashboard, or feed on desktop</sub>
 			</td>
 			<td align="center">
