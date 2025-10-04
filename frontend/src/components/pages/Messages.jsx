@@ -184,6 +184,7 @@ const Messages = () => {
           )}
           <div ref={messagesEndRef} />
         </div>
+        {/* Always show the chat input so user can start a conversation */}
         <form onSubmit={sendMessage} className="flex gap-2 p-4 bg-white border-t border-zinc-100">
           <input
             className="flex-1 border rounded-2xl px-4 py-2 focus:outline-none focus:ring"
