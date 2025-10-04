@@ -182,26 +182,22 @@ Hire-a-Helper/
 ## 🖼️ Screenshots
 
 
-<div align="center" style="display:flex;justify-content:center;gap:48px;flex-wrap:wrap;">
-	<div style="display:inline-block;">
-		<b>Laptop View</b><br/>
-		<svg width="440" height="300" viewBox="0 0 440 300" style="max-width:100%;">
-			<rect x="10" y="20" rx="18" ry="18" width="420" height="240" fill="#222" stroke="#888" stroke-width="3"/>
-			<image href="frontend/src/assets/image.png" x="30" y="40" width="380" height="200" style="border-radius:10px;"/>
-			<rect x="0" y="260" width="440" height="20" rx="8" fill="#bbb"/>
-		</svg>
-		<br/><sub>Landing page, dashboard, or feed on desktop</sub>
-	</div>
-	<div style="display:inline-block;">
-		<b>Mobile View</b><br/>
-		<svg width="160" height="340" viewBox="0 0 160 340" style="max-width:100%;">
-			<rect x="10" y="10" rx="24" ry="24" width="140" height="320" fill="#222" stroke="#888" stroke-width="3"/>
-			<circle cx="80" cy="28" r="5" fill="#888"/>
-			<rect x="60" y="320" width="40" height="8" rx="4" fill="#888"/>
-			<image href="frontend/src/assets/image01.png" x="22" y="40" width="116" height="260" style="border-radius:8px;"/>
-		</svg>
-		<br/><sub>Mobile view of the same page</sub>
-	</div>
+
+<div align="center">
+	<table>
+		<tr>
+			<td align="center">
+				<b>Laptop View</b><br/>
+				<img src="frontend/src/assets/image.png" alt="Desktop Screenshot" width="420" style="border:2px solid #888;border-radius:16px;box-shadow:0 2px 12px #0002;" />
+				<br/><sub>Landing page, dashboard, or feed on desktop</sub>
+			</td>
+			<td align="center">
+				<b>Mobile View</b><br/>
+				<img src="frontend/src/assets/image01.png" alt="Mobile Screenshot" width="220" style="border:2px solid #888;border-radius:32px;box-shadow:0 2px 12px #0002;" />
+				<br/><sub>Mobile view of the same page</sub>
+			</td>
+		</tr>
+	</table>
 </div>
 
 > _Replace the image paths above with your actual screenshots for a professional showcase!_
