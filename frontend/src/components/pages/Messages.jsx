@@ -128,7 +128,22 @@ const Messages = () => {
         <div className="p-4 border-b border-zinc-100 font-bold text-lg text-zinc-700">Messages</div>
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
-            <div className="p-6 text-zinc-400 text-center">No conversations yet.</div>
+            // If there are no conversations, but the user is on a valid chat route, show a temporary conversation in the sidebar
+            (taskId && userId ? (
+              <div
+                key={taskId}
+                className={`px-4 py-3 cursor-pointer hover:bg-indigo-50 flex items-center gap-3 bg-indigo-100`}
+                onClick={() => navigate(`/dashboard/messages/${taskId}/${userId}`)}
+              >
+                <img src={'https://placehold.co/40x40'} alt="Task" className="h-10 w-10 rounded-full object-cover border" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-zinc-800 truncate">Chat</div>
+                  <div className="text-xs text-zinc-500 truncate">No messages yet.</div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 text-zinc-400 text-center">No conversations yet.</div>
+            ))
           ) : (
             conversations.map(conv => (
               <div
@@ -155,8 +170,12 @@ const Messages = () => {
           </div>
         )}
         <div className="p-4 border-b border-zinc-100 flex items-center gap-3 bg-white">
-          <img src={conversations.find(c => c.taskId === taskId)?.taskImage || 'https://placehold.co/40x40'} alt="Task" className="h-10 w-10 rounded-full object-cover border" />
-          <div className="font-semibold text-lg text-zinc-800">{conversations.find(c => c.taskId === taskId)?.taskTitle || 'Chat'}</div>
+          <img src={
+            (conversations.find(c => c.taskId === taskId)?.taskImage) || 'https://placehold.co/40x40'
+          } alt="Task" className="h-10 w-10 rounded-full object-cover border" />
+          <div className="font-semibold text-lg text-zinc-800">{
+            (conversations.find(c => c.taskId === taskId)?.taskTitle) || 'Chat'
+          }</div>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-4 bg-zinc-50">
           {loading ? (
