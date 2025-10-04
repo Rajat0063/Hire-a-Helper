@@ -33,15 +33,15 @@ const RequestModal = ({ isOpen, onClose, task, onSendRequest }) => {
                     </div>
                     <div className="md:w-1/2 w-full p-8 flex flex-col relative">
                         <h2 className="text-3xl font-bold text-zinc-800 mb-2">{task.title}</h2>
-                                                                        <span
-                                                                            className={`inline-flex min-w-0 text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2
-                                                                                ${task.type && task.type.toLowerCase() === 'other'
-                                                                                    ? 'bg-zinc-200 text-zinc-600'
-                                                                                    : 'bg-indigo-100 text-indigo-700'}
-                                                                            `}
-                                                                        >
-                                                                            {task.type}
-                                                                        </span>
+                                                                                                <span
+                                                                                                    className={`inline-block w-auto text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2
+                                                                                                        ${task.type && task.type.toLowerCase() === 'other'
+                                                                                                            ? 'bg-zinc-200 text-zinc-600'
+                                                                                                            : 'bg-indigo-100 text-indigo-700'}
+                                                                                                    `}
+                                                                                                >
+                                                                                                    {task.type}
+                                                                                                </span>
                         <p className="text-zinc-600 mb-2">{task.description}</p>
                         <div className="text-zinc-500 text-base mb-4">
                             <span className="block mb-1"><b>Location:</b> {task.location || 'N/A'}</span>
