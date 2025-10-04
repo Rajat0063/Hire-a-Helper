@@ -39,11 +39,13 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                                 {item.icon}
                                 {isSidebarOpen && <span className="ml-3">{item.name}</span>}
                             </div>
+                            
                             {item.count > 0 && isSidebarOpen && (
                                 <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-indigo-600' : 'bg-red-500 text-white'}`}>
                                     {item.count}
                                 </span>
                             )}
+
                             {!isSidebarOpen && (
                                 <span className="absolute left-full rounded-md px-2 py-1 ml-6 bg-indigo-100 text-indigo-800 text-sm invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0">
                                     {item.name}
@@ -53,18 +55,6 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                     )}
                 </NavLink>
             ))}
-            {/* Admin Panel Link (admin only) */}
-            {user && user.role === 'admin' && (
-                <NavLink
-                    to="/admin"
-                    className={({ isActive }) => `w-full flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 group relative mt-4 ${
-                        isActive ? 'bg-yellow-500 text-white shadow-lg' : 'text-yellow-700 hover:bg-yellow-100'
-                    } ${!isSidebarOpen && 'justify-center'}`}
-                >
-                    <span role="img" aria-label="Admin">🛡️</span>
-                    {isSidebarOpen && <span className="ml-3 font-bold">Admin Panel</span>}
-                </NavLink>
-            )}
         </nav>
         <div className="p-4 border-t border-zinc-200">
             <div className={`flex items-center mb-4 ${!isSidebarOpen && 'justify-center'}`}>
