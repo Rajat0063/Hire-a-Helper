@@ -14,7 +14,6 @@ import TopHeader from './TopHeader';
 // UI Components
 import { Icon, AddTaskIcon } from '../ui/Icon';
 import RequestModal from '../ui/RequestModal';
-import ChatModal from '../ui/ChatModal';
 
 // Toast component
 function Toast({ show, type, message, onClose }) {
@@ -262,22 +261,9 @@ const DashboardLayout = () => {
         return () => window.removeEventListener('resize', onResize);
     }, [isSidebarOpen]);
 
-
-    // Chat modal state
-    const [isChatModalOpen, setIsChatModalOpen] = useState(false);
-    const [chatTask, setChatTask] = useState(null);
-    const [chatOtherUser, setChatOtherUser] = useState(null);
-
     const handleOpenRequestModal = useCallback((task) => {
         setSelectedTask(task);
         setIsRequestModalOpen(true);
-    }, []);
-
-    // Open chat modal with task and other user
-    const handleOpenChatModal = useCallback((task, otherUser) => {
-        setChatTask(task);
-        setChatOtherUser(otherUser);
-        setIsChatModalOpen(true);
     }, []);
 
     const handleUserUpdate = useCallback(async (updatedUserData) => {
@@ -696,32 +682,22 @@ const DashboardLayout = () => {
                         <button className="ml-4 text-white text-lg font-bold" onClick={e => { e.stopPropagation(); setShowNotificationBar(false); setNotificationActive(false); setNewRequesters([]); }}>&#10005;</button>
                     </div>
                 )}
-                                <Outlet context={{ 
-                                        feedTasks, 
-                                        tasksData, 
-                                        requests, 
-                                        myRequests, 
-                                        user,
-                                        handleOpenRequestModal,
-                                        handleOpenChatModal,
-                                        handleUserUpdate,
-                                        handleAddTask,
-                                        handleMoveTask,
-                                        handleAcceptRequest,
-                                        handleDeclineRequest,
-                                        requestsLoading,
-                                        feedLoading,
-                                        searchQuery,
-                                }} />
-
-                                {/* Chat Modal */}
-                                <ChatModal
-                                    isOpen={isChatModalOpen}
-                                    onClose={() => setIsChatModalOpen(false)}
-                                    task={chatTask}
-                                    currentUser={user}
-                                    otherUser={chatOtherUser}
-                                />
+                <Outlet context={{ 
+                    feedTasks, 
+                    tasksData, 
+                    requests, 
+                    myRequests, 
+                    user,
+                    handleOpenRequestModal,
+                    handleUserUpdate,
+                    handleAddTask,
+                    handleMoveTask,
+                    handleAcceptRequest,
+                    handleDeclineRequest,
+                    requestsLoading,
+                    feedLoading,
+                    searchQuery,
+                }} />
             </div>
             <RequestModal 
                 isOpen={isRequestModalOpen}

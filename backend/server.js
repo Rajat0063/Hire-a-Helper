@@ -50,12 +50,8 @@ app.use('/api/incoming-requests', require('./routes/incomingRequestRoutes'));
 app.use('/api/incoming-requests-sent', require('./routes/incomingRequestSentRoutes'));
 app.use('/api/requests', require('./routes/requestRoutes'));
 
-
 // Mount the routes for handling my tasks
 app.use('/api/mytasks', require('./routes/myTaskRoutes'));
-
-// Mount the chat routes
-app.use('/api/chat', require('./routes/chatRoutes'));
 
 
 // Define the port the server will listen on.
