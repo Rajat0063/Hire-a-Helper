@@ -178,9 +178,31 @@ Hire-a-Helper/
 ---
 
 
+
 ## 🖼️ Screenshots
 
-> _Add screenshots of your landing page, dashboard, task feed, and modals here for a professional look._
+<div align="center">
+	<table>
+		<tr>
+			<td align="center"><b>Desktop View</b></td>
+			<td align="center"><b>Mobile View</b></td>
+		</tr>
+		<tr>
+			<td>
+				<!-- Desktop screenshot example -->
+				<img src="frontend/src/assets/screenshot-desktop.png" alt="Desktop Screenshot" width="420" style="border-radius:12px;box-shadow:0 2px 12px #0002;" />
+				<br/><sub>Landing page, dashboard, or feed on desktop</sub>
+			</td>
+			<td>
+				<!-- Mobile screenshot example -->
+				<img src="frontend/src/assets/screenshot-mobile.png" alt="Mobile Screenshot" width="220" style="border-radius:12px;box-shadow:0 2px 12px #0002;" />
+				<br/><sub>Mobile view of the same page</sub>
+			</td>
+		</tr>
+	</table>
+</div>
+
+> _Replace the image paths above with your actual screenshots for a professional showcase!_
 
 ---
 
