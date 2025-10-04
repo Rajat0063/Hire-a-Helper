@@ -34,8 +34,12 @@ app.get('/', (req, res) => {
 // Mount the authentication routes
 app.use('/api/auth', require('./routes/authRoutes'));
 
+
 // Mount the dashboard-related routes
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+
+// Mount chat routes
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 
 // ⭐️ Mount the routes for handling feed tasks
