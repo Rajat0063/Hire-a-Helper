@@ -20,7 +20,7 @@ const AdminDashboard = () => {
         setUsers(usersRes.data);
         setTasks(tasksRes.data);
         setStats(statsRes.data);
-      } catch (err) {
+      } catch {
         // Handle error
       }
       setLoading(false);
