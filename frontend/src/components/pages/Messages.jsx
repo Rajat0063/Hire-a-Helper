@@ -98,10 +98,13 @@ const Messages = () => {
       timestamp: new Date().toISOString(),
     };
     socket.emit("sendMessage", msg);
-    setMessages((prev) => [...prev, { ...msg, self: true }]);
     setInput("");
     try {
-      await axios.post(`${BACKEND_URL}/api/chat/${taskId}/${userId}`, msg);
+      // Send auth token if available
+      const headers = {};
+      const token = localStorage.getItem('token');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      await axios.post(`${BACKEND_URL}/api/chat/${taskId}/${userId}`, msg, { headers });
     } catch (err) {
       // Optionally show error to user
       console.error(err);
