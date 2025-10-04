@@ -31,17 +31,20 @@ const AdminDashboard = () => {
   if (loading) return <div className="p-8 text-center">Loading admin dashboard...</div>;
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="p-8 bg-gradient-to-br from-yellow-50 to-yellow-100 min-h-screen rounded-xl border-2 border-yellow-300 shadow-2xl">
+      <div className="flex items-center mb-8">
+        <span className="text-4xl mr-4">🛡️</span>
+        <h1 className="text-3xl font-extrabold text-yellow-700 tracking-wide drop-shadow">Admin Panel</h1>
+      </div>
       <div className="flex gap-4 mb-6">
-        <button className={`px-4 py-2 rounded ${tab === 'users' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`} onClick={() => setTab('users')}>Users</button>
-        <button className={`px-4 py-2 rounded ${tab === 'tasks' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`} onClick={() => setTab('tasks')}>Tasks</button>
-        <button className={`px-4 py-2 rounded ${tab === 'stats' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`} onClick={() => setTab('stats')}>Analytics</button>
+        <button className={`px-4 py-2 rounded font-semibold ${tab === 'users' ? 'bg-yellow-500 text-white' : 'bg-yellow-200 text-yellow-800'}`} onClick={() => setTab('users')}>Users</button>
+        <button className={`px-4 py-2 rounded font-semibold ${tab === 'tasks' ? 'bg-yellow-500 text-white' : 'bg-yellow-200 text-yellow-800'}`} onClick={() => setTab('tasks')}>Tasks</button>
+        <button className={`px-4 py-2 rounded font-semibold ${tab === 'stats' ? 'bg-yellow-500 text-white' : 'bg-yellow-200 text-yellow-800'}`} onClick={() => setTab('stats')}>Analytics</button>
       </div>
       {tab === 'users' && (
         <div>
-          <h2 className="text-xl font-semibold mb-2">All Users</h2>
-          <table className="min-w-full bg-white border">
+          <h2 className="text-xl font-bold mb-2 text-yellow-700">All Users</h2>
+          <table className="min-w-full bg-white border border-yellow-200 rounded-lg shadow">
             <thead>
               <tr>
                 <th className="border px-2 py-1">Name</th>
@@ -65,8 +68,8 @@ const AdminDashboard = () => {
       )}
       {tab === 'tasks' && (
         <div>
-          <h2 className="text-xl font-semibold mb-2">All Tasks</h2>
-          <table className="min-w-full bg-white border">
+          <h2 className="text-xl font-bold mb-2 text-yellow-700">All Tasks</h2>
+          <table className="min-w-full bg-white border border-yellow-200 rounded-lg shadow">
             <thead>
               <tr>
                 <th className="border px-2 py-1">Title</th>
@@ -88,15 +91,15 @@ const AdminDashboard = () => {
       )}
       {tab === 'stats' && (
         <div>
-          <h2 className="text-xl font-semibold mb-2">Analytics</h2>
+          <h2 className="text-xl font-bold mb-2 text-yellow-700">Analytics</h2>
           <div className="flex gap-8">
-            <div className="bg-blue-100 p-4 rounded shadow">
-              <div className="text-lg font-bold">Users</div>
-              <div className="text-2xl">{stats.userCount}</div>
+            <div className="bg-yellow-200 p-4 rounded shadow">
+              <div className="text-lg font-bold text-yellow-800">Users</div>
+              <div className="text-2xl text-yellow-900">{stats.userCount}</div>
             </div>
-            <div className="bg-green-100 p-4 rounded shadow">
-              <div className="text-lg font-bold">Tasks</div>
-              <div className="text-2xl">{stats.taskCount}</div>
+            <div className="bg-yellow-100 p-4 rounded shadow">
+              <div className="text-lg font-bold text-yellow-800">Tasks</div>
+              <div className="text-2xl text-yellow-900">{stats.taskCount}</div>
             </div>
           </div>
         </div>
