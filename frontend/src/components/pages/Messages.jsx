@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
+
 import { io } from "socket.io-client";
 import axios from "axios";
 
-const socket = io("http://localhost:5000"); // Update with your backend URL if needed
+// Use environment variable for backend URL if available
+const BACKEND_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const socket = io(BACKEND_URL, { autoConnect: false });
 
 const Messages = () => {
   const { taskId, userId } = useParams();
@@ -11,14 +14,16 @@ const Messages = () => {
   const [input, setInput] = useState("");
   const messagesEndRef = useRef(null);
 
+
   useEffect(() => {
-    // Fetch chat history
+    // Fetch chat history from backend
     axios
-      .get(`/api/chat/${taskId}/${userId}`)
+      .get(`${BACKEND_URL}/api/chat/${taskId}/${userId}`)
       .then((res) => setMessages(res.data))
       .catch((err) => console.error(err));
 
-    // Listen for new messages
+    // Connect and join room for real-time updates
+    socket.connect();
     socket.emit("joinRoom", { taskId, userId });
     socket.on("receiveMessage", (msg) => {
       setMessages((prev) => [...prev, msg]);
@@ -26,19 +31,25 @@ const Messages = () => {
     return () => {
       socket.emit("leaveRoom", { taskId, userId });
       socket.off("receiveMessage");
+      socket.disconnect();
     };
+    // eslint-disable-next-line
   }, [taskId, userId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+    // You may want to get the receiverId from context or props
+    // For demo, assume the other user is the task owner or requester
+    // Here, just send userId as sender, and backend should know receiver
     const msg = {
       taskId,
-      userId,
+      userId, // senderId
       text: input,
       timestamp: new Date().toISOString(),
     };
@@ -46,7 +57,12 @@ const Messages = () => {
     setMessages((prev) => [...prev, { ...msg, self: true }]);
     setInput("");
     // Save to DB
-    await axios.post(`/api/chat/${taskId}/${userId}`, msg);
+    try {
+      await axios.post(`${BACKEND_URL}/api/chat/${taskId}/${userId}`, msg);
+    } catch (err) {
+      // Optionally show error to user
+      console.error(err);
+    }
   };
 
   return (
