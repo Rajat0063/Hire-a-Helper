@@ -465,23 +465,6 @@ const DashboardLayout = () => {
                                 console.error('Failed to update localStorage after user-updated socket:', e);
                             }
                         }
-                        // Update all feed tasks and tasksData where userId matches
-                        setFeedTasks(prev => prev.map(t =>
-                          t.userId === updatedUser._id
-                            ? { ...t, user: updatedUser.name, userImage: updatedUser.image || t.userImage }
-                            : t
-                        ));
-                        setTasksData(prev => {
-                          const newData = { ...prev };
-                          ['todo','inProgress','done'].forEach(col => {
-                            newData[col] = newData[col].map(t =>
-                              t.userId === updatedUser._id
-                                ? { ...t, user: updatedUser.name, userImage: updatedUser.image || t.userImage }
-                                : t
-                            );
-                          });
-                          return newData;
-                        });
                     }
                 } catch (err) {
                     console.error('Error handling user-updated socket event:', err);
