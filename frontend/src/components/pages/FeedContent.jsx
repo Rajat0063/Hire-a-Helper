@@ -65,6 +65,7 @@ const FeedContent = () => {
   const activeTasks = Array.isArray(context.feedTasks) ? context.feedTasks : [];
   const feedLoading = context.feedLoading;
   const handleOpenRequestModal = context.handleOpenRequestModal;
+  const handleOpenChatModal = context.handleOpenChatModal;
   const user = context.user;
   const searchQuery = context.searchQuery || '';
   const navigate = useNavigate();
@@ -133,13 +134,24 @@ const FeedContent = () => {
                   <img src={item.userImage} alt={item.user} className="h-8 w-8 rounded-full object-cover" />
                   <span className="text-sm font-semibold text-zinc-700">{item.user}</span>
                 </div>
-                <button 
+                <div className="flex gap-2">
+                  <button 
                     onClick={() => handleOpenRequestModal(item)}
                     className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 ${item.user === (user && user.name) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
                     disabled={item.user === (user && user.name)}
-                >
-                  View Details
-                </button>
+                  >
+                    View Details
+                  </button>
+                  {/* Chat button, only show if not your own task */}
+                  {item.user !== (user && user.name) && (
+                    <button
+                      onClick={() => handleOpenChatModal(item, { _id: item.userId, name: item.user })}
+                      className="px-4 py-2 text-sm font-semibold rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors duration-200"
+                    >
+                      Chat
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
