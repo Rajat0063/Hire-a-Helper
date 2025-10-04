@@ -15,6 +15,9 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => (
                 className="w-full px-4 py-2 pl-10 rounded-full bg-zinc-100 border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
             />
             <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 h-5 w-5" path="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                <div className="absolute left-0 mt-1 w-full text-xs text-zinc-500 pl-10 select-none pointer-events-none">
+                    <span>Search by <b>title</b>, <b>description</b>, <b>location</b>, or <b>type</b></span>
+                </div>
         </div>
 
         {/* Right Side Icons & Profile */}
