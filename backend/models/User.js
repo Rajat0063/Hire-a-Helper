@@ -30,6 +30,17 @@ const userSchema = new mongoose.Schema({
         minlength: 6,
         select: false, // Don't send password back in queries by default
     },
+    // --- ADMIN ROLE FIELD ---
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user',
+    },
+    // --- BLOCKED FIELD ---
+    blocked: {
+        type: Boolean,
+        default: false,
+    },
     // --- FIELDS FOR OTP VERIFICATION ---
     isVerified: {
         type: Boolean,

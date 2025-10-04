@@ -10,6 +10,7 @@ import ResetPasswordPage from './components/pages/ResetPasswordPage';
 
 // --- Auth and Layout Imports ---
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import AdminRoute from './components/auth/AdminRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
 
 // --- Dashboard Content Imports ---
@@ -20,6 +21,7 @@ import RequestsContent from './components/pages/RequestsContent';
 import MyRequestsContent from './components/pages/MyRequestsContent';
 import AddTaskContent from './components/pages/AddTaskContent';
 import SettingsContent from './components/pages/SettingsContent';
+import AdminDashboard from './components/pages/AdminDashboard';
 
 function App() {
   return (
@@ -40,11 +42,9 @@ function App() {
         {/* ============================================= */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
-            
             {/* ⭐️ UPDATED: This now explicitly redirects to the feed route. */}
             {/* This ensures the URL is always `/dashboard/feed` for clarity. */}
             <Route index element={<Navigate to="feed" replace />} />
-            
             {/* Other nested dashboard pages */}
             <Route path="feed" element={<FeedContent />} />
             <Route path="my-tasks" element={<MyTasksContent />} />
@@ -53,6 +53,10 @@ function App() {
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />
           </Route>
+        </Route>
+        {/* Admin dashboard route (admin only) */}
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminDashboard />} />
         </Route>
 
         {/* ============================================= */}
