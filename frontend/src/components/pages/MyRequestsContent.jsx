@@ -1,6 +1,6 @@
 // src/components/pages/MyRequestsContent.jsx
 
-import { useOutletContext } from 'react-router-dom'; // 1. Import the hook
+import { useOutletContext, useNavigate } from 'react-router-dom'; // 1. Import the hook
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Icon } from '../ui/Icon';
@@ -51,6 +51,7 @@ const PLACEHOLDER_IMG = "https://placehold.co/600x300?text=No+Image";
 
 const MyRequestsContent = () => {
   const context = useOutletContext() || {};
+  // useNavigate is now declared only once at the top
   const [myRequests, setMyRequests] = useState(Array.isArray(context.myRequests) ? context.myRequests : []);
 
   // Listen for real-time notification updates and update myRequests status
@@ -94,6 +95,7 @@ const MyRequestsContent = () => {
     return 'bg-gray-100 text-gray-700';
   };
 
+  const navigate = useNavigate();
   return (
     <main className="flex-1 overflow-y-auto bg-zinc-50 p-4 sm:p-6 md:p-8">
       <div className="max-w-3xl mx-auto">
@@ -134,6 +136,15 @@ const MyRequestsContent = () => {
                 <div className="mt-2">
                   <img src={imgSrc} alt="Task" className="rounded-lg w-full object-cover max-h-72 border border-zinc-200" />
                 </div>
+                {/* Message button for accepted requests */}
+                {request.status && request.status.toLowerCase() === 'accepted' && (
+                  <button
+                    className="mt-4 self-end bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                    onClick={() => navigate(`/messages/${request.taskId || request.task_id || request.task || request._id}/${request.taskOwnerId || request.taskOwner || request.ownerId || ''}`)}
+                  >
+                    Message
+                  </button>
+                )}
               </div>
             );
           })}
