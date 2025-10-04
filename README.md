@@ -1,7 +1,11 @@
 
-# 🚀 HIRE-A-HELPER
 
-*Connect, Collaborate, and Get Things Done Effortlessly.*
+<div align="center">
+	<img src="frontend/src/assets/logo%20(2).png" alt="Hire-a-Helper Logo" width="60" style="vertical-align:middle;margin-right:12px;" />
+	<h1 style="display:inline-block;vertical-align:middle;font-size:2.5rem;margin:0;">HIRE-A-HELPER</h1>
+	<br/>
+	<em>Connect, Collaborate, and Get Things Done Effortlessly.</em>
+</div>
 
 ---
 
@@ -36,14 +40,15 @@
 
 ## 📋 Table of Contents
 
-- [Why Hire-a-Helper?](#why-hire-a-helper)
-- [Features](#features)
-- [Getting Started](#getting-started)
-- [Folder Structure](#folder-structure)
-- [Screenshots](#screenshots)
-- [Author](#author)
+- [Why Hire-a-Helper?](#-why-hire-a-helper)
+- [Features](#-features)
+- [Getting Started](#-getting-started)
+- [Folder Structure](#-folder-structure)
+- [Screenshots](#-screenshots)
+- [Author](#-author)
 
 ---
+
 
 ## ❓ Why Hire-a-Helper?
 
@@ -67,6 +72,7 @@
 - **Email Integration:** Password reset and notifications via Nodemailer/SendGrid.
 
 ---
+
 
 ## 🏗️ Technologies & Libraries
 
@@ -97,6 +103,7 @@
 - **PostCSS** & **Autoprefixer** — CSS processing
 
 ---
+
 
 ## 🚀 Getting Started
 
@@ -141,6 +148,7 @@
 
 ---
 
+
 ## 📁 Folder Structure
 
 ```
@@ -169,11 +177,13 @@ Hire-a-Helper/
 
 ---
 
+
 ## 🖼️ Screenshots
 
 > _Add screenshots of your landing page, dashboard, task feed, and modals here for a professional look._
 
 ---
+
 
 ## 👤 Author
 
