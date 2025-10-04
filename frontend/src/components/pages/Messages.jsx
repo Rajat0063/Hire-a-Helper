@@ -128,16 +128,16 @@ const Messages = () => {
         <div className="p-4 border-b border-zinc-100 font-bold text-lg text-zinc-700">Messages</div>
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
-            // If there are no conversations, but the user is on a valid chat route, show a temporary conversation in the sidebar
-            (taskId && userId ? (
+            (taskId && userId && user ? (
               <div
                 key={taskId}
                 className={`px-4 py-3 cursor-pointer hover:bg-indigo-50 flex items-center gap-3 bg-indigo-100`}
                 onClick={() => navigate(`/dashboard/messages/${taskId}/${userId}`)}
               >
-                <img src={'https://placehold.co/40x40'} alt="Task" className="h-10 w-10 rounded-full object-cover border" />
+                {/* Show the other participant's profile image and name */}
+                <img src={userId !== user._id && context?.allUsers?.[userId]?.image ? context.allUsers[userId].image : 'https://placehold.co/40x40'} alt="User" className="h-10 w-10 rounded-full object-cover border" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-zinc-800 truncate">Chat</div>
+                  <div className="font-semibold text-zinc-800 truncate">{userId !== user._id && context?.allUsers?.[userId]?.name ? context.allUsers[userId].name : 'Chat'}</div>
                   <div className="text-xs text-zinc-500 truncate">No messages yet.</div>
                 </div>
               </div>
@@ -170,11 +170,16 @@ const Messages = () => {
           </div>
         )}
         <div className="p-4 border-b border-zinc-100 flex items-center gap-3 bg-white">
+          {/* Show the other participant's profile image and name in the header */}
           <img src={
-            (conversations.find(c => c.taskId === taskId)?.taskImage) || 'https://placehold.co/40x40'
-          } alt="Task" className="h-10 w-10 rounded-full object-cover border" />
+            (conversations.find(c => c.taskId === taskId)?.taskImage) ||
+            (userId !== user._id && context?.allUsers?.[userId]?.image) ||
+            'https://placehold.co/40x40'
+          } alt="User" className="h-10 w-10 rounded-full object-cover border" />
           <div className="font-semibold text-lg text-zinc-800">{
-            (conversations.find(c => c.taskId === taskId)?.taskTitle) || 'Chat'
+            (conversations.find(c => c.taskId === taskId)?.taskTitle) ||
+            (userId !== user._id && context?.allUsers?.[userId]?.name) ||
+            'Chat'
           }</div>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-4 bg-zinc-50">
@@ -186,11 +191,11 @@ const Messages = () => {
             messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`my-2 flex ${msg.self || msg.senderId === user._id ? "justify-end" : "justify-start"}`}
+                className={`my-2 flex ${msg.senderId === user._id || msg.self ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`px-4 py-2 rounded-2xl max-w-lg break-words text-base shadow ${
-                    msg.self || msg.senderId === user._id ? "bg-indigo-600 text-white" : "bg-white text-zinc-800 border border-zinc-200"
+                    msg.senderId === user._id || msg.self ? "bg-indigo-600 text-white" : "bg-white text-zinc-800 border border-zinc-200"
                   }`}
                 >
                   {msg.text}
