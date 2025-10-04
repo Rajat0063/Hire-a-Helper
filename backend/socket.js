@@ -26,6 +26,15 @@ function initSocket(server) {
       // Broadcast to both users in the room
       const room = `${msg.taskId}-${msg.userId}`;
       io.to(room).emit('receiveMessage', msg);
+      // Notify the receiver (task owner) in real time
+      if (msg.receiverId) {
+        io.emit(`chat-notification-${msg.receiverId}`, {
+          taskId: msg.taskId,
+          senderId: msg.userId,
+          text: msg.text,
+          timestamp: msg.timestamp,
+        });
+      }
     });
   });
 }

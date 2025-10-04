@@ -1,4 +1,5 @@
 
+
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useOutletContext, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -17,7 +18,19 @@ const Messages = () => {
   const [input, setInput] = useState("");
   const [conversations, setConversations] = useState([]); // For sidebar
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState("");
   const messagesEndRef = useRef(null);
+  // Listen for chat notification events for this user
+  useEffect(() => {
+    if (!user || !user._id) return;
+    socket.on(`chat-notification-${user._id}`, (data) => {
+      setNotification(data?.message || "New message received!");
+      // Optionally, you could also update conversations/messages here
+    });
+    return () => {
+      socket.off(`chat-notification-${user._id}`);
+    };
+  }, [user]);
 
   // Fetch conversations for sidebar (all tasks with messages for this user)
   useEffect(() => {
@@ -56,9 +69,31 @@ const Messages = () => {
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+    // Find the conversation for this taskId
+    const conversation = conversations.find(c => c.taskId === taskId);
+    // Determine the receiverId: if current user is the task owner, send to the other user; otherwise, send to the task owner
+    let receiverId = "";
+    if (conversation) {
+      if (conversation.taskOwnerId && conversation.taskOwnerId !== user._id) {
+        receiverId = conversation.taskOwnerId;
+      } else if (conversation.otherUserId && conversation.otherUserId !== user._id) {
+        receiverId = conversation.otherUserId;
+      } else if (conversation.taskOwner && conversation.taskOwner !== user._id) {
+        receiverId = conversation.taskOwner;
+      } else if (conversation.ownerId && conversation.ownerId !== user._id) {
+        receiverId = conversation.ownerId;
+      } else if (conversation.userId && conversation.userId !== user._id) {
+        receiverId = conversation.userId;
+      }
+    }
+    // Fallback: if not found, use userId from params (for compatibility)
+    if (!receiverId) {
+      receiverId = userId;
+    }
     const msg = {
       taskId,
       userId,
+      receiverId,
       text: input,
       timestamp: new Date().toISOString(),
     };
@@ -113,6 +148,12 @@ const Messages = () => {
       </aside>
       {/* Chat area */}
       <section className="flex-1 flex flex-col h-full">
+        {/* Notification banner */}
+        {notification && (
+          <div className="bg-green-500 text-white text-center py-2 px-4 font-semibold animate-fade-in-down z-50">
+            {notification}
+          </div>
+        )}
         <div className="p-4 border-b border-zinc-100 flex items-center gap-3 bg-white">
           <img src={conversations.find(c => c.taskId === taskId)?.taskImage || 'https://placehold.co/40x40'} alt="Task" className="h-10 w-10 rounded-full object-cover border" />
           <div className="font-semibold text-lg text-zinc-800">{conversations.find(c => c.taskId === taskId)?.taskTitle || 'Chat'}</div>
