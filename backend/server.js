@@ -19,9 +19,17 @@ const { initSocket } = require('./socket');
 const server = http.createServer(app);
 
 // --- Middleware Setup ---
-// Allow CORS from frontend domain specified in environment variable
+// Allow CORS from frontend domain specified in environment variable (for cookies)
 const allowedOrigin = process.env.FRONTEND_URL || '*';
-app.use(cors({ origin: allowedOrigin, credentials: true }));
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (origin === allowedOrigin) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // --- API Routes ---
