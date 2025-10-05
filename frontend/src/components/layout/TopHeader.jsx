@@ -57,3 +57,4 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
 };
 
 export default TopHeader;
+
