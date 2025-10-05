@@ -1,8 +1,10 @@
 
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import socket from '../../utils/socket';
 import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
+import SkeletonLoader from '../ui/SkeletonLoader';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -77,7 +79,7 @@ export default function UsersAdmin() {
       .catch(() => alert('Delete failed'));
   };
 
-  if (loading) return <div>Loading users...</div>;
+  if (loading) return <SkeletonLoader count={5} />;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (

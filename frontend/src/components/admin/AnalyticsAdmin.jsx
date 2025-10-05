@@ -1,8 +1,10 @@
 
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import socket from '../../utils/socket';
 import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
+import SkeletonLoader from '../ui/SkeletonLoader';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -34,7 +36,7 @@ export default function AnalyticsAdmin() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div>Loading analytics...</div>;
+  if (loading) return <SkeletonLoader count={2} />;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
