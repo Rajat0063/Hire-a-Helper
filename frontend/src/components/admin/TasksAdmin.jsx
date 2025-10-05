@@ -10,7 +10,11 @@ export default function TasksAdmin() {
 
   useEffect(() => {
     setLoading(true);
-  axios.get(`${API}/api/admin/tasks`, { withCredentials: true })
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.get(`${API}/api/admin/tasks`, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    })
       .then(res => setTasks(res.data))
       .catch(() => setError('Failed to load tasks'))
       .finally(() => setLoading(false));
@@ -18,7 +22,11 @@ export default function TasksAdmin() {
 
   const handleDelete = id => {
     if (!window.confirm('Delete this task?')) return;
-  axios.delete(`${API}/api/admin/tasks/${id}`, { withCredentials: true })
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.delete(`${API}/api/admin/tasks/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    })
       .then(() => setTasks(tasks => tasks.filter(t => t._id !== id)))
       .catch(() => alert('Delete failed'));
   };

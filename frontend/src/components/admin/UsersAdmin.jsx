@@ -10,21 +10,33 @@ export default function UsersAdmin() {
 
   useEffect(() => {
     setLoading(true);
-  axios.get(`${API}/api/admin/users`, { withCredentials: true })
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.get(`${API}/api/admin/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    })
       .then(res => setUsers(res.data))
-  .catch(() => setError('Failed to load users'))
+      .catch(() => setError('Failed to load users'))
       .finally(() => setLoading(false));
   }, []);
 
   const handleBlock = (id, block) => {
-  axios.patch(`${API}/api/admin/users/${id}/${block ? 'block' : 'unblock'}`, {}, { withCredentials: true })
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.patch(`${API}/api/admin/users/${id}/${block ? 'block' : 'unblock'}`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    })
       .then(res => setUsers(users => users.map(u => u._id === id ? res.data : u)))
       .catch(() => alert('Action failed'));
   };
 
   const handleDelete = id => {
     if (!window.confirm('Delete this user?')) return;
-  axios.delete(`${API}/api/admin/users/${id}`, { withCredentials: true })
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.delete(`${API}/api/admin/users/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    })
       .then(() => setUsers(users => users.filter(u => u._id !== id)))
       .catch(() => alert('Delete failed'));
   };

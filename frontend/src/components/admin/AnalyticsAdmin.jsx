@@ -10,7 +10,11 @@ export default function AnalyticsAdmin() {
 
   useEffect(() => {
     setLoading(true);
-  axios.get(`${API}/api/admin/analytics`, { withCredentials: true })
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.get(`${API}/api/admin/analytics`, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    })
       .then(res => setData(res.data))
       .catch(() => setError('Failed to load analytics'))
       .finally(() => setLoading(false));
