@@ -49,9 +49,9 @@ export default function AdminDashboard() {
           {tab === 'disputes' && <DisputesAdmin />}
           {tab === 'analytics' && <AnalyticsAdmin />}
         </div>
-        {/* CORS/API error message for clarity */}
-        <div className="mt-4 text-center text-xs text-red-500">
-          If you see "Failed to load users" or similar, check your backend/API and CORS settings.
+        {/* Friendly admin info message */}
+        <div className="mt-4 text-center text-sm text-indigo-700 bg-indigo-50 rounded-lg px-4 py-2 shadow-sm font-medium">
+          Welcome, Admin! Manage users, tasks, and analytics in real time. <span className="text-indigo-400">All changes are instantly reflected for your team.</span>
         </div>
       </div>
     </div>
