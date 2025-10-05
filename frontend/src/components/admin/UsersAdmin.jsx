@@ -1,13 +1,42 @@
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import socket from '../../utils/socket';
+import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
 
 const API = import.meta.env.VITE_API_URL || '';
+
 
 export default function UsersAdmin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Connect socket on mount
+  useEffect(() => {
+    if (!socket.connected) socket.connect();
+    return () => {
+      socket.off(ADMIN_EVENTS.USER_UPDATED);
+      socket.off(ADMIN_EVENTS.USER_DELETED);
+      // socket.disconnect(); // Don't disconnect globally, only if you want to close all sockets
+    };
+  }, []);
+
+  // Listen for real-time user updates
+  useEffect(() => {
+    socket.on(ADMIN_EVENTS.USER_UPDATED, updatedUser => {
+      setUsers(users => users.map(u => u._id === updatedUser._id ? updatedUser : u));
+    });
+    socket.on(ADMIN_EVENTS.USER_DELETED, deletedUserId => {
+      setUsers(users => users.filter(u => u._id !== deletedUserId));
+    });
+    return () => {
+      socket.off(ADMIN_EVENTS.USER_UPDATED);
+      socket.off(ADMIN_EVENTS.USER_DELETED);
+    };
+  }, []);
+
+  // Initial fetch
   useEffect(() => {
     setLoading(true);
     const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
@@ -20,13 +49,17 @@ export default function UsersAdmin() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Optimistic UI update and emit socket event
   const handleBlock = (id, block) => {
     const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
     axios.patch(`${API}/api/admin/users/${id}/${block ? 'block' : 'unblock'}`, {}, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
-      .then(res => setUsers(users => users.map(u => u._id === id ? res.data : u)))
+      .then(res => {
+        setUsers(users => users.map(u => u._id === id ? res.data : u));
+        socket.emit(ADMIN_EVENTS.USER_UPDATED, res.data); // Notify all admins
+      })
       .catch(() => alert('Action failed'));
   };
 
@@ -37,7 +70,10 @@ export default function UsersAdmin() {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
-      .then(() => setUsers(users => users.filter(u => u._id !== id)))
+      .then(() => {
+        setUsers(users => users.filter(u => u._id !== id));
+        socket.emit(ADMIN_EVENTS.USER_DELETED, id); // Notify all admins
+      })
       .catch(() => alert('Delete failed'));
   };
 

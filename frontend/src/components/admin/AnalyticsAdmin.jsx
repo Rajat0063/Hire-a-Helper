@@ -1,12 +1,26 @@
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import socket from '../../utils/socket';
+import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
 
 const API = import.meta.env.VITE_API_URL || '';
+
 
 export default function AnalyticsAdmin() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!socket.connected) socket.connect();
+    socket.on(ADMIN_EVENTS.ANALYTICS_UPDATED, newAnalytics => {
+      setData(newAnalytics);
+    });
+    return () => {
+      socket.off(ADMIN_EVENTS.ANALYTICS_UPDATED);
+    };
+  }, []);
 
   useEffect(() => {
     setLoading(true);

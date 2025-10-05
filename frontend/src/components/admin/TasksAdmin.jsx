@@ -1,12 +1,26 @@
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import socket from '../../utils/socket';
+import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
 
 const API = import.meta.env.VITE_API_URL || '';
+
 
 export default function TasksAdmin() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!socket.connected) socket.connect();
+    socket.on(ADMIN_EVENTS.TASK_DELETED, deletedTaskId => {
+      setTasks(tasks => tasks.filter(t => t._id !== deletedTaskId));
+    });
+    return () => {
+      socket.off(ADMIN_EVENTS.TASK_DELETED);
+    };
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -27,7 +41,10 @@ export default function TasksAdmin() {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
-      .then(() => setTasks(tasks => tasks.filter(t => t._id !== id)))
+      .then(() => {
+        setTasks(tasks => tasks.filter(t => t._id !== id));
+        socket.emit(ADMIN_EVENTS.TASK_DELETED, id);
+      })
       .catch(() => alert('Delete failed'));
   };
 
