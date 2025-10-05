@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const API = import.meta.env.VITE_API_URL || '';
+
 export default function AnalyticsAdmin() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -8,7 +10,7 @@ export default function AnalyticsAdmin() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get('/api/admin/analytics', { withCredentials: true })
+  axios.get(`${API}/api/admin/analytics`, { withCredentials: true })
       .then(res => setData(res.data))
       .catch(() => setError('Failed to load analytics'))
       .finally(() => setLoading(false));

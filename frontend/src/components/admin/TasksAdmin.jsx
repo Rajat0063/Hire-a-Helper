@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const API = import.meta.env.VITE_API_URL || '';
+
 export default function TasksAdmin() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -8,7 +10,7 @@ export default function TasksAdmin() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get('/api/admin/tasks', { withCredentials: true })
+  axios.get(`${API}/api/admin/tasks`, { withCredentials: true })
       .then(res => setTasks(res.data))
       .catch(() => setError('Failed to load tasks'))
       .finally(() => setLoading(false));
@@ -16,7 +18,7 @@ export default function TasksAdmin() {
 
   const handleDelete = id => {
     if (!window.confirm('Delete this task?')) return;
-    axios.delete(`/api/admin/tasks/${id}`, { withCredentials: true })
+  axios.delete(`${API}/api/admin/tasks/${id}`, { withCredentials: true })
       .then(() => setTasks(tasks => tasks.filter(t => t._id !== id)))
       .catch(() => alert('Delete failed'));
   };

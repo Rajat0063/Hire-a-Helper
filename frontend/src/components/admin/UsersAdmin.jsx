@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const API = import.meta.env.VITE_API_URL || '';
+
 export default function UsersAdmin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -8,21 +10,21 @@ export default function UsersAdmin() {
 
   useEffect(() => {
     setLoading(true);
-    axios.get('/api/admin/users', { withCredentials: true })
+  axios.get(`${API}/api/admin/users`, { withCredentials: true })
       .then(res => setUsers(res.data))
   .catch(() => setError('Failed to load users'))
       .finally(() => setLoading(false));
   }, []);
 
   const handleBlock = (id, block) => {
-    axios.patch(`/api/admin/users/${id}/${block ? 'block' : 'unblock'}`, {}, { withCredentials: true })
+  axios.patch(`${API}/api/admin/users/${id}/${block ? 'block' : 'unblock'}`, {}, { withCredentials: true })
       .then(res => setUsers(users => users.map(u => u._id === id ? res.data : u)))
       .catch(() => alert('Action failed'));
   };
 
   const handleDelete = id => {
     if (!window.confirm('Delete this user?')) return;
-    axios.delete(`/api/admin/users/${id}`, { withCredentials: true })
+  axios.delete(`${API}/api/admin/users/${id}`, { withCredentials: true })
       .then(() => setUsers(users => users.filter(u => u._id !== id)))
       .catch(() => alert('Delete failed'));
   };
