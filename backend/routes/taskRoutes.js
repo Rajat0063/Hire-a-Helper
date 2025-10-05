@@ -1,9 +1,12 @@
 // routes/taskRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/taskModel'); // Make sure the path is correct
 const AdminAction = require('../models/adminActionModel');
 const { getIO } = require('../socket');
+const { protect } = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 
 // @desc    Update a task
 // @route   PUT /api/tasks/:id
@@ -31,12 +34,12 @@ router.put('/:id', async (req, res) => {
 
 // @desc    Delete a task
 // @route   DELETE /api/tasks/:id
-// @access  Public (should be protected later)
-router.delete('/:id', async (req, res) => {
+// @access  Admin
+router.delete('/:id', protect, adminMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    // Optionally, get adminId from req.user if using auth middleware
-    const adminId = req.user ? req.user._id : null;
+  // Get adminId from req.admin (set by adminMiddleware)
+  const adminId = req.admin ? req.admin._id : null;
     const deletedTask = await Task.findByIdAndDelete(id);
     if (!deletedTask) {
       return res.status(404).json({ message: 'Task not found' });
