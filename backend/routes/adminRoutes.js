@@ -1,5 +1,3 @@
-// TEST: Route to manually create a test admin action
-router.post('/test-admin-action', adminController.testAdminAction);
 const express = require('express');
 const adminMiddleware = require('../middleware/adminMiddleware');
 const { protect } = require('../middleware/authMiddleware');

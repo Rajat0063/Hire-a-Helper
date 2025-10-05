@@ -3,7 +3,7 @@ const User = require('../models/User');
 
 const adminMiddleware = async (req, res, next) => {
   try {
-    const userId = req.user && req.user.id;
+  const userId = req.user && (req.user._id || req.user.id);
     if (!userId) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
