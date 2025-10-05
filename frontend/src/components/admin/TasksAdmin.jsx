@@ -42,8 +42,11 @@ export default function TasksAdmin() {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
+      .then(() => {
+        setTasks(tasks => tasks.filter(t => t._id !== id)); // Remove from UI immediately
+      })
       .catch(() => alert('Delete failed'));
-    // UI will update via socket event
+    // UI will also update via socket event for other admins
   };
 
   if (loading) return <div>Loading tasks...</div>;
