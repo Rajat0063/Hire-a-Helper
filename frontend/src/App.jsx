@@ -9,8 +9,11 @@ import ForgotPasswordPage from './components/pages/ForgotPasswordPage';
 import ResetPasswordPage from './components/pages/ResetPasswordPage';
 
 // --- Auth and Layout Imports ---
+
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import DashboardLayout from './components/layout/DashboardLayout';
+import AdminDashboard from './components/admin/AdminDashboard';
+import AdminRoute from './components/auth/AdminRoute';
 
 // --- Dashboard Content Imports ---
 import FeedContent from './components/pages/FeedContent';
@@ -35,17 +38,13 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
+
         {/* ============================================= */}
         {/* PROTECTED ROUTES                              */}
         {/* ============================================= */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
-            
-            {/* ⭐️ UPDATED: This now explicitly redirects to the feed route. */}
-            {/* This ensures the URL is always `/dashboard/feed` for clarity. */}
             <Route index element={<Navigate to="feed" replace />} />
-            
-            {/* Other nested dashboard pages */}
             <Route path="feed" element={<FeedContent />} />
             <Route path="my-tasks" element={<MyTasksContent />} />
             <Route path="requests" element={<RequestsContent />} />
@@ -53,6 +52,12 @@ function App() {
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />
           </Route>
+          {/* Admin dashboard route (protected, only visible to admins) */}
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } />
         </Route>
 
         {/* ============================================= */}

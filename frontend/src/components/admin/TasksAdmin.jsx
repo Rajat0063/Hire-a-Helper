@@ -1,0 +1,59 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+export default function TasksAdmin() {
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    axios.get('/api/admin/tasks', { withCredentials: true })
+      .then(res => setTasks(res.data))
+      .catch(() => setError('Failed to load tasks'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleDelete = id => {
+    if (!window.confirm('Delete this task?')) return;
+    axios.delete(`/api/admin/tasks/${id}`, { withCredentials: true })
+      .then(() => setTasks(tasks => tasks.filter(t => t._id !== id)))
+      .catch(() => alert('Delete failed'));
+  };
+
+  if (loading) return <div>Loading tasks...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+
+  return (
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Tasks</h2>
+      <table className="w-full border">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-2">Title</th>
+            <th className="p-2">Description</th>
+            <th className="p-2">User</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tasks.map(t => (
+            <tr key={t._id} className="border-t">
+              <td className="p-2">{t.title}</td>
+              <td className="p-2">{t.description}</td>
+              <td className="p-2">{t.userId ? t.userId.name || t.userId.email : '-'}</td>
+              <td className="p-2">
+                <button
+                  className="px-2 py-1 rounded bg-red-500 text-white"
+                  onClick={() => handleDelete(t._id)}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
