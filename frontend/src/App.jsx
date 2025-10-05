@@ -52,13 +52,13 @@ function App() {
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />
           </Route>
-          {/* Admin dashboard route (protected, only visible to admins) */}
-          <Route path="/admin" element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          } />
         </Route>
+        {/* Admin dashboard route (protected, only visible to admins) */}
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        } />
 
         {/* ============================================= */}
         {/* FALLBACK ROUTE                                */}
