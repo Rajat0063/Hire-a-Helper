@@ -67,10 +67,11 @@ const DashboardLayout = () => {
     const [requests, setRequests] = useState([]);
     const [myRequests, setMyRequests] = useState([]);
     const [requestCount, setRequestCount] = useState(0);
-    // Force user to null for skeleton loader testing
-    const [user, setUser] = useState(null);
-    // Uncomment the next line to always show the skeleton loader for testing
-    // user = null;
+    // Initialize user from localStorage
+    const [user, setUser] = useState(() => {
+        const storedUserInfo = localStorage.getItem('userInfo');
+        return storedUserInfo ? JSON.parse(storedUserInfo) : null;
+    });
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
     // Notification bar state
