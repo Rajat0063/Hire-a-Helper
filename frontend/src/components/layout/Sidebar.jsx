@@ -39,11 +39,13 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                                 {item.icon}
                                 {isSidebarOpen && <span className="ml-3">{item.name}</span>}
                             </div>
+                            
                             {item.count > 0 && isSidebarOpen && (
                                 <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-indigo-600' : 'bg-red-500 text-white'}`}>
                                     {item.count}
                                 </span>
                             )}
+
                             {!isSidebarOpen && (
                                 <span className="absolute left-full rounded-md px-2 py-1 ml-6 bg-indigo-100 text-indigo-800 text-sm invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0">
                                     {item.name}

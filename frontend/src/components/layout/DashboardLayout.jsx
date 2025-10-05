@@ -67,11 +67,10 @@ const DashboardLayout = () => {
     const [requests, setRequests] = useState([]);
     const [myRequests, setMyRequests] = useState([]);
     const [requestCount, setRequestCount] = useState(0);
-    // Initialize user from localStorage
-    const [user, setUser] = useState(() => {
-        const storedUserInfo = localStorage.getItem('userInfo');
-        return storedUserInfo ? JSON.parse(storedUserInfo) : null;
-    });
+    // Force user to null for skeleton loader testing
+    const [user, setUser] = useState(null);
+    // Uncomment the next line to always show the skeleton loader for testing
+    // user = null;
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
     // Notification bar state
@@ -608,7 +607,7 @@ const DashboardLayout = () => {
         { name: 'My Requests', path: 'my-requests', icon: <Icon className="h-5 w-5" path="M22 2l-7 20-4-9-9-4 20-7z" />, count: null },
         { name: 'Add Task', path: 'add-task', icon: <AddTaskIcon className="h-5 w-5" />, count: null },
         { name: 'Settings', path: 'settings', icon: <Icon className="h-5 w-5" path="M12 4.5c-4.142 0-7.5 3.358-7.5 7.5s3.358 7.5 7.5 7.5 7.5-3.358 7.5-7.5-3.358-7.5-7.5-7.5zm0 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11zm0-9a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />, count: null },
-         ...(user && user.isAdmin ? [{ name: 'Admin', path: 'admin', icon: <Icon className="h-5 w-5" path="M3 3h18v18H3V3zm2 2v14h14V5H5zm4 4h6v6H9V9z" />, count: null }] : []),
+         ...(user && user.isAdmin ? [{ name: 'Admin', path: '/admin', icon: <Icon className="h-5 w-5" path="M3 3h18v18H3V3zm2 2v14h14V5H5zm4 4h6v6H9V9z" />, count: null }] : []),
     ];
 
     if (!user) {
