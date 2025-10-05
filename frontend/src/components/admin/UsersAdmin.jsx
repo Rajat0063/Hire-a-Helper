@@ -80,6 +80,7 @@ export default function UsersAdmin() {
   };
 
   if (loading) return <SkeletonLoader count={5} />;
+  if (loading) return <SkeletonLoader rows={5} cols={5} headers={["Name", "Email", "Admin", "Blocked", "Actions"]} />;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (

@@ -52,6 +52,7 @@ export default function TasksAdmin() {
   };
 
   if (loading) return <SkeletonLoader count={5} />;
+  if (loading) return <SkeletonLoader rows={5} cols={4} headers={["Title", "Description", "User", "Actions"]} />;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (

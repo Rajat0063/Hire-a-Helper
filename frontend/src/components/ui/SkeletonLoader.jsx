@@ -3,16 +3,30 @@ import React from 'react';
 
 
 
-// Users/Tasks tab: skeleton row styled like table row with rounded bg and spacing
-const AdminTableSkeleton = ({ rows = 5, cols = 5 }) => (
-  <div className="space-y-2">
-    {Array.from({ length: rows }).map((_, i) => (
-      <div key={i} className="flex items-center bg-white rounded-lg shadow-sm px-2 py-3 gap-2 animate-pulse">
-        {Array.from({ length: cols }).map((_, j) => (
-          <div key={j} className="h-4 bg-gray-200 rounded w-full mx-1" style={{ flex: 1 }} />
+const AdminTableSkeleton = ({ rows = 5, cols = 5, headers = [] }) => (
+  <div className="overflow-x-auto">
+    <table className="w-full border rounded-lg bg-white animate-pulse">
+      {headers.length > 0 && (
+        <thead>
+          <tr className="bg-gray-100">
+            {headers.map((header, i) => (
+              <th key={i} className="p-2 text-left font-semibold text-gray-500">{header}</th>
+            ))}
+          </tr>
+        </thead>
+      )}
+      <tbody>
+        {Array.from({ length: rows }).map((_, i) => (
+          <tr key={i} className="border-t">
+            {Array.from({ length: cols }).map((_, j) => (
+              <td key={j} className="p-2">
+                <div className="h-4 bg-gray-200 rounded w-full" />
+              </td>
+            ))}
+          </tr>
         ))}
-      </div>
-    ))}
+      </tbody>
+    </table>
   </div>
 );
 
