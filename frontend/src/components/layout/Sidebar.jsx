@@ -28,7 +28,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
             {navItems.map((item) => (
                 <NavLink
                     key={item.name}
-                    to={item.absolute ? item.path : `/dashboard/${item.path}`}
+                    to={`/dashboard/${item.path}`}
                     className={({ isActive }) => `w-full flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 group relative ${
                         isActive ? 'bg-indigo-600 text-white shadow-lg' : 'text-zinc-600 hover:bg-zinc-100'
                     } ${!isSidebarOpen && 'justify-center'}`}

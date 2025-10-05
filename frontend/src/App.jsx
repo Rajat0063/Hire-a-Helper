@@ -51,13 +51,13 @@ function App() {
             <Route path="my-requests" element={<MyRequestsContent />} />
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />
+            {/* Admin dashboard route (protected, only visible to admins) */}
+            <Route path="admin" element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } />
           </Route>
-          {/* Admin dashboard route (protected, only visible to admins) */}
-          <Route path="/admin" element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          } />
         </Route>
 
         {/* ============================================= */}
