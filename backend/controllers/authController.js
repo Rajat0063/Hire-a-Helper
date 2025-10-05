@@ -265,6 +265,7 @@ const loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 image: user.image,
+                isAdmin: user.isAdmin,
                 token: generateToken(user._id),
             });
         } else {

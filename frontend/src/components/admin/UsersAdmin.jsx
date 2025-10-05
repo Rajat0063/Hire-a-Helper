@@ -10,7 +10,7 @@ export default function UsersAdmin() {
     setLoading(true);
     axios.get('/api/admin/users', { withCredentials: true })
       .then(res => setUsers(res.data))
-      .catch(err => setError('Failed to load users'))
+  .catch(() => setError('Failed to load users'))
       .finally(() => setLoading(false));
   }, []);
 
