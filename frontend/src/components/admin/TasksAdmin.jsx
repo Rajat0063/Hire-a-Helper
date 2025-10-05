@@ -14,11 +14,12 @@ export default function TasksAdmin() {
 
   useEffect(() => {
     if (!socket.connected) socket.connect();
-    socket.on(ADMIN_EVENTS.TASK_DELETED, deletedTaskId => {
+    // Listen for new admin:task-deleted event
+    socket.on('admin:task-deleted', deletedTaskId => {
       setTasks(tasks => tasks.filter(t => t._id !== deletedTaskId));
     });
     return () => {
-      socket.off(ADMIN_EVENTS.TASK_DELETED);
+      socket.off('admin:task-deleted');
     };
   }, []);
 
@@ -42,10 +43,10 @@ export default function TasksAdmin() {
       withCredentials: true
     })
       .then(() => {
-        setTasks(tasks => tasks.filter(t => t._id !== id));
-        socket.emit(ADMIN_EVENTS.TASK_DELETED, id);
+        setTasks(tasks => tasks.filter(t => t._id !== id)); // Remove from UI immediately
       })
       .catch(() => alert('Delete failed'));
+    // UI will also update via socket event for other admins
   };
 
   if (loading) return <div>Loading tasks...</div>;
