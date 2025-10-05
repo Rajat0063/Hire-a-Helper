@@ -1,23 +1,25 @@
 const express = require('express');
 const adminMiddleware = require('../middleware/adminMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 const adminController = require('../controllers/adminController');
 const router = express.Router();
 
+
 // User management
-router.get('/users', adminMiddleware, adminController.getUsers);
-router.patch('/users/:id/block', adminMiddleware, adminController.blockUser);
-router.patch('/users/:id/unblock', adminMiddleware, adminController.unblockUser);
-router.delete('/users/:id', adminMiddleware, adminController.deleteUser);
+router.get('/users', protect, adminMiddleware, adminController.getUsers);
+router.patch('/users/:id/block', protect, adminMiddleware, adminController.blockUser);
+router.patch('/users/:id/unblock', protect, adminMiddleware, adminController.unblockUser);
+router.delete('/users/:id', protect, adminMiddleware, adminController.deleteUser);
 
 // Task management
-router.get('/tasks', adminMiddleware, adminController.getTasks);
-router.delete('/tasks/:id', adminMiddleware, adminController.deleteTask);
+router.get('/tasks', protect, adminMiddleware, adminController.getTasks);
+router.delete('/tasks/:id', protect, adminMiddleware, adminController.deleteTask);
 
 // Dispute management
-router.get('/disputes', adminMiddleware, adminController.getDisputes);
-router.patch('/disputes/:id/resolve', adminMiddleware, adminController.resolveDispute);
+router.get('/disputes', protect, adminMiddleware, adminController.getDisputes);
+router.patch('/disputes/:id/resolve', protect, adminMiddleware, adminController.resolveDispute);
 
 // Analytics
-router.get('/analytics', adminMiddleware, adminController.getAnalytics);
+router.get('/analytics', protect, adminMiddleware, adminController.getAnalytics);
 
 module.exports = router;
