@@ -5,6 +5,23 @@ const AdminAction = require('../models/adminActionModel');
 // const Dispute = require('../models/disputeModel');
 
 const adminController = {
+  // TEST: Create a test admin action manually
+  testAdminAction: async (req, res) => {
+    try {
+      // Use any valid admin and target ObjectId from your DB, or fallback to random ones for test
+      const testAction = await AdminAction.create({
+        adminId: req.body.adminId || '652e0e0e0e0e0e0e0e0e0e0e',
+        actionType: 'test_action',
+        targetId: req.body.targetId || '652e0e0e0e0e0e0e0e0e0e0f',
+        targetType: 'User',
+        notes: 'Test admin action created manually.'
+      });
+      res.json({ message: 'Test admin action created', testAction });
+    } catch (err) {
+      console.error('Error creating test admin action:', err);
+      res.status(500).json({ message: 'Failed to create test admin action', error: err.message });
+    }
+  },
   // USERS
   getUsers: async (req, res) => {
     const users = await User.find({});
