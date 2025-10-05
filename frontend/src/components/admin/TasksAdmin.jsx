@@ -45,9 +45,16 @@ export default function TasksAdmin() {
       withCredentials: true
     })
       .then(() => {
-        setTasks(tasks => tasks.filter(t => t._id !== id)); // Remove from UI immediately
+        setTasks(tasks => tasks.filter(t => t._id !== id));
       })
-      .catch(() => alert('Delete failed'));
+      .catch(() => {
+        // Only show error if the task is still present (not already removed by real-time update)
+        setTasks(tasks => {
+          const stillExists = tasks.some(t => t._id === id);
+          if (stillExists) alert('Delete failed');
+          return tasks;
+        });
+      });
     // UI will also update via socket event for other admins
   };
 
