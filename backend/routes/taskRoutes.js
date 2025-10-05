@@ -1,8 +1,8 @@
-
 // routes/taskRoutes.js
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/taskModel'); // Make sure the path is correct
+const AdminAction = require('../models/adminActionModel');
 const { getIO } = require('../socket');
 
 // @desc    Update a task
@@ -35,13 +35,25 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    // Optionally, get adminId from req.user if using auth middleware
+    const adminId = req.user ? req.user._id : null;
     const deletedTask = await Task.findByIdAndDelete(id);
     if (!deletedTask) {
       return res.status(404).json({ message: 'Task not found' });
     }
-    // Emit socket event for task deletion
+    // Log admin action
+    if (adminId) {
+      await AdminAction.create({
+        adminId,
+        actionType: 'delete_task',
+        targetId: id,
+        targetType: 'Task',
+        notes: `Task deleted by admin`,
+      });
+    }
+    // Emit socket event for task deletion (real-time)
     try {
-      getIO().emit('task:delete', { _id: id });
+      getIO().emit('admin:task-deleted', id);
     } catch (e) {
       console.warn('Socket.io not initialized:', e.message);
     }
