@@ -1,4 +1,6 @@
-// TEMP: Test route to manually create an admin action
+// --- API Routes ---
+
+// TEMP: Test route to manually create an admin action (must be after app is initialized)
 app.post('/api/test-admin-action', async (req, res) => {
   try {
     const AdminAction = require('./models/adminActionModel');
