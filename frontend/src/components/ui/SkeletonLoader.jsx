@@ -1,35 +1,43 @@
 
 import React from 'react';
 
-// Professional skeleton card with shimmer effect
-const SkeletonCard = ({ className = '' }) => (
-  <div className={`relative overflow-hidden rounded-xl bg-white shadow p-4 flex flex-col gap-4 min-h-[160px] ${className}`}>
-    {/* Shimmer overlay */}
-    <div className="absolute inset-0 z-0 bg-gradient-to-r from-transparent via-gray-200/60 to-transparent animate-shimmer" />
-    <div className="flex items-center gap-3 z-10">
-      <div className="h-10 w-10 rounded-full bg-gray-200" />
-      <div className="flex-1 space-y-2">
-        <div className="h-4 w-1/3 bg-gray-200 rounded" />
-        <div className="h-3 w-1/4 bg-gray-200 rounded" />
-      </div>
-    </div>
-    <div className="h-4 w-2/3 bg-gray-200 rounded z-10" />
-    <div className="h-3 w-full bg-gray-200 rounded z-10" />
-    <div className="h-3 w-5/6 bg-gray-200 rounded z-10" />
-    <div className="flex gap-2 mt-2 z-10">
-      <div className="h-8 w-20 bg-gray-200 rounded" />
-      <div className="h-8 w-20 bg-gray-200 rounded" />
-    </div>
-  </div>
-);
 
-// Main SkeletonLoader for lists
-const SkeletonLoader = ({ count = 3, className = '' }) => (
-  <div className={`space-y-6 ${className}`}>
-    {Array.from({ length: count }).map((_, i) => (
-      <SkeletonCard key={i} />
+// Table-style skeleton loader for admin dashboard
+const SkeletonTableRow = ({ cols = 5 }) => (
+  <tr>
+    {Array.from({ length: cols }).map((_, i) => (
+      <td key={i} className="px-2 py-3">
+        <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
+      </td>
     ))}
+  </tr>
+);
+
+const SkeletonTable = ({ rows = 5, cols = 5, className = '' }) => (
+  <table className={`w-full ${className}`}>
+    <tbody>
+      {Array.from({ length: rows }).map((_, i) => (
+        <SkeletonTableRow key={i} cols={cols} />
+      ))}
+    </tbody>
+  </table>
+);
+
+// Analytics-style skeleton
+const SkeletonAnalytics = () => (
+  <div className="flex gap-8">
+    <div className="bg-blue-100 p-4 rounded shadow w-32 h-20 flex flex-col justify-center items-center animate-pulse">
+      <div className="h-6 w-10 bg-blue-200 rounded mb-2" />
+      <div className="h-3 w-14 bg-blue-200 rounded" />
+    </div>
+    <div className="bg-green-100 p-4 rounded shadow w-32 h-20 flex flex-col justify-center items-center animate-pulse">
+      <div className="h-6 w-10 bg-green-200 rounded mb-2" />
+      <div className="h-3 w-14 bg-green-200 rounded" />
+    </div>
   </div>
 );
 
-export default SkeletonLoader;
+export default function SkeletonLoader({ type = 'table', rows = 5, cols = 5, ...props }) {
+  if (type === 'analytics') return <SkeletonAnalytics />;
+  return <SkeletonTable rows={rows} cols={cols} {...props} />;
+}
