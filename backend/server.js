@@ -1,23 +1,3 @@
-// --- API Routes ---
-
-// TEMP: Test route to manually create an admin action (must be after app is initialized)
-app.post('/api/test-admin-action', async (req, res) => {
-  try {
-    const AdminAction = require('./models/adminActionModel');
-    // Use a hardcoded ObjectId for adminId and targetId for testing
-    const testAction = await AdminAction.create({
-      adminId: req.body.adminId || '000000000000000000000001',
-      actionType: req.body.actionType || 'test_action',
-      targetId: req.body.targetId || '000000000000000000000002',
-      targetType: req.body.targetType || 'User',
-      notes: req.body.notes || 'Test admin action'
-    });
-    res.json({ success: true, data: testAction });
-  } catch (err) {
-    console.error('Test admin action error:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
 // server.js
 
 // ✅ Using CommonJS require syntax, which you are currently using.
