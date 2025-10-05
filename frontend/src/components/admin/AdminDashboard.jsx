@@ -18,8 +18,8 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-blue-50 to-white py-4 px-1 sm:px-4 flex flex-col items-center w-full">
-      <div className="w-full max-w-6xl">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-blue-50 to-white py-4 px-2 sm:px-8 flex flex-col items-center w-full">
+      <div className="w-full max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
           <button
             onClick={() => navigate('/dashboard')}
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
             </button>
           ))}
         </div>
-        <div className="bg-white/90 rounded-2xl shadow-xl p-2 sm:p-6 min-h-[300px] sm:min-h-[400px] border border-indigo-100 overflow-x-auto">
+  <div className="bg-white/95 rounded-2xl shadow-2xl p-4 sm:p-8 min-h-[300px] sm:min-h-[400px] border border-indigo-200 overflow-x-auto transition-all duration-300">
           {tab === 'users' && <UsersAdmin />}
           {tab === 'tasks' && <TasksAdmin />}
           {tab === 'disputes' && <DisputesAdmin />}
