@@ -38,6 +38,25 @@ app.use(express.json({ limit: '10mb' }));
 
 // --- API Routes ---
 
+// TEMP: Test route to create an admin action directly (no auth/middleware)
+app.post('/api/test-admin-action', async (req, res) => {
+  try {
+    const AdminAction = require('./models/adminActionModel');
+    // Use dummy data or allow override via body
+    const action = await AdminAction.create({
+      adminId: req.body.adminId || '652e0e2e2e2e2e2e2e2e2e2e', // replace with a valid User _id from your DB
+      actionType: req.body.actionType || 'test_action',
+      targetId: req.body.targetId || '652e0e2e2e2e2e2e2e2e2e2e', // replace with a valid target _id
+      targetType: req.body.targetType || 'User',
+      notes: req.body.notes || 'Test admin action'
+    });
+    res.status(201).json({ success: true, action });
+  } catch (err) {
+    console.error('Test admin action error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // A simple test route to confirm the API is running
 app.get('/', (req, res) => {
   res.send('Dashboard API is running...');
