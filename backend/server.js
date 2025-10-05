@@ -19,14 +19,18 @@ const { initSocket } = require('./socket');
 const server = http.createServer(app);
 
 // --- Middleware Setup ---
-// Allow CORS from frontend domain specified in environment variable (for cookies)
-const allowedOrigin = process.env.FRONTEND_URL || '*';
+// Allow CORS from frontend domain(s) specified in environment variable (for cookies)
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // e.g. https://hire-a-helper-yr.vercel.app
+  'http://localhost:5173', // Vite default
+  'http://localhost:3000', // React default
+].filter(Boolean);
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
-    if (origin === allowedOrigin) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS: ' + origin));
   },
   credentials: true,
 }));
