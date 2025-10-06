@@ -1,3 +1,9 @@
+const express = require('express');
+const router = express.Router();
+const Request = require('../models/requestModel');
+const Task = require('../models/taskModel');
+const User = require('../models/User');
+
 // ADMIN: Get all requests
 router.get('/', async (req, res) => {
     try {
@@ -18,9 +24,6 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
-const express = require('express');
-const router = express.Router();
-const Request = require('../models/requestModel');
 // Mark requests as seen by the current user
 router.post('/mark-seen', async (req, res) => {
     try {
@@ -38,8 +41,6 @@ router.post('/mark-seen', async (req, res) => {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
-const Task = require('../models/taskModel');
-const User = require('../models/User');
 
 // Create a new request (when a user sends a request for a task)
 router.post('/', async (req, res) => {
