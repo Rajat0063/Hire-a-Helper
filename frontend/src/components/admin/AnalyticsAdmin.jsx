@@ -9,15 +9,20 @@ import SkeletonLoader from '../ui/SkeletonLoader';
 const API = import.meta.env.VITE_API_URL || '';
 
 
+
 export default function AnalyticsAdmin() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(() => {
+    const cached = localStorage.getItem('admin_analytics');
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [loading, setLoading] = useState(() => !localStorage.getItem('admin_analytics'));
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!socket.connected) socket.connect();
     socket.on(ADMIN_EVENTS.ANALYTICS_UPDATED, newAnalytics => {
       setData(newAnalytics);
+      localStorage.setItem('admin_analytics', JSON.stringify(newAnalytics));
     });
     return () => {
       socket.off(ADMIN_EVENTS.ANALYTICS_UPDATED);
@@ -25,16 +30,21 @@ export default function AnalyticsAdmin() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
-    axios.get(`${API}/api/admin/analytics`, {
-      headers: { Authorization: `Bearer ${token}` },
-      withCredentials: true
-    })
-      .then(res => setData(res.data))
-      .catch(() => setError('Failed to load analytics'))
-      .finally(() => setLoading(false));
-  }, []);
+    if (!data) {
+      setLoading(true);
+      const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+      axios.get(`${API}/api/admin/analytics`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
+      })
+        .then(res => {
+          setData(res.data);
+          localStorage.setItem('admin_analytics', JSON.stringify(res.data));
+        })
+        .catch(() => setError('Failed to load analytics'))
+        .finally(() => setLoading(false));
+    }
+  }, [data]);
 
   if (loading) return <SkeletonLoader count={2} />;
   if (error) return <div className="text-red-500">{error}</div>;

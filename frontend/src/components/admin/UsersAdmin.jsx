@@ -9,9 +9,13 @@ import SkeletonLoader from '../ui/SkeletonLoader';
 const API = import.meta.env.VITE_API_URL || '';
 
 
+
 export default function UsersAdmin() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState(() => {
+    const cached = localStorage.getItem('admin_users');
+    return cached ? JSON.parse(cached) : [];
+  });
+  const [loading, setLoading] = useState(() => !localStorage.getItem('admin_users'));
   const [error, setError] = useState(null);
 
   // Connect socket on mount
@@ -20,17 +24,24 @@ export default function UsersAdmin() {
     return () => {
       socket.off(ADMIN_EVENTS.USER_UPDATED);
       socket.off(ADMIN_EVENTS.USER_DELETED);
-      // socket.disconnect(); // Don't disconnect globally, only if you want to close all sockets
     };
   }, []);
 
   // Listen for real-time user updates
   useEffect(() => {
     socket.on(ADMIN_EVENTS.USER_UPDATED, updatedUser => {
-      setUsers(users => users.map(u => u._id === updatedUser._id ? updatedUser : u));
+      setUsers(users => {
+        const updated = users.map(u => u._id === updatedUser._id ? updatedUser : u);
+        localStorage.setItem('admin_users', JSON.stringify(updated));
+        return updated;
+      });
     });
     socket.on(ADMIN_EVENTS.USER_DELETED, deletedUserId => {
-      setUsers(users => users.filter(u => u._id !== deletedUserId));
+      setUsers(users => {
+        const updated = users.filter(u => u._id !== deletedUserId);
+        localStorage.setItem('admin_users', JSON.stringify(updated));
+        return updated;
+      });
     });
     return () => {
       socket.off(ADMIN_EVENTS.USER_UPDATED);
@@ -38,18 +49,23 @@ export default function UsersAdmin() {
     };
   }, []);
 
-  // Initial fetch
+  // Initial fetch (only on first mount)
   useEffect(() => {
-    setLoading(true);
-    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
-    axios.get(`${API}/api/admin/users`, {
-      headers: { Authorization: `Bearer ${token}` },
-      withCredentials: true
-    })
-      .then(res => setUsers(res.data))
-      .catch(() => setError('Failed to load users'))
-      .finally(() => setLoading(false));
-  }, []);
+    if (users.length === 0) {
+      setLoading(true);
+      const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+      axios.get(`${API}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
+      })
+        .then(res => {
+          setUsers(res.data);
+          localStorage.setItem('admin_users', JSON.stringify(res.data));
+        })
+        .catch(() => setError('Failed to load users'))
+        .finally(() => setLoading(false));
+    }
+  }, [users.length]);
 
   // Optimistic UI update and emit socket event
   const handleBlock = (id, block) => {

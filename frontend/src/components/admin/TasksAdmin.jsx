@@ -9,16 +9,23 @@ import SkeletonLoader from '../ui/SkeletonLoader';
 const API = import.meta.env.VITE_API_URL || '';
 
 
+
 export default function TasksAdmin() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState(() => {
+    const cached = localStorage.getItem('admin_tasks');
+    return cached ? JSON.parse(cached) : [];
+  });
+  const [loading, setLoading] = useState(() => !localStorage.getItem('admin_tasks'));
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!socket.connected) socket.connect();
-    // Listen for new admin:task-deleted event
     socket.on('admin:task-deleted', deletedTaskId => {
-      setTasks(tasks => tasks.filter(t => t._id !== deletedTaskId));
+      setTasks(tasks => {
+        const updated = tasks.filter(t => t._id !== deletedTaskId);
+        localStorage.setItem('admin_tasks', JSON.stringify(updated));
+        return updated;
+      });
     });
     return () => {
       socket.off('admin:task-deleted');
@@ -26,16 +33,21 @@ export default function TasksAdmin() {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
-    axios.get(`${API}/api/admin/tasks`, {
-      headers: { Authorization: `Bearer ${token}` },
-      withCredentials: true
-    })
-      .then(res => setTasks(res.data))
-      .catch(() => setError('Failed to load tasks'))
-      .finally(() => setLoading(false));
-  }, []);
+    if (tasks.length === 0) {
+      setLoading(true);
+      const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+      axios.get(`${API}/api/admin/tasks`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
+      })
+        .then(res => {
+          setTasks(res.data);
+          localStorage.setItem('admin_tasks', JSON.stringify(res.data));
+        })
+        .catch(() => setError('Failed to load tasks'))
+        .finally(() => setLoading(false));
+    }
+  }, [tasks.length]);
 
   const handleDelete = id => {
     if (!window.confirm('Delete this task?')) return;
