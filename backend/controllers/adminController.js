@@ -48,7 +48,7 @@ const adminController = {
         actionType: 'delete_user',
         targetId: req.params.id,
         targetType: 'User',
-        notes: req.body.notes || ''
+        notes: (req.body && req.body.notes) ? req.body.notes : ''
       });
     } catch (err) {
       console.error('Error storing admin action (deleteUser):', err);

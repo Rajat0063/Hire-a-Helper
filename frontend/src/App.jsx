@@ -1,4 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import socket from './utils/socket';
 
 // --- Page Imports ---
 import LandingPage from '../src/components/pages/LandingPage_Display';
@@ -25,6 +27,25 @@ import AddTaskContent from './components/pages/AddTaskContent';
 import SettingsContent from './components/pages/SettingsContent';
 
 function App() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    socket.connect();
+    socket.on('force-logout', ({ userId }) => {
+      const userInfo = localStorage.getItem('userInfo');
+      if (userInfo) {
+        const user = JSON.parse(userInfo);
+        if (user._id === userId) {
+          localStorage.removeItem('userInfo');
+          navigate('/login', { replace: true });
+        }
+      }
+    });
+    return () => {
+      socket.off('force-logout');
+    };
+  }, [navigate]);
+
   return (
     <Router>
       <Routes>
