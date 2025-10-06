@@ -97,7 +97,11 @@ export default function UsersAdmin() {
       withCredentials: true
     })
       .then(() => {
-        setUsers(users => users.filter(u => u._id !== id));
+        setUsers(users => {
+          const updated = users.filter(u => u._id !== id);
+          localStorage.setItem('admin_users', JSON.stringify(updated));
+          return updated;
+        });
         socket.emit(ADMIN_EVENTS.USER_DELETED, id); // Notify all admins
       })
       .catch(() => alert('Delete failed'));
