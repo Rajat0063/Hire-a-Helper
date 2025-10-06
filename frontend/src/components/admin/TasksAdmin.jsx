@@ -33,6 +33,7 @@ export default function TasksAdmin() {
   }, []);
 
   useEffect(() => {
+    let timer;
     if (tasks.length === 0) {
       setLoading(true);
       const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
@@ -45,8 +46,14 @@ export default function TasksAdmin() {
           localStorage.setItem('admin_tasks', JSON.stringify(res.data));
         })
         .catch(() => setError('Failed to load tasks'))
-        .finally(() => setLoading(false));
+        .finally(() => {
+          timer = setTimeout(() => setLoading(false), 1000);
+        });
+    } else {
+      setLoading(true);
+      timer = setTimeout(() => setLoading(false), 1000);
     }
+    return () => clearTimeout(timer);
   }, [tasks.length]);
 
   const handleDelete = id => {

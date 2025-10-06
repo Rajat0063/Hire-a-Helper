@@ -30,6 +30,7 @@ export default function AnalyticsAdmin() {
   }, []);
 
   useEffect(() => {
+    let timer;
     if (!data) {
       setLoading(true);
       const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
@@ -42,8 +43,14 @@ export default function AnalyticsAdmin() {
           localStorage.setItem('admin_analytics', JSON.stringify(res.data));
         })
         .catch(() => setError('Failed to load analytics'))
-        .finally(() => setLoading(false));
+        .finally(() => {
+          timer = setTimeout(() => setLoading(false), 1000);
+        });
+    } else {
+      setLoading(true);
+      timer = setTimeout(() => setLoading(false), 1000);
     }
+    return () => clearTimeout(timer);
   }, [data]);
 
   if (loading) return <SkeletonLoader count={2} />;

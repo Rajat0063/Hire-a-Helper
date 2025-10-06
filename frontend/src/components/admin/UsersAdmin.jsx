@@ -51,6 +51,7 @@ export default function UsersAdmin() {
 
   // Initial fetch (only on first mount)
   useEffect(() => {
+    let timer;
     if (users.length === 0) {
       setLoading(true);
       const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
@@ -63,8 +64,15 @@ export default function UsersAdmin() {
           localStorage.setItem('admin_users', JSON.stringify(res.data));
         })
         .catch(() => setError('Failed to load users'))
-        .finally(() => setLoading(false));
+        .finally(() => {
+          timer = setTimeout(() => setLoading(false), 1000);
+        });
+    } else {
+      // Always show skeleton for at least 1s on tab switch
+      setLoading(true);
+      timer = setTimeout(() => setLoading(false), 1000);
     }
+    return () => clearTimeout(timer);
   }, [users.length]);
 
   // Optimistic UI update and emit socket event
