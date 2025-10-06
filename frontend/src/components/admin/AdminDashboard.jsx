@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+
 import UsersAdmin from './UsersAdmin';
 import TasksAdmin from './TasksAdmin';
 import DisputesAdmin from './DisputesAdmin';
 import AnalyticsAdmin from './AnalyticsAdmin';
+import RequestsAdmin from './RequestsAdmin';
+import IncomingRequestsAdmin from './IncomingRequestsAdmin';
 
 const TABS = [
   { label: 'Users', value: 'users' },
   { label: 'Tasks', value: 'tasks' },
+  { label: 'Requests', value: 'requests' },
+  { label: 'Incoming Requests', value: 'incomingrequests' },
   { label: 'Disputes', value: 'disputes' },
   { label: 'Analytics', value: 'analytics' },
 ];
@@ -46,6 +51,8 @@ export default function AdminDashboard() {
   <div className="bg-white/95 rounded-2xl shadow-2xl p-4 sm:p-8 min-h-[300px] sm:min-h-[400px] border border-indigo-200 overflow-x-auto transition-all duration-300">
           {tab === 'users' && <UsersAdmin />}
           {tab === 'tasks' && <TasksAdmin />}
+          {tab === 'requests' && <RequestsAdmin />}
+          {tab === 'incomingrequests' && <IncomingRequestsAdmin />}
           {tab === 'disputes' && <DisputesAdmin />}
           {tab === 'analytics' && <AnalyticsAdmin />}
         </div>

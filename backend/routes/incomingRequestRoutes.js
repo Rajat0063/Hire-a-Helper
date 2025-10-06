@@ -1,3 +1,23 @@
+// ADMIN: Get all incoming requests
+router.get('/', async (req, res) => {
+    try {
+        const requests = await IncomingRequest.find({}).sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
+
+// ADMIN: Delete an incoming request by ID
+router.delete('/:id', async (req, res) => {
+    try {
+        const deleted = await IncomingRequest.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ message: 'Incoming request not found' });
+        res.json({ message: 'Incoming request deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
 const express = require('express');
 const router = express.Router();
 const IncomingRequest = require('../models/incomingRequestModel');
