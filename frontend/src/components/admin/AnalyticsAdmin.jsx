@@ -29,29 +29,25 @@ export default function AnalyticsAdmin() {
     };
   }, []);
 
+  // Always fetch fresh data on mount and tab switch
   useEffect(() => {
     let timer;
-    if (!data) {
-      setLoading(true);
-      const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
-      axios.get(`${API}/api/admin/analytics`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
+    setLoading(true);
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.get(`${API}/api/admin/analytics`, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    })
+      .then(res => {
+        setData(res.data);
+        localStorage.setItem('admin_analytics', JSON.stringify(res.data));
       })
-        .then(res => {
-          setData(res.data);
-          localStorage.setItem('admin_analytics', JSON.stringify(res.data));
-        })
-        .catch(() => setError('Failed to load analytics'))
-        .finally(() => {
-          timer = setTimeout(() => setLoading(false), 1000);
-        });
-    } else {
-      setLoading(true);
-      timer = setTimeout(() => setLoading(false), 1000);
-    }
+      .catch(() => setError('Failed to load analytics'))
+      .finally(() => {
+        timer = setTimeout(() => setLoading(false), 1000);
+      });
     return () => clearTimeout(timer);
-  }, [data]);
+  }, []);
 
   if (loading) return <SkeletonLoader count={2} />;
   if (error) return <div className="text-red-500">{error}</div>;

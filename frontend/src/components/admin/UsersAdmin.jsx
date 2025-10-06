@@ -50,30 +50,25 @@ export default function UsersAdmin() {
   }, []);
 
   // Initial fetch (only on first mount)
+  // Always fetch fresh data on mount and tab switch
   useEffect(() => {
     let timer;
-    if (users.length === 0) {
-      setLoading(true);
-      const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
-      axios.get(`${API}/api/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
+    setLoading(true);
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.get(`${API}/api/admin/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    })
+      .then(res => {
+        setUsers(res.data);
+        localStorage.setItem('admin_users', JSON.stringify(res.data));
       })
-        .then(res => {
-          setUsers(res.data);
-          localStorage.setItem('admin_users', JSON.stringify(res.data));
-        })
-        .catch(() => setError('Failed to load users'))
-        .finally(() => {
-          timer = setTimeout(() => setLoading(false), 1000);
-        });
-    } else {
-      // Always show skeleton for at least 1s on tab switch
-      setLoading(true);
-      timer = setTimeout(() => setLoading(false), 1000);
-    }
+      .catch(() => setError('Failed to load users'))
+      .finally(() => {
+        timer = setTimeout(() => setLoading(false), 1000);
+      });
     return () => clearTimeout(timer);
-  }, [users.length]);
+  }, []);
 
   // Optimistic UI update and emit socket event
   const handleBlock = (id, block) => {
