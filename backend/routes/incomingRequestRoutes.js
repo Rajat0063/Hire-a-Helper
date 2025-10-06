@@ -32,11 +32,7 @@ router.post('/mark-seen', async (req, res) => {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
-const Task = require('../models/taskModel');
-const User = require('../models/User');
-
-// Create a new incoming request (when a user sends a request for a task)
-const Request = require('../models/requestModel');
+// (Removed duplicate requires for Task, User, and Request)
 router.post('/', async (req, res) => {
     try {
         const { requesterId, requesterName, taskId, message, taskOwnerId } = req.body;
