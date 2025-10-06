@@ -1,3 +1,8 @@
+const express = require('express');
+const router = express.Router();
+const IncomingRequest = require('../models/incomingRequestModel');
+const MyTask = require('../models/myTaskModel');
+
 // ADMIN: Get all incoming requests
 router.get('/', async (req, res) => {
     try {
@@ -18,10 +23,6 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: 'Server Error', error: error.message });
     }
 });
-const express = require('express');
-const router = express.Router();
-const IncomingRequest = require('../models/incomingRequestModel');
-const MyTask = require('../models/myTaskModel');
 // Mark incoming requests as seen by the current user
 router.post('/mark-seen', async (req, res) => {
     try {
