@@ -48,18 +48,10 @@ const adminController = {
         actionType: 'delete_user',
         targetId: req.params.id,
         targetType: 'User',
-        notes: (req.body && req.body.notes) ? req.body.notes : ''
+        notes: req.body.notes || ''
       });
     } catch (err) {
       console.error('Error storing admin action (deleteUser):', err);
-    }
-    // Emit socket event to force logout for deleted user
-    try {
-      const { getIO } = require('../socket');
-      const io = getIO();
-      io.emit('force-logout', { userId: req.params.id, type: user?.role || 'user' });
-    } catch (err) {
-      console.error('Error emitting force-logout:', err);
     }
     res.json({ message: 'User deleted' });
   },
