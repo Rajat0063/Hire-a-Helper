@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import socket from './utils/socket';
+
 
 // --- Page Imports ---
 import LandingPage from '../src/components/pages/LandingPage_Display';
@@ -25,10 +24,11 @@ import RequestsContent from './components/pages/RequestsContent';
 import MyRequestsContent from './components/pages/MyRequestsContent';
 import AddTaskContent from './components/pages/AddTaskContent';
 import SettingsContent from './components/pages/SettingsContent';
+import { useEffect } from 'react';
+import socket from './utils/socket';
 
-function App() {
+function ForceLogoutListener() {
   const navigate = useNavigate();
-
   useEffect(() => {
     socket.connect();
     socket.on('force-logout', ({ userId }) => {
@@ -45,9 +45,13 @@ function App() {
       socket.off('force-logout');
     };
   }, [navigate]);
+  return null;
+}
 
+function App() {
   return (
     <Router>
+      <ForceLogoutListener />
       <Routes>
         {/* ============================================= */}
         {/* PUBLIC ROUTES                                 */}
