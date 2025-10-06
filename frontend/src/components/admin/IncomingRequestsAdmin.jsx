@@ -9,16 +9,29 @@ export default function IncomingRequestsAdmin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Use localStorage cache for snappy UX, like RequestsAdmin
   useEffect(() => {
     setLoading(true);
+    const cached = localStorage.getItem('admin_incoming_requests');
+    if (cached) {
+      setIncomingRequests(JSON.parse(cached));
+      // Always show skeleton for at least 1s
+      setTimeout(() => setLoading(false), 1000);
+    }
     const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
     axios.get(`${API}/api/incoming-requests`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
-      .then(res => setIncomingRequests(res.data))
+      .then(res => {
+        setIncomingRequests(res.data);
+        localStorage.setItem('admin_incoming_requests', JSON.stringify(res.data));
+      })
       .catch(() => setError('Failed to load incoming requests'))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        // If no cache, show loader for 1s; else, loader already hidden
+        if (!cached) setTimeout(() => setLoading(false), 1000);
+      });
   }, []);
 
   const handleDelete = id => {
@@ -28,7 +41,13 @@ export default function IncomingRequestsAdmin() {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
     })
-      .then(() => setIncomingRequests(reqs => reqs.filter(r => r._id !== id)))
+      .then(() => {
+        setIncomingRequests(reqs => {
+          const updated = reqs.filter(r => r._id !== id);
+          localStorage.setItem('admin_incoming_requests', JSON.stringify(updated));
+          return updated;
+        });
+      })
       .catch(() => alert('Delete failed. Please refresh.'));
   };
 
