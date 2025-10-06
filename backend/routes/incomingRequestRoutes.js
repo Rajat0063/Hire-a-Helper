@@ -1,3 +1,12 @@
+// ADMIN: Get all incoming requests
+router.get('/', async (req, res) => {
+    try {
+        const requests = await IncomingRequest.find({}).sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+});
 const express = require('express');
 const router = express.Router();
 const IncomingRequest = require('../models/incomingRequestModel');
