@@ -67,8 +67,17 @@ const DashboardLayout = () => {
     const [requests, setRequests] = useState([]);
     const [myRequests, setMyRequests] = useState([]);
     const [requestCount, setRequestCount] = useState(0);
-    // Force user to null for skeleton loader testing
-    const [user, setUser] = useState(null);
+    // Initialize user from localStorage to avoid empty dashboard on first load
+    const getInitialUser = () => {
+        try {
+            const storedUserInfo = localStorage.getItem('userInfo');
+            if (storedUserInfo) {
+                return JSON.parse(storedUserInfo);
+            }
+        } catch (e) {}
+        return null;
+    };
+    const [user, setUser] = useState(getInitialUser);
     // Uncomment the next line to always show the skeleton loader for testing
     // user = null;
     const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
