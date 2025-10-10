@@ -23,6 +23,7 @@ import RequestsContent from './components/pages/RequestsContent';
 import MyRequestsContent from './components/pages/MyRequestsContent';
 import AddTaskContent from './components/pages/AddTaskContent';
 import SettingsContent from './components/pages/SettingsContent';
+import DashboardOverview from './components/pages/DashboardOverview';
 
 function App() {
   return (
@@ -44,7 +45,8 @@ function App() {
         {/* ============================================= */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<Navigate to="feed" replace />} />
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<DashboardOverview />} />
             <Route path="feed" element={<FeedContent />} />
             <Route path="my-tasks" element={<MyTasksContent />} />
             <Route path="requests" element={<RequestsContent />} />
