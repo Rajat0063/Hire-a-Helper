@@ -56,24 +56,24 @@ export default function IncomingRequestsAdmin() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Incoming Requests</h2>
-      <table className="min-w-full bg-white border rounded-lg overflow-hidden">
+      <h2 className="text-xl font-semibold mb-4">Incoming Requests</h2>
+      <table className="w-full border">
         <thead>
-          <tr>
-            <th className="px-4 py-2">From</th>
-            <th className="px-4 py-2">Task</th>
-            <th className="px-4 py-2">Message</th>
-            <th className="px-4 py-2">Actions</th>
+          <tr className="bg-gray-100">
+            <th className="p-2">From</th>
+            <th className="p-2">Task</th>
+            <th className="p-2">Message</th>
+            <th className="p-2">Actions</th>
           </tr>
         </thead>
         <tbody>
           {incomingRequests.map(r => (
             <tr key={r._id} className="border-t">
-              <td className="px-4 py-2">{r.requesterName}</td>
-              <td className="px-4 py-2">{r.taskTitle || r.taskId}</td>
-              <td className="px-4 py-2">{r.message}</td>
-              <td className="px-4 py-2">
-                <button onClick={() => handleDelete(r._id)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
+              <td className="p-2">{r.requesterName || r.requester || '-'}</td>
+              <td className="p-2">{r.taskTitle || r.taskId}</td>
+              <td className="p-2">{r.message}</td>
+              <td className="p-2">
+                <button onClick={() => handleDelete(r._id)} className="px-2 py-1 rounded bg-red-500 text-white">Delete</button>
               </td>
             </tr>
           ))}

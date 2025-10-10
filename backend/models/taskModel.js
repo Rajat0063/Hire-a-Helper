@@ -10,6 +10,9 @@ const taskSchema = mongoose.Schema(
     category: { type: String, required: true },
     location: { type: String, required: true },
 
+      // Reference to the user who created/owns the task (optional)
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
     // ⭐️ NEW: Added fields to match your frontend UI
     imageUrl: { type: String, default: 'https://picsum.photos/seed/default/400/200' },
     userImageUrl: { type: String, default: 'https://i.pravatar.cc/150' },

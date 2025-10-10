@@ -116,7 +116,7 @@ export default function TasksAdmin() {
             <tr key={t._id} className="border-t">
               <td className="p-2">{t.title}</td>
               <td className="p-2">{t.description}</td>
-              <td className="p-2">{t.userId ? t.userId.name || t.userId.email : '-'}</td>
+              <td className="p-2">{t.userId ? (t.userId.name || t.userId.email) : (t.postedByName || '-')}</td>
               <td className="p-2">
                 <button
                   className="px-2 py-1 rounded bg-red-500 text-white"

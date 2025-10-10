@@ -116,7 +116,8 @@ const adminController = {
 
   // TASKS
   getTasks: async (req, res) => {
-    const tasks = await Task.find({});
+    // populate userId with basic user info so admin UI can show the task owner
+    const tasks = await Task.find({}).populate({ path: 'userId', select: 'name email' });
     res.json(tasks);
   },
   deleteTask: async (req, res) => {
