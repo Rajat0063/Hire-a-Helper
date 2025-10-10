@@ -19,10 +19,11 @@ router.get('/', async (req, res) => {
 
 // ADMIN: Delete a request by ID
 router.delete('/:id', protect, adminMiddleware, async (req, res) => {
+    // Find the request first so we know the requester
+    const { id } = req.params;
+    const adminId = req.admin ? req.admin._id : null;
         try {
-                const { id } = req.params;
-                const adminId = req.admin ? req.admin._id : null;
-                const deleted = await Request.findByIdAndDelete(id);
+        const deleted = await Request.findByIdAndDelete(id);
                 if (!deleted) return res.status(404).json({ message: 'Request not found' });
 
                 // Log admin action and emit
@@ -32,15 +33,14 @@ router.delete('/:id', protect, adminMiddleware, async (req, res) => {
                         console.log('AdminAction payload (requestRoutes delete):', payload);
                         const created = await AdminAction.create(payload);
                         console.log('AdminAction created (requestRoutes delete)');
+                        // Emit socket event for request deletion (real-time)
+                        const { getIO } = require('../socket');
+                        const io = getIO();
                         try {
                             const { getIO } = require('../socket');
                             const io = getIO();
                             io.emit('admin:action-created', created);
                             io.emit('admin:request-deleted', id);
-                            // Real-time: notify the requester so their dashboard updates
-                            if (deleted && deleted.requester) {
-                              io.to(`user:${deleted.requester}`).emit('user:request-deleted', id);
-                            }
                             const userCount = await require('../models/User').countDocuments();
                             const taskCount = await require('../models/taskModel').countDocuments();
                             io.emit('admin:analytics-updated', { userCount, taskCount });

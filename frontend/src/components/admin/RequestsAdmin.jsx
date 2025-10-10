@@ -44,7 +44,6 @@ export default function RequestsAdmin() {
             <th className="p-2">From</th>
             <th className="p-2">Task</th>
             <th className="p-2">Message</th>
-            <th className="p-2">Status</th>
             <th className="p-2">Actions</th>
           </tr>
         </thead>
@@ -55,17 +54,7 @@ export default function RequestsAdmin() {
               <td className="p-2">{r.taskTitle || r.taskId}</td>
               <td className="p-2">{r.message}</td>
               <td className="p-2">
-                <span className={`px-2 py-1 rounded text-xs font-semibold ${r.status === 'accepted' ? 'bg-green-100 text-green-700' : r.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : 'Pending'}</span>
-              </td>
-              <td className="p-2">
-                <button
-                  onClick={() => handleDelete(r._id)}
-                  className="px-2 py-1 rounded bg-red-500 text-white disabled:opacity-50"
-                  disabled={r.status !== 'pending'}
-                  title={r.status !== 'pending' ? 'Cannot delete after decision' : ''}
-                >
-                  Delete
-                </button>
+                <button onClick={() => handleDelete(r._id)} className="px-2 py-1 rounded bg-red-500 text-white">Delete</button>
               </td>
             </tr>
           ))}
