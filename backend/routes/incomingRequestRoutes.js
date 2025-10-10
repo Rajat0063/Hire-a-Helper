@@ -128,6 +128,14 @@ router.post('/', async (req, res) => {
     // Emit real-time update to the task owner for new request
     const { emitRequestsToOwner } = require('../utils/requestSocketEvents');
     emitRequestsToOwner(owner._id.toString());
+    // Emit to admins so admin tabs update in real-time
+    try {
+        const { getIO } = require('../socket');
+        const io = getIO();
+        io.emit('admin:incoming-request-created', incomingRequest);
+    } catch (emitErr) {
+        console.warn('Socket emit failed (incomingRequestRoutes create incomingRequest):', emitErr && emitErr.message ? emitErr.message : emitErr);
+    }
     res.status(201).json(incomingRequest);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });

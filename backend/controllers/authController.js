@@ -185,6 +185,22 @@ const registerUser = async (req, res) => {
             otpExpires
         });
 
+        // Emit admin event for new user creation (unverified)
+        try {
+            const { getIO } = require('../socket');
+            const io = getIO();
+            io.emit('admin:user-created', {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                isVerified: user.isVerified,
+                isAdmin: user.isAdmin,
+                image: user.image,
+            });
+        } catch (emitErr) {
+            console.warn('Socket emit failed (registerUser user-created):', emitErr && emitErr.message ? emitErr.message : emitErr);
+        }
+
         res.status(201).json({ 
             success: true, 
             message: `An OTP has been sent to ${email}. Please verify to continue.` 
