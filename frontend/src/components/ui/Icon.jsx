@@ -1,7 +1,7 @@
 // src/components/ui/Icon.jsx
 
-export const Icon = ({ path, viewBox = "0 0 24 24", className }) => (
-  <svg className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox={viewBox} xmlns="http://www.w3.org/2000/svg">
+export const Icon = ({ path, viewBox = "0 0 24 24", className = '' }) => (
+  <svg className={`${className} icon-primary`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox={viewBox} xmlns="http://www.w3.org/2000/svg">
     <path d={path} />
   </svg>
 );

@@ -37,7 +37,7 @@ export default function LandingPage() {
       <main className="w-full max-w-6xl mx-auto px-6 py-14">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <span className="inline-block bg-white/60 backdrop-blur px-3 py-1 rounded-full text-sm font-semibold text-indigo-700">Find help. Give help.</span>
+            <span className="inline-block bg-white/60 backdrop-blur px-3 py-1 rounded-full text-sm font-semibold text-primary">Find help. Give help.</span>
 
             <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-zinc-900">Make work simple — connect, hire, and grow</h1>
 
@@ -76,7 +76,7 @@ export default function LandingPage() {
                     <h3 className="font-semibold text-lg">Latest Tasks</h3>
                     <p className="text-sm text-zinc-500">See what's been posted nearby</p>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">3</div>
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">3</div>
                 </div>
                 <ul className="space-y-3">
                   <li className="p-3 bg-white rounded-lg shadow-sm">
@@ -85,7 +85,7 @@ export default function LandingPage() {
                         <p className="font-medium">Paint living room</p>
                         <p className="text-sm text-zinc-500">Dehradun · Oct 3</p>
                       </div>
-                      <div className="text-sm text-indigo-600">$30</div>
+                      <div className="text-sm text-primary">$30</div>
                     </div>
                   </li>
                   <li className="p-3 bg-white rounded-lg shadow-sm">
@@ -94,7 +94,7 @@ export default function LandingPage() {
                         <p className="font-medium">Assemble furniture</p>
                         <p className="text-sm text-zinc-500">Dehradun · Oct 2</p>
                       </div>
-                      <div className="text-sm text-indigo-600">$20</div>
+                      <div className="text-sm text-primary">$20</div>
                     </div>
                   </li>
                 </ul>

@@ -15,6 +15,20 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary-500: #6366f1; /* indigo-500-ish */
+  --primary-700: #4f46e5; /* indigo-700-ish */
+  --accent-500: #06b6d4; /* teal-ish for accents */
+}
+
+.text-primary {
+  color: var(--primary-700);
+}
+
+.icon-primary {
+  stroke: var(--primary-700);
+}
+
 @keyframes toastFade {
   0% { opacity: 0; }
   100% { opacity: 1; }

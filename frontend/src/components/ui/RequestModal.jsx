@@ -32,8 +32,8 @@ const RequestModal = ({ isOpen, onClose, task, onSendRequest }) => {
                         <img src={task.image} alt={task.title} className="rounded-xl w-full h-80 object-cover shadow-md" />
                     </div>
                     <div className="md:w-1/2 w-full p-8 flex flex-col relative">
-                        <h2 className="text-3xl font-bold text-zinc-800 mb-2">{task.title}</h2>
-                        <span className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 ${task.type ? 'bg-indigo-100 text-indigo-700' : 'bg-zinc-200 text-zinc-600'}`}>{task.type}</span>
+                        <h2 className="text-3xl font-bold text-primary mb-2">{task.title}</h2>
+                        <span className={`inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2 ${task.type ? 'bg-primary/10 text-primary' : 'bg-zinc-200 text-zinc-600'}`}>{task.type}</span>
                         <p className="text-zinc-600 mb-2">{task.description}</p>
                         <div className="text-zinc-500 text-base mb-4">
                             <span className="block mb-1"><b>Location:</b> {task.location || 'N/A'}</span>

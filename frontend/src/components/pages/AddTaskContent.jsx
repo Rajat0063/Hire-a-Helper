@@ -108,7 +108,7 @@ const AddTaskContent = () => {
                                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 4v.01M28 8l4.586-4.586a2 2 0 012.828 0L42 10M28 8l14 14M12 36h24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                     <div className="mt-4 flex text-sm leading-6 text-zinc-600">
-                                        <span className="font-semibold text-indigo-600">Upload a file</span>
+                                        <span className="font-semibold text-primary">Upload a file</span>
                                         <p className="pl-1">or drag and drop</p>
                                     </div>
                                     <p className="text-xs leading-5 text-zinc-500">PNG, JPG, GIF up to 10MB</p>
