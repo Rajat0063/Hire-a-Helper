@@ -55,16 +55,22 @@ const adminController = {
   deleteUser: async (req, res) => {
     const user = await User.findByIdAndDelete(req.params.id);
     try {
+      // Prefer the admin from adminMiddleware, fallback to req.user (self-delete or other flows)
+      const adminId = (req.admin && req.admin._id) || (req.user && req.user._id) || null;
       const payload = {
-        adminId: req.admin && req.admin._id,
+        adminId,
         actionType: 'delete_user',
         targetId: req.params.id,
         targetType: 'User',
         notes: req.body.notes || ''
       };
       console.log('AdminAction payload (deleteUser):', payload);
-      await AdminAction.create(payload);
-      console.log('AdminAction created (deleteUser)');
+      if (adminId) {
+        await AdminAction.create(payload);
+        console.log('AdminAction created (deleteUser)');
+      } else {
+        console.warn('Skipping AdminAction.create for deleteUser because no adminId found on request');
+      }
     } catch (err) {
       console.error('Error storing admin action (deleteUser):', err && err.message ? err.message : err);
       if (err && err.name === 'ValidationError' && err.errors) {
