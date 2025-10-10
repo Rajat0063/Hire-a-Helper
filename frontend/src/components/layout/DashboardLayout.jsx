@@ -601,13 +601,13 @@ const DashboardLayout = () => {
     }, [fetchIncomingRequests, requests]);
     
     const navItems = [
-    { name: 'Feed', path: 'feed', icon: <Icon className="h-5 w-5" path="M4 6h16v10H4z M4 4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4z M8 9h8v2H8V9z" />, count: null, iconColor: 'text-indigo-600', textColor: 'text-indigo-700', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-700', tooltipBg: 'bg-indigo-100', tooltipText: 'text-indigo-800' },
-        { name: 'My Tasks', path: 'my-tasks', icon: <Icon className="h-5 w-5" path="M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5zm2 6h10v2H7V9zm0 4h6v2H7v-2z" />, count: null, iconColor: 'text-indigo-600', textColor: 'text-indigo-700', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-700', tooltipBg: 'bg-indigo-100', tooltipText: 'text-indigo-800' },
-        { name: 'Requests', path: 'requests', icon: <Icon className="h-5 w-5" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />, count: requestCount, iconColor: 'text-indigo-600', textColor: 'text-indigo-700', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-700', tooltipBg: 'bg-indigo-100', tooltipText: 'text-indigo-800' },
-        { name: 'My Requests', path: 'my-requests', icon: <Icon className="h-5 w-5" path="M22 2l-7 20-4-9-9-4 20-7z" />, count: null, iconColor: 'text-indigo-600', textColor: 'text-indigo-700', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-700', tooltipBg: 'bg-indigo-100', tooltipText: 'text-indigo-800' },
-        { name: 'Add Task', path: 'add-task', icon: <AddTaskIcon className="h-5 w-5" />, count: null, iconColor: 'text-indigo-600', textColor: 'text-indigo-700', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-700', tooltipBg: 'bg-indigo-100', tooltipText: 'text-indigo-800' },
-        { name: 'Settings', path: 'settings', icon: <Icon className="h-5 w-5" path="M12 4.5c-4.142 0-7.5 3.358-7.5 7.5s3.358 7.5 7.5 7.5 7.5-3.358 7.5-7.5-3.358-7.5-7.5-7.5zm0 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11zm0-9a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />, count: null, iconColor: 'text-indigo-600', textColor: 'text-indigo-700', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-700', tooltipBg: 'bg-indigo-100', tooltipText: 'text-indigo-800' },
-         ...(user && user.isAdmin ? [{ name: 'Admin', path: '/admin', icon: <Icon className="h-5 w-5" path="M12 2a9 9 0 00-9 9v3a5 5 0 0010 0v-3a9 9 0 00-1-5.2A3 3 0 0112 2zm0 7a3 3 0 110 6 3 3 0 010-6zm8-3v6a11 11 0 01-22 0V6a1 1 0 011-1h20a1 1 0 011 1z" />, count: null, iconColor: 'text-indigo-600', textColor: 'text-indigo-700', badgeBg: 'bg-indigo-100', badgeText: 'text-indigo-700', tooltipBg: 'bg-indigo-100', tooltipText: 'text-indigo-800' }] : []),
+    { name: 'Feed', path: 'feed', icon: <Icon className="h-5 w-5" path="M4 6h16v10H4z M4 4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4z M8 9h8v2H8V9z" />, count: null },
+        { name: 'My Tasks', path: 'my-tasks', icon: <Icon className="h-5 w-5" path="M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5zm2 6h10v2H7V9zm0 4h6v2H7v-2z" />, count: null },
+        { name: 'Requests', path: 'requests', icon: <Icon className="h-5 w-5" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />, count: requestCount },
+        { name: 'My Requests', path: 'my-requests', icon: <Icon className="h-5 w-5" path="M22 2l-7 20-4-9-9-4 20-7z" />, count: null },
+        { name: 'Add Task', path: 'add-task', icon: <AddTaskIcon className="h-5 w-5" />, count: null },
+        { name: 'Settings', path: 'settings', icon: <Icon className="h-5 w-5" path="M12 4.5c-4.142 0-7.5 3.358-7.5 7.5s3.358 7.5 7.5 7.5 7.5-3.358 7.5-7.5-3.358-7.5-7.5-7.5zm0 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11zm0-9a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />, count: null },
+         ...(user && user.isAdmin ? [{ name: 'Admin', path: '/admin', icon: <Icon className="h-5 w-5" path="M12 2a9 9 0 00-9 9v3a5 5 0 0010 0v-3a9 9 0 00-1-5.2A3 3 0 0112 2zm0 7a3 3 0 110 6 3 3 0 010-6zm8-3v6a11 11 0 01-22 0V6a1 1 0 011-1h20a1 1 0 011 1z" />, count: null }] : []),
     ];
 
     if (!user) {
