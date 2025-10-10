@@ -11,9 +11,14 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                 <div className="flex items-center justify-between w-full h-full px-4">
                     <div className="flex items-center">
                         <img src={AppLogo} alt="Logo" className="h-8 w-8" />
-                        <h1 className="ml-2 text-2xl font-bold text-zinc-800 whitespace-nowrap">Heir-a-Helper</h1>
+                        <h1 className="ml-3 text-2xl font-bold text-zinc-800 whitespace-nowrap tracking-tight">Heir-a-Helper</h1>
                     </div>
-                    <button onClick={toggleSidebar} className="p-2 rounded-full text-zinc-600 hover:bg-zinc-100" aria-label="Collapse sidebar">
+                    <button
+                        onClick={toggleSidebar}
+                        className="ml-6 p-2 rounded-full text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100 transition-colors duration-150 border border-transparent hover:border-zinc-200 shadow-sm"
+                        aria-label="Collapse sidebar"
+                        style={{ marginLeft: '2rem', minWidth: 40, minHeight: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
                         <Icon className="h-6 w-6" path="M6 18L18 6M6 6l12 12" />
                     </button>
                 </div>
