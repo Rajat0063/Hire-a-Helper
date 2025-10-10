@@ -7,6 +7,7 @@ export default function DashboardOverview() {
   const [myRequestsCount, setMyRequestsCount] = useState(null);
   const [incomingRequestsCount, setIncomingRequestsCount] = useState(null);
   const [recentActivities, setRecentActivities] = useState([]);
+  const [myRequests, setMyRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +26,8 @@ export default function DashboardOverview() {
         // My sent requests
         const myReqRes = await fetch(`${API}/api/incoming-requests-sent/sent/${user._id}`);
         const myReq = await myReqRes.json();
-        setMyRequestsCount(Array.isArray(myReq) ? myReq.length : 0);
+  setMyRequestsCount(Array.isArray(myReq) ? myReq.length : 0);
+  setMyRequests(Array.isArray(myReq) ? myReq : []);
 
         // Incoming requests for tasks owned by user
         const incRes = await fetch(`${API}/api/incoming-requests/received/${user._id}`);
@@ -83,6 +85,32 @@ export default function DashboardOverview() {
           <div className="text-3xl font-extrabold mt-2">{incomingRequestsCount ?? '-'}</div>
           <div className="text-xs opacity-80 mt-1">Requests for your tasks</div>
         </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <h3 className="font-semibold mb-3 text-indigo-700">Your Requests</h3>
+        {myRequests.length === 0 ? (
+          <div className="text-gray-500">No requests sent</div>
+        ) : (
+          <ul className="space-y-3">
+            {myRequests.map((r, idx) => (
+              <li key={r._id || r.id || idx} className="flex items-center justify-between border-b last:border-b-0 py-2">
+                <div>
+                  <div className="text-sm font-medium">{r.taskTitle || r.title || 'Untitled Task'}</div>
+                  <div className="text-xs text-gray-500">To {r.taskOwnerName || r.taskOwner || 'Unknown'}</div>
+                </div>
+                <span className={
+                  `ml-2 px-3 py-1 rounded text-xs font-semibold ` +
+                  (r.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                    r.status === 'declined' ? 'bg-red-100 text-red-700' :
+                    'bg-yellow-100 text-yellow-700')
+                }>
+                  {r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : 'Pending'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">

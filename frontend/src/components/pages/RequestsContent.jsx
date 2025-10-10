@@ -86,13 +86,29 @@ const RequestsContent = () => {
                     <span className="font-semibold text-lg text-zinc-800 truncate">{request.requesterName || 'Unknown'}</span>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition" onClick={() => handleAcceptRequest(request)}>
+                <div className="flex gap-2 items-center">
+                  <button
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={() => handleAcceptRequest(request)}
+                    disabled={request.status && request.status !== 'pending'}
+                  >
                     Accept
                   </button>
-                  <button className="px-4 py-2 bg-zinc-200 text-zinc-700 rounded-lg font-semibold hover:bg-zinc-300 transition" onClick={() => handleDeclineRequest(request._id || request.id)}>
+                  <button
+                    className="px-4 py-2 bg-zinc-200 text-zinc-700 rounded-lg font-semibold hover:bg-zinc-300 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                    onClick={() => handleDeclineRequest(request._id || request.id)}
+                    disabled={request.status && request.status !== 'pending'}
+                  >
                     Decline
                   </button>
+                  <span className={
+                    `ml-2 px-3 py-1 rounded text-xs font-semibold ` +
+                    (request.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                      request.status === 'declined' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700')
+                  }>
+                    {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : 'Pending'}
+                  </span>
                 </div>
               </div>
               <div className="text-zinc-700 mb-2">
