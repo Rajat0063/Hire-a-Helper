@@ -87,19 +87,29 @@ export default function UsersAdmin() {
   const handleDelete = id => {
     if (!window.confirm('Delete this user?')) return;
     const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    // Optimistic remove with rollback
+    let previous;
+    setUsers(u => {
+      previous = u;
+      const updated = u.filter(x => x._id !== id);
+      localStorage.setItem('admin_users', JSON.stringify(updated));
+      return updated;
+    });
     axios.delete(`${API}/api/admin/users/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
-    })
-      .then(() => {
-        setUsers(users => {
-          const updated = users.filter(u => u._id !== id);
-          localStorage.setItem('admin_users', JSON.stringify(updated));
-          return updated;
-        });
-        socket.emit(ADMIN_EVENTS.USER_DELETED, id); // Notify all admins
-      })
-      .catch(() => alert('Delete failed'));
+    }).then(() => {
+      socket.emit(ADMIN_EVENTS.USER_DELETED, id); // Notify all admins
+    }).catch(err => {
+      console.error('Delete user failed', err);
+      // rollback
+      setUsers(() => {
+        localStorage.setItem('admin_users', JSON.stringify(previous || []));
+        return previous || [];
+      });
+      const msg = err && err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Delete failed';
+      alert(msg);
+    });
   };
 
   if (loading) return <SkeletonLoader count={5} />;

@@ -55,21 +55,27 @@ export default function TasksAdmin() {
   const handleDelete = id => {
     if (!window.confirm('Delete this task?')) return;
     const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    let previous;
+    setTasks(t => {
+      previous = t;
+      const updated = t.filter(x => x._id !== id);
+      localStorage.setItem('admin_tasks', JSON.stringify(updated));
+      return updated;
+    });
     axios.delete(`${API}/api/admin/tasks/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
-    })
-      .catch(() => {
-        // Only show error if the task is still present (not already removed by real-time update)
-        setTasks(tasks => {
-          const stillExists = tasks.some(t => t._id === id);
-          if (stillExists) alert('Delete failed. Please refresh.');
-          return tasks.filter(t => t._id !== id);
-        });
+    }).then(() => {
+      // success - nothing further to do because UI already updated and socket will notify others
+    }).catch(err => {
+      console.error('Delete task failed', err);
+      setTasks(() => {
+        localStorage.setItem('admin_tasks', JSON.stringify(previous || []));
+        return previous || [];
       });
-    // Always remove from UI immediately for best UX
-    setTasks(tasks => tasks.filter(t => t._id !== id));
-    // UI will also update via socket event for other admins
+      const msg = err && err.response && err.response.data && err.response.data.message ? err.response.data.message : 'Delete failed';
+      alert(msg);
+    });
   };
 
   if (loading) return <SkeletonLoader rows={5} cols={4} headers={["Title", "Description", "User", "Actions"]} />;

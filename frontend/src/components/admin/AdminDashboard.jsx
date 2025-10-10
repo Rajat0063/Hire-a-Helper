@@ -6,10 +6,12 @@ import UsersAdmin from './UsersAdmin';
 import TasksAdmin from './TasksAdmin';
 import DisputesAdmin from './DisputesAdmin';
 import AnalyticsAdmin from './AnalyticsAdmin';
+import AdminOverview from './AdminOverview';
 import RequestsAdmin from './RequestsAdmin';
 import IncomingRequestsAdmin from './IncomingRequestsAdmin';
 
 const TABS = [
+  { label: 'Overview', value: 'overview' },
   { label: 'Users', value: 'users' },
   { label: 'Tasks', value: 'tasks' },
   { label: 'Requests', value: 'requests' },
@@ -19,7 +21,7 @@ const TABS = [
 ];
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('users');
+  const [tab, setTab] = useState('overview');
   const navigate = useNavigate();
 
   return (
@@ -49,6 +51,7 @@ export default function AdminDashboard() {
           ))}
         </div>
   <div className="bg-white/95 rounded-2xl shadow-2xl p-4 sm:p-8 min-h-[300px] sm:min-h-[400px] border border-indigo-200 overflow-x-auto transition-all duration-300">
+          {tab === 'overview' && <AdminOverview />}
           {tab === 'users' && <UsersAdmin />}
           {tab === 'tasks' && <TasksAdmin />}
           {tab === 'requests' && <RequestsAdmin />}
