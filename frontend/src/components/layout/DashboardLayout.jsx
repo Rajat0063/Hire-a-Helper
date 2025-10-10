@@ -74,7 +74,7 @@ const DashboardLayout = () => {
             if (storedUserInfo) {
                 return JSON.parse(storedUserInfo);
             }
-        } catch (e) {}
+    } catch {/* ignore */}
         return null;
     };
     const [user, setUser] = useState(getInitialUser);

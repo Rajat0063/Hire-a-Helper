@@ -2,6 +2,34 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import { useEffect } from 'react';
 import socket from './utils/socket';
 
+// Move socket and force-logout logic into a child component inside Router
+function SocketAuthHandler() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('userInfo');
+      if (stored) {
+        const user = JSON.parse(stored);
+        if (user && user._id) {
+          if (!socket.connected) socket.connect();
+          socket.emit('join-user-room', user._id);
+          // Remove any previous listeners to avoid duplicates
+          socket.off('user:force-logout');
+          socket.on('user:force-logout', () => {
+            localStorage.removeItem('userInfo');
+            navigate('/login', { replace: true });
+          });
+        }
+      }
+  } catch {/* ignore */}
+    // On unmount, clean up
+    return () => {
+      socket.off('user:force-logout');
+    };
+  }, [navigate]);
+  return null;
+}
+
 // --- Page Imports ---
 import LandingPage from '../src/components/pages/LandingPage_Display';
 import LoginPage from '../src/components/pages/LoginPage_Disaplay';
@@ -28,35 +56,11 @@ import SettingsContent from './components/pages/SettingsContent';
 import DashboardOverview from './components/pages/DashboardOverview';
 
 function App() {
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('userInfo');
-      if (stored) {
-        const user = JSON.parse(stored);
-        if (user && user._id) {
-          if (!socket.connected) socket.connect();
-          socket.emit('join-user-room', user._id);
-          // Remove any previous listeners to avoid duplicates
-          socket.off('user:force-logout');
-          socket.on('user:force-logout', () => {
-            localStorage.removeItem('userInfo');
-            navigate('/login', { replace: true });
-          });
-        }
-      }
-    } catch {
-      // ignore
-    }
-    // On unmount, clean up
-    return () => {
-      socket.off('user:force-logout');
-    };
-  }, [navigate]);
 
   return (
     <Router>
+      <SocketAuthHandler />
       <Routes>
         {/* ============================================= */}
         {/* PUBLIC ROUTES                                 */}
