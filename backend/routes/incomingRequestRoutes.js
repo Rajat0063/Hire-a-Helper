@@ -6,16 +6,40 @@ const MyTask = require('../models/myTaskModel');
 const Task = require('../models/taskModel');
 const User = require('../models/User');
 const Request = require('../models/requestModel');
+const AdminAction = require('../models/adminActionModel');
+const { protect } = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 
 // ADMIN: Delete an incoming request by ID
-router.delete('/:id', async (req, res) => {
-    try {
-        const deleted = await IncomingRequest.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ message: 'Incoming request not found' });
-        res.json({ message: 'Incoming request deleted' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
-    }
+router.delete('/:id', protect, adminMiddleware, async (req, res) => {
+        try {
+                const { id } = req.params;
+                const adminId = req.admin ? req.admin._id : null;
+                const deleted = await IncomingRequest.findByIdAndDelete(id);
+                if (!deleted) return res.status(404).json({ message: 'Incoming request not found' });
+
+                // Also remove from requests collection if present
+                await Request.findByIdAndDelete(id).catch(() => {});
+
+                // Log admin action
+                if (adminId) {
+                    try {
+                        const payload = { adminId, actionType: 'delete_incoming_request', targetId: id, targetType: 'IncomingRequest', notes: `Incoming request deleted by admin` };
+                        console.log('AdminAction payload (incomingRequestRoutes delete):', payload);
+                        await AdminAction.create(payload);
+                        console.log('AdminAction created (incomingRequestRoutes delete)');
+                    } catch (err) {
+                        console.error('Error storing admin action (incomingRequestRoutes delete):', err && err.message ? err.message : err);
+                        if (err && err.name === 'ValidationError' && err.errors) {
+                            Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
+                        }
+                    }
+                }
+
+                res.json({ message: 'Incoming request deleted' });
+        } catch (error) {
+                res.status(500).json({ message: 'Server Error', error: error.message });
+        }
 });
 
 // ADMIN: Get all incoming requests

@@ -3,6 +3,9 @@ const router = express.Router();
 const Request = require('../models/requestModel');
 const Task = require('../models/taskModel');
 const User = require('../models/User');
+const AdminAction = require('../models/adminActionModel');
+const { protect } = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 
 // ADMIN: Get all requests
 router.get('/', async (req, res) => {
@@ -15,14 +18,32 @@ router.get('/', async (req, res) => {
 });
 
 // ADMIN: Delete a request by ID
-router.delete('/:id', async (req, res) => {
-    try {
-        const deleted = await Request.findByIdAndDelete(req.params.id);
-        if (!deleted) return res.status(404).json({ message: 'Request not found' });
-        res.json({ message: 'Request deleted' });
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error', error: error.message });
-    }
+router.delete('/:id', protect, adminMiddleware, async (req, res) => {
+        try {
+                const { id } = req.params;
+                const adminId = req.admin ? req.admin._id : null;
+                const deleted = await Request.findByIdAndDelete(id);
+                if (!deleted) return res.status(404).json({ message: 'Request not found' });
+
+                // Log admin action
+                if (adminId) {
+                    try {
+                        const payload = { adminId, actionType: 'delete_request', targetId: id, targetType: 'Request', notes: `Request deleted by admin` };
+                        console.log('AdminAction payload (requestRoutes delete):', payload);
+                        await AdminAction.create(payload);
+                        console.log('AdminAction created (requestRoutes delete)');
+                    } catch (err) {
+                        console.error('Error storing admin action (requestRoutes delete):', err && err.message ? err.message : err);
+                        if (err && err.name === 'ValidationError' && err.errors) {
+                            Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
+                        }
+                    }
+                }
+
+                res.json({ message: 'Request deleted' });
+        } catch (error) {
+                res.status(500).json({ message: 'Server Error', error: error.message });
+        }
 });
 // Mark requests as seen by the current user
 router.post('/mark-seen', async (req, res) => {
