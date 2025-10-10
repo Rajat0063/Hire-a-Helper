@@ -13,14 +13,14 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                         <img src={AppLogo} alt="Logo" className="h-8 w-8" />
                         <h1 className="ml-2 text-2xl font-bold text-zinc-800 whitespace-nowrap">Heir-a-Helper</h1>
                     </div>
-                    <button onClick={toggleSidebar} className="p-2 rounded-full text-zinc-600 hover:bg-zinc-100">
-                        <Icon className="h-6 w-6" path="M15 19l-7-7 7-7" />
+                    <button onClick={toggleSidebar} className="p-2 rounded-full text-zinc-600 hover:bg-zinc-100" aria-label="Collapse sidebar">
+                        <Icon className="h-6 w-6" path="M6 18L18 6M6 6l12 12" />
                     </button>
                 </div>
             ) : (
                 <div className="flex items-center justify-center w-full h-full">
-                    <button onClick={toggleSidebar} className="p-2 rounded-full text-zinc-600 hover:bg-zinc-100">
-                        <Icon className="h-6 w-6" path="M9 5l7 7-7 7" />
+                    <button onClick={toggleSidebar} className="p-2 rounded-full text-zinc-600 hover:bg-zinc-100" aria-label="Expand sidebar">
+                        <Icon className="h-6 w-6" path="M4 6h16M4 12h16M4 18h16" />
                     </button>
                 </div>
             )}
@@ -95,7 +95,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-100 transition-colors duration-200 group"
             >
-                <Icon path="M17 16l4-4m0 0l-4-4m4 4H7" className="h-5 w-5" />
+                <Icon path="M15 12H3m0 0l4-4m-4 4l4 4M21 4v16" className="h-5 w-5" />
                 {isSidebarOpen && <span className="ml-3 font-medium">Logout</span>}
             </button>
         </div>
