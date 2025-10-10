@@ -601,13 +601,13 @@ const DashboardLayout = () => {
     }, [fetchIncomingRequests, requests]);
     
     const navItems = [
-        { name: 'Feed', path: 'feed', icon: <Icon className="h-5 w-5" path="M3 7a1 1 0 011-1h16a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V7zm1 0v10h16V7H4zm8 2a2 2 0 110 4 2 2 0 010-4zm0 6a6 6 0 016-6H6a6 6 0 016 6z" />, count: null },
+    { name: 'Feed', path: 'feed', icon: <Icon className="h-5 w-5" path="M4 6h16v10H4z M4 4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4z M8 9h8v2H8V9z" />, count: null },
         { name: 'My Tasks', path: 'my-tasks', icon: <Icon className="h-5 w-5" path="M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5zm2 6h10v2H7V9zm0 4h6v2H7v-2z" />, count: null },
         { name: 'Requests', path: 'requests', icon: <Icon className="h-5 w-5" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />, count: requestCount },
         { name: 'My Requests', path: 'my-requests', icon: <Icon className="h-5 w-5" path="M22 2l-7 20-4-9-9-4 20-7z" />, count: null },
         { name: 'Add Task', path: 'add-task', icon: <AddTaskIcon className="h-5 w-5" />, count: null },
         { name: 'Settings', path: 'settings', icon: <Icon className="h-5 w-5" path="M12 4.5c-4.142 0-7.5 3.358-7.5 7.5s3.358 7.5 7.5 7.5 7.5-3.358 7.5-7.5-3.358-7.5-7.5-7.5zm0 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11zm0-9a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />, count: null },
-         ...(user && user.isAdmin ? [{ name: 'Admin', path: '/admin', icon: <Icon className="h-5 w-5" path="M3 3h18v18H3V3zm2 2v14h14V5H5zm4 4h6v6H9V9z" />, count: null }] : []),
+         ...(user && user.isAdmin ? [{ name: 'Admin', path: '/admin', icon: <Icon className="h-5 w-5" path="M12 2l3 6 6 .5-4.5 3.8L19 20l-7-4-7 4 1.5-7.7L3 8.5 9 8 12 2z" />, count: null }] : []),
     ];
 
     if (!user) {
