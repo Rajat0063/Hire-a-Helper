@@ -125,7 +125,7 @@ const MyTasksContent = () => {
                     <div className="flex flex-col">
                       <span className="font-semibold text-zinc-800">{task.taskTitle}</span>
                       <span className="text-xs text-zinc-500 mb-1">{task.description}</span>
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary w-fit mt-1">{task.status}</span>
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700 w-fit mt-1">{task.status}</span>
                       {col.key === 'todo' && (
                         <button
                           className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs self-end disabled:opacity-50"

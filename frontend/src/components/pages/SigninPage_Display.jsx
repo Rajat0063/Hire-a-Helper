@@ -58,7 +58,7 @@ export default function SignupPage() {
         </svg>
       </div>
       <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 sm:p-10 flex flex-col items-center">
-  <h2 className="text-3xl font-extrabold text-primary mb-2 tracking-tight">Create your account</h2>
+        <h2 className="text-3xl font-extrabold text-indigo-700 mb-2 tracking-tight">Create your account</h2>
         <p className="text-zinc-500 mb-8 text-center">Sign up to get started with Hire-a-Helper</p>
         <form className="w-full space-y-4" onSubmit={onSubmit}>
           <input
@@ -109,7 +109,7 @@ export default function SignupPage() {
         </form>
         <p className="text-center text-sm text-zinc-600 mt-8">
           Already have an account?{" "}
-          <Link to="/login" className="text-primary font-semibold hover:underline">
+          <Link to="/login" className="text-indigo-600 font-semibold hover:underline">
             Login
           </Link>
         </p>

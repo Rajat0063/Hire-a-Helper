@@ -50,7 +50,7 @@ export default function LoginPage() {
         </svg>
       </div>
       <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 sm:p-10 flex flex-col items-center">
-  <h2 className="text-3xl font-extrabold text-primary mb-2 tracking-tight">Sign in to Hire-a-Helper</h2>
+        <h2 className="text-3xl font-extrabold text-indigo-700 mb-2 tracking-tight">Sign in to Hire-a-Helper</h2>
         <p className="text-zinc-500 mb-8 text-center">Welcome back! Enter your details to log in.</p>
         <form className="w-full space-y-5" onSubmit={onSubmit}>
           <input
@@ -71,10 +71,10 @@ export default function LoginPage() {
           />
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center text-zinc-600 cursor-pointer">
-              <input type="checkbox" className="mr-2 h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary" />
+              <input type="checkbox" className="mr-2 h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500" />
               Remember me
             </label>
-            <Link to="/forgot-password" className="font-medium text-primary hover:text-primary/80 hover:underline">
+            <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline">
               Forgot Password?
             </Link>
           </div>
@@ -89,7 +89,7 @@ export default function LoginPage() {
         </form>
         <p className="text-center text-sm text-zinc-600 mt-8">
           Dont have an account yet?{" "}
-          <Link to="/signup" className="text-primary font-semibold hover:underline">
+          <Link to="/signup" className="text-indigo-600 font-semibold hover:underline">
             Sign up
           </Link>
         </p>

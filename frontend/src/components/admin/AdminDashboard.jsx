@@ -30,12 +30,12 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white shadow hover:bg-indigo-50 border border-indigo-200 text-primary font-semibold transition w-full sm:w-auto justify-center"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white shadow hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold transition w-full sm:w-auto justify-center"
           >
-            <ArrowLeftIcon className="h-5 w-5 icon-primary" />
+            <ArrowLeftIcon className="h-5 w-5" />
             <span>Back to Dashboard</span>
           </button>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-primary drop-shadow-sm text-center w-full sm:w-auto">Admin Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-800 drop-shadow-sm text-center w-full sm:w-auto">Admin Dashboard</h1>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-4 mb-6 justify-center">
           {TABS.map(t => (
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
               key={t.value}
               className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-full shadow transition font-semibold text-base sm:text-lg border-2 focus:outline-none ${tab === t.value
                 ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white border-indigo-500 scale-105'
-                : 'bg-white text-primary border-primary/40 hover:bg-primary/10'}`}
+                : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'}`}
               onClick={() => setTab(t.value)}
             >
               {t.label}
@@ -60,8 +60,8 @@ export default function AdminDashboard() {
           {tab === 'analytics' && <AnalyticsAdmin />}
         </div>
         {/* Friendly admin info message */}
-        <div className="mt-4 text-center text-sm text-primary bg-indigo-50 rounded-lg px-4 py-2 shadow-sm font-medium">
-          Welcome, Admin! Manage users, tasks, and analytics in real time. <span className="text-primary/60">All changes are instantly reflected for your team.</span>
+        <div className="mt-4 text-center text-sm text-indigo-700 bg-indigo-50 rounded-lg px-4 py-2 shadow-sm font-medium">
+          Welcome, Admin! Manage users, tasks, and analytics in real time. <span className="text-indigo-400">All changes are instantly reflected for your team.</span>
         </div>
       </div>
     </div>

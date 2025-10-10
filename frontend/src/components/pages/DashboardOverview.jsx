@@ -65,7 +65,7 @@ export default function DashboardOverview() {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4 text-primary">Overview</h2>
+      <h2 className="text-2xl font-bold mb-4 text-indigo-700">Overview</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="p-4 rounded-lg shadow bg-gradient-to-br from-indigo-500 to-blue-500 text-white">
@@ -86,7 +86,7 @@ export default function DashboardOverview() {
       </div>
 
       <div className="bg-white rounded-lg shadow p-4">
-  <h3 className="font-semibold mb-3 text-primary">Recent Activity</h3>
+        <h3 className="font-semibold mb-3 text-indigo-700">Recent Activity</h3>
         {recentActivities.length === 0 ? (
           <div className="text-gray-500">No recent activity</div>
         ) : (

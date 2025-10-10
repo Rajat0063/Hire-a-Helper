@@ -35,7 +35,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                 {({ isActive }) => (
                     <>
                         <div className="flex items-center">
-                            <svg className={`h-5 w-5 ${isActive ? 'text-white' : 'icon-primary'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6"></path></svg>
+                            <svg className={`h-5 w-5 ${isActive ? 'text-white' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6"></path></svg>
                             {isSidebarOpen && <span className="ml-3">Overview</span>}
                         </div>
                     </>
@@ -58,13 +58,13 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                                     {item.icon}
                                     {isSidebarOpen && <span className="ml-3">{item.name}</span>}
                                 </div>
-                                    {item.count > 0 && isSidebarOpen && (
-                                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-primary' : 'bg-red-500 text-white'}`}>
+                                {item.count > 0 && isSidebarOpen && (
+                                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-indigo-600' : 'bg-red-500 text-white'}`}>
                                         {item.count}
                                     </span>
                                 )}
                                 {!isSidebarOpen && (
-                                    <span className="absolute left-full rounded-md px-2 py-1 ml-6 bg-primary/10 text-primary text-sm invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0">
+                                    <span className="absolute left-full rounded-md px-2 py-1 ml-6 bg-indigo-100 text-indigo-800 text-sm invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0">
                                         {item.name}
                                     </span>
                                 )}
