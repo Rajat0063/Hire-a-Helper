@@ -1,3 +1,4 @@
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Icon } from '../ui/Icon';
 import AppLogo from '../../assets/logo (2).png';
@@ -35,13 +36,13 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                 {({ isActive }) => (
                     <>
                         <div className="flex items-center">
-                            <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-indigo-600'}`} path="M3 12l9-7 9 7v8a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-8z" />
-                            {isSidebarOpen && <span className="ml-3">Overview</span>}
+                            <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-primary'}`} path="M3 12l9-7 9 7v8a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-8z" />
+                            {isSidebarOpen && <span className={`ml-3 ${isActive ? 'text-white' : 'text-zinc-700'}`}>Overview</span>}
                         </div>
                     </>
                 )}
             </NavLink>
-            {navItems.map((item) => {
+                {navItems.map((item) => {
                 // Use absolute path for Admin, else prefix with /dashboard/
                 const to = item.path.startsWith('/') ? item.path : `/dashboard/${item.path}`;
                 return (
@@ -55,16 +56,18 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                         {({ isActive }) => (
                             <>
                                 <div className="flex items-center">
-                                    {item.icon}
-                                    {isSidebarOpen && <span className="ml-3">{item.name}</span>}
+                                    {React.isValidElement(item.icon)
+                                        ? React.cloneElement(item.icon, { className: `h-5 w-5 ${isActive ? 'text-white' : (item.iconColor || 'text-indigo-600')}` })
+                                        : item.icon}
+                                    {isSidebarOpen && <span className={`ml-3 ${isActive ? 'text-white' : (item.textColor || 'text-zinc-700')}`}>{item.name}</span>}
                                 </div>
                                 {item.count > 0 && isSidebarOpen && (
-                                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-indigo-600' : 'bg-red-500 text-white'}`}>
+                                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white ' + (item.iconColor || 'text-indigo-600') : (item.badgeBg || 'bg-red-500') + ' ' + (item.badgeText || 'text-white')}`}>
                                         {item.count}
                                     </span>
                                 )}
                                 {!isSidebarOpen && (
-                                    <span className="absolute left-full rounded-md px-2 py-1 ml-6 bg-indigo-100 text-indigo-800 text-sm invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0">
+                                    <span className={`absolute left-full rounded-md px-2 py-1 ml-6 ${item.tooltipBg || 'bg-indigo-100'} ${item.tooltipText || 'text-indigo-800'} text-sm invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0`}>
                                         {item.name}
                                     </span>
                                 )}
