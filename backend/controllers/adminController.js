@@ -121,6 +121,7 @@ const adminController = {
     res.json(tasks);
   },
   deleteTask: async (req, res) => {
+    // Find the task first so we know the owner
     const task = await Task.findByIdAndDelete(req.params.id);
     try {
       const payload = {
@@ -137,6 +138,10 @@ const adminController = {
         const io = getIO();
         io.emit('admin:action-created', created);
         io.emit('admin:task-deleted', req.params.id);
+        // If the task had a userId, emit to that user's room
+        if (task && task.userId) {
+          io.to(`user:${task.userId}`).emit('user:task-deleted', req.params.id);
+        }
         const userCount = await User.countDocuments();
         const taskCount = await Task.countDocuments();
         io.emit('admin:analytics-updated', { userCount, taskCount });

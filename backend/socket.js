@@ -16,7 +16,13 @@ function initSocket(server) {
   });
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
-    // You can add more event listeners here
+    // Listen for user to join their own room after authenticating
+    socket.on('join-user-room', (userId) => {
+      if (userId) {
+        socket.join(`user:${userId}`);
+        console.log(`Socket ${socket.id} joined room user:${userId}`);
+      }
+    });
   });
 }
 function getIO() {
