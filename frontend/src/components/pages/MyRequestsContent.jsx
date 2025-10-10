@@ -2,7 +2,7 @@
 
 import { useOutletContext } from 'react-router-dom'; // 1. Import the hook
 import { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
+import socket from '../../utils/socket';
 import { Icon } from '../ui/Icon';
 
 // Professional skeleton for My Requests page
@@ -60,17 +60,31 @@ const MyRequestsContent = () => {
 
   useEffect(() => {
     if (!context.user || !context.user._id) return;
-  const socket = io(import.meta.env.VITE_API_URL);
-    socket.on(`notification-update-${context.user._id}`, (notification) => {
-      // When a notification is received, update the status of the relevant request in myRequests
+    if (!socket.connected) socket.connect();
+    // Join user room for real-time events
+    socket.emit('join-user-room', context.user._id);
+
+    // Listen for request status updates (existing logic)
+    const notificationHandler = (notification) => {
       setMyRequests(prev => prev.map(req => {
         if (req._id === notification.requestId || req.id === notification.requestId) {
           return { ...req, status: notification.type === 'request-accepted' ? 'accepted' : notification.type === 'request-declined' ? 'declined' : req.status };
         }
         return req;
       }));
-    });
-    return () => socket.disconnect();
+    };
+    socket.on(`notification-update-${context.user._id}`, notificationHandler);
+
+    // Listen for real-time request deletion by admin
+    const requestDeletedHandler = (deletedId) => {
+      setMyRequests(prev => prev.filter(req => req._id !== deletedId && req.id !== deletedId));
+    };
+    socket.on('user:request-deleted', requestDeletedHandler);
+
+    return () => {
+      socket.off(`notification-update-${context.user._id}`, notificationHandler);
+      socket.off('user:request-deleted', requestDeletedHandler);
+    };
   }, [context.user]);
 
   if (context.myRequests === undefined) return <MyRequestsSkeleton />;

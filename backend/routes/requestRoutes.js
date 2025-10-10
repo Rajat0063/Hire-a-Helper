@@ -37,6 +37,10 @@ router.delete('/:id', protect, adminMiddleware, async (req, res) => {
                             const io = getIO();
                             io.emit('admin:action-created', created);
                             io.emit('admin:request-deleted', id);
+                            // Real-time: notify the requester so their dashboard updates
+                            if (deleted && deleted.requester) {
+                              io.to(`user:${deleted.requester}`).emit('user:request-deleted', id);
+                            }
                             const userCount = await require('../models/User').countDocuments();
                             const taskCount = await require('../models/taskModel').countDocuments();
                             io.emit('admin:analytics-updated', { userCount, taskCount });
