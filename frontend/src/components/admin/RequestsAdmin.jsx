@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import socket from '../../utils/socket';
-import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
 import axios from 'axios';
 import SkeletonLoader from '../ui/SkeletonLoader';
 
@@ -21,14 +19,6 @@ export default function RequestsAdmin() {
       .then(res => setRequests(res.data))
       .catch(() => setError('Failed to load requests'))
       .finally(() => setLoading(false));
-
-    if (!socket.connected) socket.connect();
-    socket.on(ADMIN_EVENTS.REQUEST_CREATED, newReq => {
-      setRequests(prev => [newReq, ...prev]);
-    });
-    return () => {
-      socket.off(ADMIN_EVENTS.REQUEST_CREATED);
-    };
   }, []);
 
   const handleDelete = id => {

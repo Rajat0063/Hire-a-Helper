@@ -24,7 +24,6 @@ export default function UsersAdmin() {
     return () => {
       socket.off(ADMIN_EVENTS.USER_UPDATED);
       socket.off(ADMIN_EVENTS.USER_DELETED);
-      socket.off(ADMIN_EVENTS.USER_CREATED);
     };
   }, []);
 
@@ -37,13 +36,6 @@ export default function UsersAdmin() {
         return updated;
       });
     });
-    socket.on(ADMIN_EVENTS.USER_CREATED, newUser => {
-      setUsers(users => {
-        const next = [newUser, ...users];
-        localStorage.setItem('admin_users', JSON.stringify(next));
-        return next;
-      });
-    });
     socket.on(ADMIN_EVENTS.USER_DELETED, deletedUserId => {
       setUsers(users => {
         const updated = users.filter(u => u._id !== deletedUserId);
@@ -54,7 +46,6 @@ export default function UsersAdmin() {
     return () => {
       socket.off(ADMIN_EVENTS.USER_UPDATED);
       socket.off(ADMIN_EVENTS.USER_DELETED);
-      socket.off(ADMIN_EVENTS.USER_CREATED);
     };
   }, []);
 

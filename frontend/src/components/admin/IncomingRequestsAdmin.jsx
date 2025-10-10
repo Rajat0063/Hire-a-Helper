@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import socket from '../../utils/socket';
-import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
 import axios from 'axios';
 import SkeletonLoader from '../ui/SkeletonLoader';
 
@@ -20,15 +18,6 @@ export default function IncomingRequestsAdmin() {
       // Always show skeleton for at least 1s
       setTimeout(() => setLoading(false), 1000);
     }
-    // connect socket and listen for new incoming requests created elsewhere
-    if (!socket.connected) socket.connect();
-    socket.on(ADMIN_EVENTS.INCOMING_REQUEST_CREATED, newReq => {
-      setIncomingRequests(prev => {
-        const next = [newReq, ...prev];
-        localStorage.setItem('admin_incoming_requests', JSON.stringify(next));
-        return next;
-      });
-    });
     const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
     axios.get(`${API}/api/incoming-requests`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -43,9 +32,6 @@ export default function IncomingRequestsAdmin() {
         // If no cache, show loader for 1s; else, loader already hidden
         if (!cached) setTimeout(() => setLoading(false), 1000);
       });
-    return () => {
-      socket.off(ADMIN_EVENTS.INCOMING_REQUEST_CREATED);
-    };
   }, []);
 
   const handleDelete = id => {

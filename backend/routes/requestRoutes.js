@@ -106,14 +106,6 @@ router.post('/', async (req, res) => {
             status: 'pending',
         });
         await request.save();
-        // emit to admins that a new request was created
-        try {
-            const { getIO } = require('../socket');
-            const io = getIO();
-            io.emit('admin:request-created', request);
-        } catch (emitErr) {
-            console.warn('Socket emit failed (requestRoutes create request):', emitErr && emitErr.message ? emitErr.message : emitErr);
-        }
         res.status(201).json(request);
     } catch (error) {
         res.status(500).json({ message: 'Server Error', error: error.message });
