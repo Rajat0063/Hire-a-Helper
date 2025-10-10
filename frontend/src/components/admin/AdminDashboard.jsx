@@ -51,13 +51,29 @@ export default function AdminDashboard() {
           ))}
         </div>
   <div className="bg-white/95 rounded-2xl shadow-2xl p-4 sm:p-8 min-h-[300px] sm:min-h-[400px] border border-indigo-200 overflow-x-auto transition-all duration-300">
-          {tab === 'overview' && <AdminOverview />}
-          {tab === 'users' && <UsersAdmin />}
-          {tab === 'tasks' && <TasksAdmin />}
-          {tab === 'requests' && <RequestsAdmin />}
-          {tab === 'incomingrequests' && <IncomingRequestsAdmin />}
-          {tab === 'disputes' && <DisputesAdmin />}
-          {tab === 'analytics' && <AnalyticsAdmin />}
+          {/* Keep all admin tab components mounted so they can receive socket events in real-time.
+              We hide inactive tabs visually but don't unmount them so their listeners remain active. */}
+          <div style={{ display: tab === 'overview' ? 'block' : 'none' }} aria-hidden={tab !== 'overview'}>
+            <AdminOverview />
+          </div>
+          <div style={{ display: tab === 'users' ? 'block' : 'none' }} aria-hidden={tab !== 'users'}>
+            <UsersAdmin />
+          </div>
+          <div style={{ display: tab === 'tasks' ? 'block' : 'none' }} aria-hidden={tab !== 'tasks'}>
+            <TasksAdmin />
+          </div>
+          <div style={{ display: tab === 'requests' ? 'block' : 'none' }} aria-hidden={tab !== 'requests'}>
+            <RequestsAdmin />
+          </div>
+          <div style={{ display: tab === 'incomingrequests' ? 'block' : 'none' }} aria-hidden={tab !== 'incomingrequests'}>
+            <IncomingRequestsAdmin />
+          </div>
+          <div style={{ display: tab === 'disputes' ? 'block' : 'none' }} aria-hidden={tab !== 'disputes'}>
+            <DisputesAdmin />
+          </div>
+          <div style={{ display: tab === 'analytics' ? 'block' : 'none' }} aria-hidden={tab !== 'analytics'}>
+            <AnalyticsAdmin />
+          </div>
         </div>
         {/* Friendly admin info message */}
         <div className="mt-4 text-center text-sm text-indigo-700 bg-indigo-50 rounded-lg px-4 py-2 shadow-sm font-medium">
