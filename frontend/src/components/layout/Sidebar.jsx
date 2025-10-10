@@ -35,7 +35,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                 {({ isActive }) => (
                     <>
                         <div className="flex items-center">
-                            <svg className={`h-5 w-5 ${isActive ? 'text-white' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6"></path></svg>
+                            <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-indigo-600'}`} path="M3 12l9-7 9 7v8a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-8z" />
                             {isSidebarOpen && <span className="ml-3">Overview</span>}
                         </div>
                     </>
