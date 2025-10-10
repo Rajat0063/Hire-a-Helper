@@ -607,7 +607,7 @@ const DashboardLayout = () => {
         { name: 'My Requests', path: 'my-requests', icon: <Icon className="h-5 w-5" path="M22 2l-7 20-4-9-9-4 20-7z" />, count: null },
         { name: 'Add Task', path: 'add-task', icon: <AddTaskIcon className="h-5 w-5" />, count: null },
         { name: 'Settings', path: 'settings', icon: <Icon className="h-5 w-5" path="M12 4.5c-4.142 0-7.5 3.358-7.5 7.5s3.358 7.5 7.5 7.5 7.5-3.358 7.5-7.5-3.358-7.5-7.5-7.5zm0 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11zm0-9a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />, count: null },
-    ...(user && user.isAdmin ? [{ name: 'Admin', path: '/admin', icon: <Icon className="h-5 w-5" path="M12 2a1 1 0 01.894.553l3 6A1 1 0 0116 10h-8a1 1 0 01-.894-1.447l3-6A1 1 0 0112 2zm0 7a5 5 0 00-5 5v3a1 1 0 001 1h8a1 1 0 001-1v-3a5 5 0 00-5-5z" />, count: null }] : []),
+    ...(user && user.isAdmin ? [{ name: 'Admin', path: '/admin', icon: <Icon className="h-5 w-5" path="M12 2l2.09 6.26L20 9l-4.5 3.26L16.18 19 12 16.27 7.82 19l1.68-6.74L5 9l5.91-.74L12 2z" />, count: null }] : []),
     ];
 
     if (!user) {
