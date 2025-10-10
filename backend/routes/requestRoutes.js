@@ -19,46 +19,46 @@ router.get('/', async (req, res) => {
 
 // ADMIN: Delete a request by ID
 router.delete('/:id', protect, adminMiddleware, async (req, res) => {
-    // Find the request first so we know the requester
-    const { id } = req.params;
-    const adminId = req.admin ? req.admin._id : null;
-        try {
+    try {
+        const { id } = req.params;
+        const adminId = req.admin ? req.admin._id : null;
         const deleted = await Request.findByIdAndDelete(id);
-                if (!deleted) return res.status(404).json({ message: 'Request not found' });
+        if (!deleted) return res.status(404).json({ message: 'Request not found' });
 
-                // Log admin action and emit
-                if (adminId) {
-                    try {
-                        const payload = { adminId, actionType: 'delete_request', targetId: id, targetType: 'Request', notes: `Request deleted by admin` };
-                        console.log('AdminAction payload (requestRoutes delete):', payload);
-                        const created = await AdminAction.create(payload);
-                        console.log('AdminAction created (requestRoutes delete)');
-                        // Emit socket event for request deletion (real-time)
-                        const { getIO } = require('../socket');
-                        const io = getIO();
-                        try {
-                            const { getIO } = require('../socket');
-                            const io = getIO();
-                            io.emit('admin:action-created', created);
-                            io.emit('admin:request-deleted', id);
-                            const userCount = await require('../models/User').countDocuments();
-                            const taskCount = await require('../models/taskModel').countDocuments();
-                            io.emit('admin:analytics-updated', { userCount, taskCount });
-                        } catch (socketErr) {
-                            console.warn('Socket emit failed (requestRoutes delete):', socketErr && socketErr.message ? socketErr.message : socketErr);
-                        }
-                    } catch (err) {
-                        console.error('Error storing admin action (requestRoutes delete):', err && err.message ? err.message : err);
-                        if (err && err.name === 'ValidationError' && err.errors) {
-                            Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
-                        }
+        // Log admin action and emit
+        if (adminId) {
+            try {
+                const payload = { adminId, actionType: 'delete_request', targetId: id, targetType: 'Request', notes: `Request deleted by admin` };
+                console.log('AdminAction payload (requestRoutes delete):', payload);
+                const created = await AdminAction.create(payload);
+                console.log('AdminAction created (requestRoutes delete)');
+                try {
+                    const { getIO } = require('../socket');
+                    const io = getIO();
+                    io.emit('admin:action-created', created);
+                    io.emit('admin:request-deleted', id);
+                    // Also notify the requester if present
+                    if (deleted && deleted.requester) {
+                        io.to(`user:${deleted.requester}`).emit('user:request-deleted', id);
                     }
+                    const userCount = await require('../models/User').countDocuments();
+                    const taskCount = await require('../models/taskModel').countDocuments();
+                    io.emit('admin:analytics-updated', { userCount, taskCount });
+                } catch (socketErr) {
+                    console.warn('Socket emit failed (requestRoutes delete):', socketErr && socketErr.message ? socketErr.message : socketErr);
                 }
-
-                res.json({ message: 'Request deleted' });
-        } catch (error) {
-                res.status(500).json({ message: 'Server Error', error: error.message });
+            } catch (err) {
+                console.error('Error storing admin action (requestRoutes delete):', err && err.message ? err.message : err);
+                if (err && err.name === 'ValidationError' && err.errors) {
+                    Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
+                }
+            }
         }
+
+        res.json({ message: 'Request deleted' });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
 });
 // Mark requests as seen by the current user
 router.post('/mark-seen', async (req, res) => {

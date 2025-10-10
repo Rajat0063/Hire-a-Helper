@@ -61,20 +61,29 @@ const MyRequestsContent = () => {
   useEffect(() => {
     if (!context.user || !context.user._id) return;
     if (!socket.connected) socket.connect();
-    // Join user room for real-time updates
+    // Join user room for real-time events
     socket.emit('join-user-room', context.user._id);
-    // Listen for request status updates (accepted/declined/deleted)
-    const handler = (payload) => {
+
+    // Listen for request status notifications
+    const notifHandler = (notification) => {
       setMyRequests(prev => prev.map(req => {
-        if (req._id === payload._id || req.id === payload._id) {
-          return { ...req, status: payload.status };
+        if (req._id === notification.requestId || req.id === notification.requestId) {
+          return { ...req, status: notification.type === 'request-accepted' ? 'accepted' : notification.type === 'request-declined' ? 'declined' : req.status };
         }
         return req;
       }));
     };
-    socket.on('user:request-updated', handler);
+    socket.on(`notification-update-${context.user._id}`, notifHandler);
+
+    // Listen for admin-deleted requests
+    const deletedHandler = (deletedId) => {
+      setMyRequests(prev => prev.filter(req => req._id !== deletedId && req.id !== deletedId));
+    };
+    socket.on('user:request-deleted', deletedHandler);
+
     return () => {
-      socket.off('user:request-updated', handler);
+      socket.off(`notification-update-${context.user._id}`, notifHandler);
+      socket.off('user:request-deleted', deletedHandler);
     };
   }, [context.user]);
 
@@ -106,13 +115,8 @@ const MyRequestsContent = () => {
         <div className="text-zinc-500 mb-4">Track the help requests you've sent</div>
         <div className="space-y-8">
           {myRequests.map(request => {
+            // Prefer taskImage (from backend), then image, then placeholder
             const imgSrc = request.taskImage || request.image || PLACEHOLDER_IMG;
-            // Determine if actions should be disabled
-            // const isDisabled = ['accepted', 'declined', 'deleted'].includes((request.status || '').toLowerCase());
-            let statusMsg = '';
-            if ((request.status || '').toLowerCase() === 'deleted') statusMsg = 'This request was deleted by the owner/admin.';
-            if ((request.status || '').toLowerCase() === 'declined') statusMsg = 'This request was declined.';
-            if ((request.status || '').toLowerCase() === 'accepted') statusMsg = 'This request was accepted.';
             return (
               <div key={request._id || request.id} className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 border border-zinc-100">
                 <div className="flex items-center gap-3 mb-2">
@@ -144,9 +148,6 @@ const MyRequestsContent = () => {
                 <div className="mt-2">
                   <img src={imgSrc} alt="Task" className="rounded-lg w-full object-cover max-h-72 border border-zinc-200" />
                 </div>
-                {statusMsg && (
-                  <div className="mt-4 text-center text-sm font-semibold text-red-500">{statusMsg}</div>
-                )}
               </div>
             );
           })}
