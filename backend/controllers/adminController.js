@@ -13,60 +13,45 @@ const adminController = {
   blockUser: async (req, res) => {
     const user = await User.findByIdAndUpdate(req.params.id, { isBlocked: true }, { new: true });
     try {
-      const payload = {
-        adminId: req.admin ? req.admin._id : null,
+      await AdminAction.create({
+        adminId: req.admin._id,
         actionType: 'block_user',
-        targetId: user ? user._id : req.params.id,
+        targetId: user._id,
         targetType: 'User',
         notes: req.body.notes || ''
-      };
-      await AdminAction.create(payload);
+      });
     } catch (err) {
-      console.error('Error storing admin action (blockUser). Payload:', {
-        admin: req.admin ? { id: req.admin._id, email: req.admin.email } : null,
-        params: req.params,
-        body: req.body
-      }, err && err.message, err && err.stack);
+      console.error('Error storing admin action (blockUser):', err);
     }
     res.json(user);
   },
   unblockUser: async (req, res) => {
     const user = await User.findByIdAndUpdate(req.params.id, { isBlocked: false }, { new: true });
     try {
-      const payload = {
-        adminId: req.admin ? req.admin._id : null,
+      await AdminAction.create({
+        adminId: req.admin._id,
         actionType: 'unblock_user',
-        targetId: user ? user._id : req.params.id,
+        targetId: user._id,
         targetType: 'User',
         notes: req.body.notes || ''
-      };
-      await AdminAction.create(payload);
+      });
     } catch (err) {
-      console.error('Error storing admin action (unblockUser). Payload:', {
-        admin: req.admin ? { id: req.admin._id, email: req.admin.email } : null,
-        params: req.params,
-        body: req.body
-      }, err && err.message, err && err.stack);
+      console.error('Error storing admin action (unblockUser):', err);
     }
     res.json(user);
   },
   deleteUser: async (req, res) => {
     const user = await User.findByIdAndDelete(req.params.id);
     try {
-      const payload = {
-        adminId: req.admin ? req.admin._id : null,
+      await AdminAction.create({
+        adminId: req.admin._id,
         actionType: 'delete_user',
         targetId: req.params.id,
         targetType: 'User',
         notes: req.body.notes || ''
-      };
-      await AdminAction.create(payload);
+      });
     } catch (err) {
-      console.error('Error storing admin action (deleteUser). Payload:', {
-        admin: req.admin ? { id: req.admin._id, email: req.admin.email } : null,
-        params: req.params,
-        body: req.body
-      }, err && err.message, err && err.stack);
+      console.error('Error storing admin action (deleteUser):', err);
     }
     res.json({ message: 'User deleted' });
   },
@@ -79,20 +64,15 @@ const adminController = {
   deleteTask: async (req, res) => {
     const task = await Task.findByIdAndDelete(req.params.id);
     try {
-      const payload = {
-        adminId: req.admin ? req.admin._id : null,
+      await AdminAction.create({
+        adminId: req.admin._id,
         actionType: 'delete_task',
         targetId: req.params.id,
         targetType: 'Task',
         notes: req.body.notes || ''
-      };
-      await AdminAction.create(payload);
+      });
     } catch (err) {
-      console.error('Error storing admin action (deleteTask). Payload:', {
-        admin: req.admin ? { id: req.admin._id, email: req.admin.email } : null,
-        params: req.params,
-        body: req.body
-      }, err && err.message, err && err.stack);
+      console.error('Error storing admin action (deleteTask):', err);
     }
     res.json({ message: 'Task deleted' });
   },
