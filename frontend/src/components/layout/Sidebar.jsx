@@ -25,6 +25,22 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
             )}
         </div>
         <nav className="flex-1 p-4 space-y-2">
+            {/* Always show Overview link so users can easily navigate to their dashboard overview */}
+            <NavLink
+                to="/dashboard/overview"
+                className={({ isActive }) => `w-full flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 group relative ${
+                    isActive ? 'bg-indigo-600 text-white shadow-lg' : 'text-zinc-600 hover:bg-zinc-100'
+                } ${!isSidebarOpen && 'justify-center'}`}
+            >
+                {({ isActive }) => (
+                    <>
+                        <div className="flex items-center">
+                            <svg className={`h-5 w-5 ${isActive ? 'text-white' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6"></path></svg>
+                            {isSidebarOpen && <span className="ml-3">Overview</span>}
+                        </div>
+                    </>
+                )}
+            </NavLink>
             {navItems.map((item) => {
                 // Use absolute path for Admin, else prefix with /dashboard/
                 const to = item.path.startsWith('/') ? item.path : `/dashboard/${item.path}`;
