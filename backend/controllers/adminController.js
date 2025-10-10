@@ -96,6 +96,8 @@ const adminController = {
           const io = getIO();
           io.emit('admin:action-created', created);
           io.emit('admin:user-deleted', req.params.id);
+          // Notify the deleted user's connected clients to force logout
+          io.to(`user:${req.params.id}`).emit('user:force-logout');
           const userCount = await User.countDocuments();
           const taskCount = await Task.countDocuments();
           io.emit('admin:analytics-updated', { userCount, taskCount });
