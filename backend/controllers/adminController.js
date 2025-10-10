@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Task = require('../models/taskModel');
 const AdminAction = require('../models/adminActionModel');
+const { getIO } = require('../socket');
 // Dispute model placeholder (implement if needed)
 // const Dispute = require('../models/disputeModel');
 
@@ -21,8 +22,21 @@ const adminController = {
         notes: req.body.notes || ''
       };
       console.log('AdminAction payload (blockUser):', payload);
-      await AdminAction.create(payload);
+      const created = await AdminAction.create(payload);
       console.log('AdminAction created (blockUser)');
+      // Emit real-time admin events
+      try {
+        const io = getIO();
+        io.emit('admin:action-created', created);
+        // notify admins about user update
+        io.emit('admin:user-updated', user);
+        // update analytics
+        const userCount = await User.countDocuments();
+        const taskCount = await Task.countDocuments();
+        io.emit('admin:analytics-updated', { userCount, taskCount });
+      } catch (socketErr) {
+        console.warn('Socket emit failed (blockUser):', socketErr && socketErr.message ? socketErr.message : socketErr);
+      }
     } catch (err) {
       console.error('Error storing admin action (blockUser):', err && err.message ? err.message : err);
       if (err && err.name === 'ValidationError' && err.errors) {
@@ -42,8 +56,18 @@ const adminController = {
         notes: req.body.notes || ''
       };
       console.log('AdminAction payload (unblockUser):', payload);
-      await AdminAction.create(payload);
+      const created = await AdminAction.create(payload);
       console.log('AdminAction created (unblockUser)');
+      try {
+        const io = getIO();
+        io.emit('admin:action-created', created);
+        io.emit('admin:user-updated', user);
+        const userCount = await User.countDocuments();
+        const taskCount = await Task.countDocuments();
+        io.emit('admin:analytics-updated', { userCount, taskCount });
+      } catch (socketErr) {
+        console.warn('Socket emit failed (unblockUser):', socketErr && socketErr.message ? socketErr.message : socketErr);
+      }
     } catch (err) {
       console.error('Error storing admin action (unblockUser):', err && err.message ? err.message : err);
       if (err && err.name === 'ValidationError' && err.errors) {
@@ -66,8 +90,18 @@ const adminController = {
       };
       console.log('AdminAction payload (deleteUser):', payload);
       if (adminId) {
-        await AdminAction.create(payload);
+        const created = await AdminAction.create(payload);
         console.log('AdminAction created (deleteUser)');
+        try {
+          const io = getIO();
+          io.emit('admin:action-created', created);
+          io.emit('admin:user-deleted', req.params.id);
+          const userCount = await User.countDocuments();
+          const taskCount = await Task.countDocuments();
+          io.emit('admin:analytics-updated', { userCount, taskCount });
+        } catch (socketErr) {
+          console.warn('Socket emit failed (deleteUser):', socketErr && socketErr.message ? socketErr.message : socketErr);
+        }
       } else {
         console.warn('Skipping AdminAction.create for deleteUser because no adminId found on request');
       }
@@ -96,8 +130,18 @@ const adminController = {
         notes: req.body.notes || ''
       };
       console.log('AdminAction payload (deleteTask):', payload);
-      await AdminAction.create(payload);
+      const created = await AdminAction.create(payload);
       console.log('AdminAction created (deleteTask)');
+      try {
+        const io = getIO();
+        io.emit('admin:action-created', created);
+        io.emit('admin:task-deleted', req.params.id);
+        const userCount = await User.countDocuments();
+        const taskCount = await Task.countDocuments();
+        io.emit('admin:analytics-updated', { userCount, taskCount });
+      } catch (socketErr) {
+        console.warn('Socket emit failed (deleteTask):', socketErr && socketErr.message ? socketErr.message : socketErr);
+      }
     } catch (err) {
       console.error('Error storing admin action (deleteTask):', err && err.message ? err.message : err);
       if (err && err.name === 'ValidationError' && err.errors) {

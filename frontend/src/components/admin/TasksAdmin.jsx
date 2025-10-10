@@ -20,15 +20,33 @@ export default function TasksAdmin() {
 
   useEffect(() => {
     if (!socket.connected) socket.connect();
-    socket.on('admin:task-deleted', deletedTaskId => {
+    // keep tasks in sync when other admins modify/delete tasks
+    socket.on(ADMIN_EVENTS.TASK_DELETED, deletedTaskId => {
       setTasks(tasks => {
         const updated = tasks.filter(t => t._id !== deletedTaskId);
         localStorage.setItem('admin_tasks', JSON.stringify(updated));
         return updated;
       });
     });
+
+    socket.on(ADMIN_EVENTS.TASK_UPDATED, updatedTask => {
+      setTasks(tasks => {
+        const found = tasks.some(t => t._id === updatedTask._id);
+        let next;
+        if (found) {
+          next = tasks.map(t => (t._id === updatedTask._id ? updatedTask : t));
+        } else {
+          // if not present, prepend so admin can see it quickly
+          next = [updatedTask, ...tasks];
+        }
+        localStorage.setItem('admin_tasks', JSON.stringify(next));
+        return next;
+      });
+    });
+
     return () => {
-      socket.off('admin:task-deleted');
+      socket.off(ADMIN_EVENTS.TASK_DELETED);
+      socket.off(ADMIN_EVENTS.TASK_UPDATED);
     };
   }, []);
 

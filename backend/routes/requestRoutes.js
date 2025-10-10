@@ -25,13 +25,24 @@ router.delete('/:id', protect, adminMiddleware, async (req, res) => {
                 const deleted = await Request.findByIdAndDelete(id);
                 if (!deleted) return res.status(404).json({ message: 'Request not found' });
 
-                // Log admin action
+                // Log admin action and emit
                 if (adminId) {
                     try {
                         const payload = { adminId, actionType: 'delete_request', targetId: id, targetType: 'Request', notes: `Request deleted by admin` };
                         console.log('AdminAction payload (requestRoutes delete):', payload);
-                        await AdminAction.create(payload);
+                        const created = await AdminAction.create(payload);
                         console.log('AdminAction created (requestRoutes delete)');
+                        try {
+                            const { getIO } = require('../socket');
+                            const io = getIO();
+                            io.emit('admin:action-created', created);
+                            io.emit('admin:request-deleted', id);
+                            const userCount = await require('../models/User').countDocuments();
+                            const taskCount = await require('../models/taskModel').countDocuments();
+                            io.emit('admin:analytics-updated', { userCount, taskCount });
+                        } catch (socketErr) {
+                            console.warn('Socket emit failed (requestRoutes delete):', socketErr && socketErr.message ? socketErr.message : socketErr);
+                        }
                     } catch (err) {
                         console.error('Error storing admin action (requestRoutes delete):', err && err.message ? err.message : err);
                         if (err && err.name === 'ValidationError' && err.errors) {

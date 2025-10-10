@@ -26,8 +26,19 @@ router.delete('/:id', protect, adminMiddleware, async (req, res) => {
                     try {
                         const payload = { adminId, actionType: 'delete_incoming_request', targetId: id, targetType: 'IncomingRequest', notes: `Incoming request deleted by admin` };
                         console.log('AdminAction payload (incomingRequestRoutes delete):', payload);
-                        await AdminAction.create(payload);
-                        console.log('AdminAction created (incomingRequestRoutes delete)');
+                            const created = await AdminAction.create(payload);
+                            console.log('AdminAction created (incomingRequestRoutes delete)');
+                            try {
+                                const { getIO } = require('../socket');
+                                const io = getIO();
+                                io.emit('admin:action-created', created);
+                                io.emit('admin:incoming-request-deleted', id);
+                                const userCount = await require('../models/User').countDocuments();
+                                const taskCount = await require('../models/taskModel').countDocuments();
+                                io.emit('admin:analytics-updated', { userCount, taskCount });
+                            } catch (socketErr) {
+                                console.warn('Socket emit failed (incomingRequestRoutes delete):', socketErr && socketErr.message ? socketErr.message : socketErr);
+                            }
                     } catch (err) {
                         console.error('Error storing admin action (incomingRequestRoutes delete):', err && err.message ? err.message : err);
                         if (err && err.name === 'ValidationError' && err.errors) {

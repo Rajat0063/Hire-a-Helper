@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import socket from '../../utils/socket';
+import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
 import axios from 'axios';
 import SkeletonLoader from '../ui/SkeletonLoader';
 
@@ -38,7 +40,27 @@ export default function AdminOverview() {
       })
       .catch(() => console.warn('Failed to load admin actions'));
 
-    return () => clearTimeout(timer);
+    // Socket listeners for realtime admin updates
+    if (!socket.connected) socket.connect();
+    socket.off(ADMIN_EVENTS.ACTION_CREATED);
+    socket.off(ADMIN_EVENTS.ANALYTICS_UPDATED);
+    socket.on(ADMIN_EVENTS.ACTION_CREATED, (newAction) => {
+      setActions(prev => {
+        const updated = [newAction, ...prev].slice(0, 20);
+        localStorage.setItem('admin_actions', JSON.stringify(updated));
+        return updated;
+      });
+    });
+    socket.on(ADMIN_EVENTS.ANALYTICS_UPDATED, (newAnalytics) => {
+      setAnalytics(newAnalytics);
+      localStorage.setItem('admin_analytics', JSON.stringify(newAnalytics));
+    });
+
+    return () => {
+      clearTimeout(timer);
+      socket.off(ADMIN_EVENTS.ACTION_CREATED);
+      socket.off(ADMIN_EVENTS.ANALYTICS_UPDATED);
+    };
   }, []);
 
   if (loading) return <SkeletonLoader rows={3} cols={3} headers={["Metric","Value",""]} />;

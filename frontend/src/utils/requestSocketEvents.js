@@ -6,4 +6,8 @@ export const ADMIN_EVENTS = {
   TASK_DELETED: 'admin:task-deleted',
   DISPUTE_UPDATED: 'admin:dispute-updated',
   ANALYTICS_UPDATED: 'admin:analytics-updated',
+  ACTION_CREATED: 'admin:action-created',
+  USER_DELETED_EVENT: 'admin:user-deleted',
+  REQUEST_DELETED: 'admin:request-deleted',
+  INCOMING_REQUEST_DELETED: 'admin:incoming-request-deleted',
 };
