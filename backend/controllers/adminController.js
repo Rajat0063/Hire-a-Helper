@@ -13,45 +13,63 @@ const adminController = {
   blockUser: async (req, res) => {
     const user = await User.findByIdAndUpdate(req.params.id, { isBlocked: true }, { new: true });
     try {
-      await AdminAction.create({
-        adminId: req.admin._id,
+      const payload = {
+        adminId: req.admin && req.admin._id,
         actionType: 'block_user',
-        targetId: user._id,
+        targetId: user && user._id,
         targetType: 'User',
         notes: req.body.notes || ''
-      });
+      };
+      console.log('AdminAction payload (blockUser):', payload);
+      await AdminAction.create(payload);
+      console.log('AdminAction created (blockUser)');
     } catch (err) {
-      console.error('Error storing admin action (blockUser):', err);
+      console.error('Error storing admin action (blockUser):', err && err.message ? err.message : err);
+      if (err && err.name === 'ValidationError' && err.errors) {
+        Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
+      }
     }
     res.json(user);
   },
   unblockUser: async (req, res) => {
     const user = await User.findByIdAndUpdate(req.params.id, { isBlocked: false }, { new: true });
     try {
-      await AdminAction.create({
-        adminId: req.admin._id,
+      const payload = {
+        adminId: req.admin && req.admin._id,
         actionType: 'unblock_user',
-        targetId: user._id,
+        targetId: user && user._id,
         targetType: 'User',
         notes: req.body.notes || ''
-      });
+      };
+      console.log('AdminAction payload (unblockUser):', payload);
+      await AdminAction.create(payload);
+      console.log('AdminAction created (unblockUser)');
     } catch (err) {
-      console.error('Error storing admin action (unblockUser):', err);
+      console.error('Error storing admin action (unblockUser):', err && err.message ? err.message : err);
+      if (err && err.name === 'ValidationError' && err.errors) {
+        Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
+      }
     }
     res.json(user);
   },
   deleteUser: async (req, res) => {
     const user = await User.findByIdAndDelete(req.params.id);
     try {
-      await AdminAction.create({
-        adminId: req.admin._id,
+      const payload = {
+        adminId: req.admin && req.admin._id,
         actionType: 'delete_user',
         targetId: req.params.id,
         targetType: 'User',
         notes: req.body.notes || ''
-      });
+      };
+      console.log('AdminAction payload (deleteUser):', payload);
+      await AdminAction.create(payload);
+      console.log('AdminAction created (deleteUser)');
     } catch (err) {
-      console.error('Error storing admin action (deleteUser):', err);
+      console.error('Error storing admin action (deleteUser):', err && err.message ? err.message : err);
+      if (err && err.name === 'ValidationError' && err.errors) {
+        Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
+      }
     }
     res.json({ message: 'User deleted' });
   },
@@ -64,15 +82,21 @@ const adminController = {
   deleteTask: async (req, res) => {
     const task = await Task.findByIdAndDelete(req.params.id);
     try {
-      await AdminAction.create({
-        adminId: req.admin._id,
+      const payload = {
+        adminId: req.admin && req.admin._id,
         actionType: 'delete_task',
         targetId: req.params.id,
         targetType: 'Task',
         notes: req.body.notes || ''
-      });
+      };
+      console.log('AdminAction payload (deleteTask):', payload);
+      await AdminAction.create(payload);
+      console.log('AdminAction created (deleteTask)');
     } catch (err) {
-      console.error('Error storing admin action (deleteTask):', err);
+      console.error('Error storing admin action (deleteTask):', err && err.message ? err.message : err);
+      if (err && err.name === 'ValidationError' && err.errors) {
+        Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
+      }
     }
     res.json({ message: 'Task deleted' });
   },
@@ -91,6 +115,17 @@ const adminController = {
     const taskCount = await Task.countDocuments();
     // Add more analytics as needed
     res.json({ userCount, taskCount });
+  }
+  ,
+  // ADMIN ACTIONS (for debugging / audit)
+  getAdminActions: async (req, res) => {
+    try {
+      const actions = await AdminAction.find({}).sort({ createdAt: -1 }).limit(200);
+      res.json(actions);
+    } catch (err) {
+      console.error('Error fetching admin actions:', err && err.message ? err.message : err);
+      res.status(500).json({ message: 'Failed to fetch admin actions' });
+    }
   }
 };
 

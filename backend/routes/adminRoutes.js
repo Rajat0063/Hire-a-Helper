@@ -21,5 +21,7 @@ router.patch('/disputes/:id/resolve', protect, adminMiddleware, adminController.
 
 // Analytics
 router.get('/analytics', protect, adminMiddleware, adminController.getAnalytics);
+// Debug: list admin actions
+router.get('/actions', protect, adminMiddleware, adminController.getAdminActions);
 
 module.exports = router;

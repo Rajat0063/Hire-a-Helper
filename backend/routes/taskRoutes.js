@@ -46,13 +46,17 @@ router.delete('/:id', protect, adminMiddleware, async (req, res) => {
     }
     // Log admin action
     if (adminId) {
-      await AdminAction.create({
-        adminId,
-        actionType: 'delete_task',
-        targetId: id,
-        targetType: 'Task',
-        notes: `Task deleted by admin`,
-      });
+      try {
+        const payload = { adminId, actionType: 'delete_task', targetId: id, targetType: 'Task', notes: `Task deleted by admin` };
+        console.log('AdminAction payload (taskRoutes delete):', payload);
+        await AdminAction.create(payload);
+        console.log('AdminAction created (taskRoutes delete)');
+      } catch (err) {
+        console.error('Error storing admin action (taskRoutes delete):', err && err.message ? err.message : err);
+        if (err && err.name === 'ValidationError' && err.errors) {
+          Object.entries(err.errors).forEach(([field, e]) => console.error('Validation error', field, e.message));
+        }
+      }
     }
     // Emit socket event for task deletion (real-time)
     try {
