@@ -611,7 +611,6 @@ const DashboardLayout = () => {
     
     const navItems = [
     { name: 'Feed', path: 'feed', icon: <Icon className="h-5 w-5" path="M4 6h16v10H4z M4 4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4z M8 9h8v2H8V9z" />, count: null },
-    { name: 'Messages', path: 'messages', icon: <Icon className="h-5 w-5" path="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />, count: null },
         { name: 'My Tasks', path: 'my-tasks', icon: <Icon className="h-5 w-5" path="M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5zm2 6h10v2H7V9zm0 4h6v2H7v-2z" />, count: null },
         { name: 'Requests', path: 'requests', icon: <Icon className="h-5 w-5" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />, count: requestCount },
         { name: 'My Requests', path: 'my-requests', icon: <Icon className="h-5 w-5" path="M22 2l-7 20-4-9-9-4 20-7z" />, count: null },

@@ -1,183 +1,156 @@
+import React, { useEffect, useRef, useState } from "react";
+import socket from "../../utils/socket";
+import Avatar from "../ui/Avatar";
 
-import React, { useState, useEffect, useRef } from "react";
-import io from "socket.io-client";
-import { fetchMessages } from "../../utils/messagesApi";
+// Dummy data for sidebar (replace with API call)
+const conversationsDummy = [
+	{ id: "1", name: "John Helper", lastMessage: "See you soon!", image: "", unread: 2 },
+	{ id: "2", name: "Jane Requester", lastMessage: "Thank you!", image: "", unread: 0 },
+];
 
-// Dummy chat list for UI demo; replace with real user list from backend
-import { fetchConversations, sendMessageApi } from "../../utils/messagesApi";
-
-const getUser = () => {
-  try {
-    const stored = localStorage.getItem("userInfo");
-    if (stored) return JSON.parse(stored);
-  } catch {
-    // ignore
-  }
-  return null;
-};
-
-const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-let socket;
+const currentUser = { id: "me", name: "You" };
 
 const Messages = () => {
-  const user = getUser();
-  const [chatList, setChatList] = useState([]);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [loadingChats, setLoadingChats] = useState(true);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [connected, setConnected] = useState(false);
-  const messagesEndRef = useRef(null);
+		const [conversations] = useState(conversationsDummy);
+	const [selectedId, setSelectedId] = useState(conversationsDummy[0]?.id || "");
+	const [messages, setMessages] = useState([]);
+	const [input, setInput] = useState("");
+	const [loading, setLoading] = useState(false);
+	const messagesEndRef = useRef(null);
 
-  // Fetch chat list (conversations)
-  useEffect(() => {
-    if (!user) return;
-    setLoadingChats(true);
-    fetchConversations(user.token)
-      .then((convos) => {
-        setChatList(convos);
-        setSelectedChat(convos[0] || null);
-      })
-      .finally(() => setLoadingChats(false));
-  }, [user]);
+	// Connect to socket and join room
+	useEffect(() => {
+		socket.connect();
+		if (selectedId) {
+			socket.emit("join_conversation", selectedId);
+		}
+		return () => {
+			socket.disconnect();
+		};
+	}, [selectedId]);
 
-  // Fetch messages for selected chat
-  useEffect(() => {
-    if (!user || !selectedChat) return;
-    let isMounted = true;
-    const token = user.token;
-    fetchMessages(user._id, selectedChat._id, token)
-      .then((msgs) => {
-        if (isMounted) setMessages(msgs);
-      })
-      .catch(() => {});
+	// Listen for incoming messages
+	useEffect(() => {
+		socket.on("receive_message", (msg) => {
+			setMessages((prev) => [...prev, msg]);
+		});
+		return () => {
+			socket.off("receive_message");
+		};
+	}, []);
 
-    // Setup socket
-    socket = io(SOCKET_URL, { autoConnect: true });
-    setConnected(true);
-    socket.emit("joinRoom", { userId: user._id, recipientId: selectedChat._id });
-    const handleMessage = (msg) => {
-      setMessages((prev) => {
-        if (prev.length && prev[prev.length - 1]._id === msg._id) return prev;
-        return [...prev, msg];
-      });
-    };
-    socket.on("message", handleMessage);
-    return () => {
-      socket.emit("leaveRoom", { userId: user._id, recipientId: selectedChat._id });
-      socket.disconnect();
-      setConnected(false);
-      isMounted = false;
-    };
-  }, [user, selectedChat]);
+	// Scroll to bottom on new message
+	useEffect(() => {
+		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [messages]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+	// Dummy: Load messages for selected conversation
+	useEffect(() => {
+		setLoading(true);
+		setTimeout(() => {
+			setMessages([
+				{ id: 1, sender: { id: "1", name: "John Helper" }, text: "Hello! How can I help you?", time: "10:00" },
+				{ id: 2, sender: currentUser, text: "Hi! I need help with my request.", time: "10:01" },
+			]);
+			setLoading(false);
+		}, 500);
+	}, [selectedId]);
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    const token = user.token;
-    try {
-      const sent = await sendMessageApi(user._id, selectedChat._id, input, token);
-      setMessages((prev) => [...prev, sent]);
-      socket.emit("message", sent);
-      setInput("");
-    } catch {
-      // Optionally show error
-    }
-  };
+	const sendMessage = (e) => {
+		e.preventDefault();
+		if (!input.trim()) return;
+		const msg = {
+			sender: currentUser,
+			text: input,
+			time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+		};
+		setMessages((prev) => [...prev, msg]);
+		socket.emit("send_message", { conversationId: selectedId, ...msg });
+		setInput("");
+	};
 
-  return (
-    <div className="flex h-[80vh] w-full bg-white rounded-2xl shadow-2xl overflow-hidden text-zinc-800">
-      {/* Sidebar Chat List */}
-      <aside className="w-80 bg-zinc-50 border-r border-zinc-200 flex flex-col">
-        <div className="p-5 border-b border-zinc-200 text-xl font-bold tracking-wide">Messages</div>
-        <div className="flex-1 overflow-y-auto">
-          {loadingChats ? (
-            <div className="p-6 text-zinc-400 text-center">Loading chats...</div>
-          ) : chatList.length === 0 ? (
-            <div className="p-6 text-zinc-400 text-center">No conversations yet.</div>
-          ) : chatList.map((chat) => (
-            <div
-              key={chat._id}
-              className={`flex items-center gap-3 px-5 py-4 cursor-pointer transition hover:bg-zinc-100 ${selectedChat && selectedChat._id === chat._id ? "bg-zinc-100" : ""}`}
-              onClick={() => setSelectedChat(chat)}
-            >
-              <img src={chat.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(chat.name)}`} alt={chat.name} className="w-10 h-10 rounded-full object-cover" />
-              <div className="flex-1">
-                <div className="font-semibold text-base">{chat.name}</div>
-                <div className="text-xs text-zinc-500 truncate max-w-[120px]">{chat.lastMessage}</div>
-              </div>
-              {chat.unread > 0 && (
-                <span className="bg-indigo-600 text-xs px-2 py-0.5 rounded-full font-bold text-white">{chat.unread}</span>
-              )}
-            </div>
-          ))}
-        </div>
-      </aside>
+	return (
+		<div className="flex h-[calc(100vh-64px)] bg-zinc-100">
+			{/* Sidebar */}
+			<aside className="w-80 bg-white border-r flex flex-col">
+				<div className="p-6 border-b text-xl font-bold text-indigo-700">Messages</div>
+				<div className="flex-1 overflow-y-auto">
+					{conversations.map((conv) => (
+						<button
+							key={conv.id}
+							className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 focus:bg-indigo-100 transition text-left ${selectedId === conv.id ? "bg-indigo-50" : ""}`}
+							onClick={() => setSelectedId(conv.id)}
+						>
+							<Avatar user={conv} className="h-10 w-10" />
+							<div className="flex-1">
+								<div className="font-medium text-zinc-800">{conv.name}</div>
+								<div className="text-xs text-zinc-500 truncate">{conv.lastMessage}</div>
+							</div>
+							{conv.unread > 0 && (
+								<span className="ml-2 bg-indigo-600 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{conv.unread}</span>
+							)}
+						</button>
+					))}
+				</div>
+			</aside>
 
-      {/* Main Chat Window */}
-      <section className="flex-1 flex flex-col bg-white">
-        {/* Chat Header */}
-        {selectedChat ? (
-          <div className="flex items-center px-8 py-5 border-b border-zinc-200 bg-zinc-50">
-            <img src={selectedChat.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedChat.name)}`} alt={selectedChat.name} className="w-10 h-10 rounded-full object-cover mr-4" />
-            <div className="flex-1">
-              <div className="font-semibold text-lg">{selectedChat.name}</div>
-              <div className="text-xs text-zinc-500">Online</div>
-            </div>
-            <span className={`ml-2 h-2 w-2 rounded-full ${connected ? "bg-green-500" : "bg-gray-300"}`}></span>
-          </div>
-        ) : (
-          <div className="flex items-center px-8 py-5 border-b border-zinc-200 bg-zinc-50 text-zinc-400">Select a conversation</div>
-        )}
+			{/* Main chat area */}
+			<main className="flex-1 flex flex-col">
+				{/* Header */}
+				<div className="h-16 flex items-center px-6 border-b bg-white shadow-sm">
+					<Avatar user={conversations.find((c) => c.id === selectedId) || {}} className="h-10 w-10 mr-3" />
+					<div className="font-semibold text-lg text-zinc-800">
+						{conversations.find((c) => c.id === selectedId)?.name || "Select a conversation"}
+					</div>
+				</div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-3 bg-white">
-          {selectedChat && messages.length > 0 ? messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${msg.sender === user._id ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`px-5 py-3 rounded-2xl max-w-lg text-sm shadow-md ${msg.sender === user._id ? "bg-indigo-600 text-white" : "bg-zinc-100 text-zinc-800 border border-zinc-200"}`}
-              >
-                {msg.text}
-                <div className="text-[10px] text-right text-zinc-400 mt-1">
-                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                </div>
-              </div>
-            </div>
-          )) : (
-            <div className="text-zinc-400 text-center mt-10">No messages yet.</div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+				{/* Messages */}
+				<div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-zinc-50">
+					{loading ? (
+						<div className="text-zinc-400 text-center mt-10">Loading messages...</div>
+					) : (
+						messages.map((msg, idx) => (
+							<div
+								key={idx}
+								className={`flex ${msg.sender.id === currentUser.id ? "justify-end" : "justify-start"}`}
+							>
+								{msg.sender.id !== currentUser.id && (
+									<Avatar user={msg.sender} className="h-8 w-8 mr-2" />
+								)}
+								<div className={`max-w-xs px-4 py-2 rounded-2xl shadow text-sm ${msg.sender.id === currentUser.id ? "bg-indigo-600 text-white" : "bg-white text-zinc-800"}`}>
+									{msg.text}
+									<div className="text-[10px] text-zinc-400 text-right mt-1">{msg.time}</div>
+								</div>
+								{msg.sender.id === currentUser.id && (
+									<Avatar user={msg.sender} className="h-8 w-8 ml-2" />
+								)}
+							</div>
+						))
+					)}
+					<div ref={messagesEndRef} />
+				</div>
 
-        {/* Message Input */}
-        {selectedChat && (
-          <form onSubmit={sendMessage} className="flex items-center border-t border-zinc-200 px-8 py-5 bg-zinc-50">
-            <input
-              type="text"
-              className="flex-1 bg-white border border-zinc-200 rounded-xl px-4 py-3 mr-3 text-zinc-800 placeholder-zinc-400 focus:ring-2 focus:ring-indigo-600 outline-none"
-              placeholder="Type your message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition"
-              disabled={!input.trim()}
-            >
-              Send
-            </button>
-          </form>
-        )}
-      </section>
-    </div>
-  );
+				{/* Input */}
+				<form onSubmit={sendMessage} className="flex items-center gap-2 px-6 py-4 border-t bg-white">
+					<input
+						type="text"
+						value={input}
+						onChange={(e) => setInput(e.target.value)}
+						placeholder="Type your message..."
+						className="flex-1 border rounded-full px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none bg-zinc-50"
+						autoComplete="off"
+					/>
+					<button
+						type="submit"
+						className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-full font-semibold shadow"
+						disabled={!input.trim()}
+					>
+						Send
+					</button>
+				</form>
+			</main>
+		</div>
+	);
 };
 
 export default Messages;

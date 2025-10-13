@@ -66,15 +66,8 @@ app.use('/api/requests', require('./routes/requestRoutes'));
 // Mount the routes for handling my tasks
 app.use('/api/mytasks', require('./routes/myTaskRoutes'));
 
-
 // Mount the admin routes
 app.use('/api/admin', require('./routes/adminRoutes'));
-
-// Mount the message routes (real-time chat)
-app.use('/api/messages', require('./routes/messageRoutes'));
-
-// Mount the conversation routes (chat sidebar)
-app.use('/api/conversations', require('./routes/conversationRoutes'));
 
 
 // Define the port the server will listen on.
