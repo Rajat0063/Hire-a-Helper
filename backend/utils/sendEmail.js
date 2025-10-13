@@ -1,10 +1,12 @@
 const sgMail = require('@sendgrid/mail');
+const { randomUUID } = require('crypto');
 
 const sendEmail = async (options) => {
     try {
         sgMail.setApiKey(process.env.EMAIL_PASSWORD); // SendGrid API key
         const fromName = process.env.EMAIL_FROM_NAME || 'Hire-a-Helper';
         const fromEmail = process.env.EMAIL_FROM || 'no-reply@yourdomain.com';
+        const messageId = `<${randomUUID()}@${fromEmail.split('@')[1] || 'mail.hire-a-helper'}>`;
         const msg = {
             to: options.email,
             from: {
@@ -15,6 +17,11 @@ const sendEmail = async (options) => {
             subject: options.subject,
             text: options.plainText || options.message || '',
             html: options.html || (`<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111">${options.message || ''}</div>`),
+            // Add helpful headers: List-Unsubscribe (mailto) and Message-ID
+            headers: {
+                'List-Unsubscribe': `<mailto:${options.replyTo || process.env.SUPPORT_EMAIL || fromEmail}>`,
+                'Message-ID': messageId,
+            },
             tracking_settings: {
                 click_tracking: { enable: false },
                 open_tracking: { enable: false }
