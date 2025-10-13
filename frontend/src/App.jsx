@@ -86,6 +86,7 @@ function App() {
             <Route path="my-requests" element={<MyRequestsContent />} />
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />
+            <Route path="messages" element={<Messages />} />
           </Route>
         </Route>
         {/* Admin dashboard route (protected, only visible to admins) */}
