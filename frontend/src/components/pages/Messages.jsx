@@ -6,6 +6,8 @@ import Avatar from "../ui/Avatar";
 const conversationsDummy = [
 	{ id: "1", name: "John Helper", lastMessage: "See you soon!", image: "", unread: 2 },
 	{ id: "2", name: "Jane Requester", lastMessage: "Thank you!", image: "", unread: 0 },
+	// Example: Task Owner (will be added dynamically in real app)
+	{ id: "owner-123", name: "Task Owner", lastMessage: "Request accepted!", image: "", unread: 0, isOwner: true },
 ];
 
 const currentUser = { id: "me", name: "You" };
@@ -69,30 +71,39 @@ const Messages = () => {
 		setInput("");
 	};
 
-	return (
-		<div className="flex h-[calc(100vh-64px)] bg-zinc-100">
-			{/* Sidebar */}
-			<aside className="w-80 bg-white border-r flex flex-col">
-				<div className="p-6 border-b text-xl font-bold text-indigo-700">Messages</div>
-				<div className="flex-1 overflow-y-auto">
-					{conversations.map((conv) => (
+		return (
+			<div className="flex h-[calc(100vh-64px)] bg-zinc-100">
+				{/* Sidebar */}
+				<aside className="w-80 bg-white border-r flex flex-col">
+					<div className="p-6 border-b text-xl font-bold text-indigo-700 flex items-center justify-between">
+						Messages
+						{/* Always show Message Owner button for demonstration */}
 						<button
-							key={conv.id}
-							className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 focus:bg-indigo-100 transition text-left ${selectedId === conv.id ? "bg-indigo-50" : ""}`}
-							onClick={() => setSelectedId(conv.id)}
+							className="ml-2 px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 font-semibold text-xs"
+							onClick={() => setSelectedId("owner-123")}
 						>
-							<Avatar user={conv} className="h-10 w-10" />
-							<div className="flex-1">
-								<div className="font-medium text-zinc-800">{conv.name}</div>
-								<div className="text-xs text-zinc-500 truncate">{conv.lastMessage}</div>
-							</div>
-							{conv.unread > 0 && (
-								<span className="ml-2 bg-indigo-600 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{conv.unread}</span>
-							)}
+							Message Owner
 						</button>
-					))}
-				</div>
-			</aside>
+					</div>
+					<div className="flex-1 overflow-y-auto">
+						{conversations.map((conv) => (
+							<button
+								key={conv.id}
+								className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 focus:bg-indigo-100 transition text-left ${selectedId === conv.id ? "bg-indigo-50" : ""}`}
+								onClick={() => setSelectedId(conv.id)}
+							>
+								<Avatar user={conv} className="h-10 w-10" />
+								<div className="flex-1">
+									<div className="font-medium text-zinc-800">{conv.name}{conv.isOwner && <span className="ml-1 text-xs text-indigo-500 font-semibold">(Owner)</span>}</div>
+									<div className="text-xs text-zinc-500 truncate">{conv.lastMessage}</div>
+								</div>
+								{conv.unread > 0 && (
+									<span className="ml-2 bg-indigo-600 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{conv.unread}</span>
+								)}
+							</button>
+						))}
+					</div>
+				</aside>
 
 			{/* Main chat area */}
 			<main className="flex-1 flex flex-col">
