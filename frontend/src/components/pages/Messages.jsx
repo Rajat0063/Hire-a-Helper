@@ -281,7 +281,7 @@ const Messages = () => {
 						</div>
 						<div className="p-2">
 							{conversations.map((conv) => (
-								<button key={conv.id} className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${selectedId === conv.id ? "bg-indigo-50" : ""}`} onClick={() => { setSelectedId(conv.id); setShowSidebarMobile(false); }}>
+								<button key={conv._id || conv.id} className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${selectedId === (conv._id || conv.id) ? "bg-indigo-50" : ""}`} onClick={() => { setSelectedId(conv._id || conv.id); setShowSidebarMobile(false); }}>
 									<Avatar user={conv} className="h-10 w-10" />
 									<div className="flex-1">
 										<div className="font-medium text-zinc-800">{conv.name}</div>
