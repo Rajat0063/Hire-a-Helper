@@ -45,6 +45,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminRoute from './components/auth/AdminRoute';
 
+
 // --- Dashboard Content Imports ---
 import FeedContent from './components/pages/FeedContent';
 import TasksContent from './components/pages/TasksContent';
@@ -54,6 +55,7 @@ import MyRequestsContent from './components/pages/MyRequestsContent';
 import AddTaskContent from './components/pages/AddTaskContent';
 import SettingsContent from './components/pages/SettingsContent';
 import DashboardOverview from './components/pages/DashboardOverview';
+import Messages from './components/pages/Messages';
 
 function App() {
 
