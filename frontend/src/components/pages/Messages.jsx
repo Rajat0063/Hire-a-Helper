@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useLocation } from 'react-router-dom';
 import socket from "../../utils/socket";
 import Avatar from "../ui/Avatar";
 
@@ -14,7 +15,10 @@ const currentUser = { id: "me", name: "You" };
 
 const Messages = () => {
 		const [conversations] = useState(conversationsDummy);
-	const [selectedId, setSelectedId] = useState(conversationsDummy[0]?.id || "");
+		const location = useLocation();
+		const params = new URLSearchParams(location.search);
+		const initialConv = params.get('conversation') || conversationsDummy[0]?.id || "";
+		const [selectedId, setSelectedId] = useState(initialConv);
 	const [messages, setMessages] = useState([]);
 	const [input, setInput] = useState("");
 	const [loading, setLoading] = useState(false);

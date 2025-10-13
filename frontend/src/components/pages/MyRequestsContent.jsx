@@ -148,6 +148,22 @@ const MyRequestsContent = () => {
                 <div className="mt-2">
                   <img src={imgSrc} alt="Task" className="rounded-lg w-full object-cover max-h-72 border border-zinc-200" />
                 </div>
+                <div className="flex justify-end mt-3">
+                  {/* Show Message Owner button only when request is accepted */}
+                  {request.status && request.status.toLowerCase() === 'accepted' && (
+                    <button
+                      className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 font-semibold"
+                      onClick={() => {
+                        const ownerId = request.taskOwnerId || request.taskOwner || request.ownerId || request.taskOwnerId;
+                        // Navigate to messages page with conversation query param
+                        // Use absolute dashboard path so route resolves correctly
+                        window.location.href = `/dashboard/messages?conversation=${ownerId}`;
+                      }}
+                    >
+                      Message Owner
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
