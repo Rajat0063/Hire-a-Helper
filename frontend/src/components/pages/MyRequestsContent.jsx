@@ -1,6 +1,6 @@
 // src/components/pages/MyRequestsContent.jsx
 
-import { useOutletContext } from 'react-router-dom'; // 1. Import the hook
+import { useOutletContext, useNavigate } from 'react-router-dom'; // 1. Import the hook
 import { useEffect, useState } from 'react';
 import socket from '../../utils/socket';
 import { Icon } from '../ui/Icon';
@@ -52,6 +52,24 @@ const PLACEHOLDER_IMG = "https://placehold.co/600x300?text=No+Image";
 const MyRequestsContent = () => {
   const context = useOutletContext() || {};
   const [myRequests, setMyRequests] = useState(Array.isArray(context.myRequests) ? context.myRequests : []);
+  const navigate = useNavigate();
+
+  // Component to render Message Owner button using navigate and pass owner object
+  const MessageOwnerButton = ({ request }) => {
+    const owner = {
+      id: request.taskOwner || request.taskOwnerId || request.ownerId || request.taskOwnerId || request.taskOwnerName,
+      name: request.taskOwnerName || request.taskOwner || 'Task Owner',
+      image: request.taskOwnerImage || request.taskOwnerImg || ''
+    };
+    return (
+      <button
+        className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 font-semibold"
+        onClick={() => navigate(`/dashboard/messages`, { state: { owner } })}
+      >
+        Message Owner
+      </button>
+    );
+  };
 
   // Listen for real-time notification updates and update myRequests status
   useEffect(() => {
@@ -151,17 +169,7 @@ const MyRequestsContent = () => {
                 <div className="flex justify-end mt-3">
                   {/* Show Message Owner button only when request is accepted */}
                   {request.status && request.status.toLowerCase() === 'accepted' && (
-                    <button
-                      className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 font-semibold"
-                      onClick={() => {
-                        const ownerId = request.taskOwnerId || request.taskOwner || request.ownerId || request.taskOwnerId;
-                        // Navigate to messages page with conversation query param
-                        // Use absolute dashboard path so route resolves correctly
-                        window.location.href = `/dashboard/messages?conversation=${ownerId}`;
-                      }}
-                    >
-                      Message Owner
-                    </button>
+                    <MessageOwnerButton request={request} />
                   )}
                 </div>
               </div>

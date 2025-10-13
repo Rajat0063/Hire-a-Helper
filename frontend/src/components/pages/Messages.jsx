@@ -14,11 +14,17 @@ const conversationsDummy = [
 const currentUser = { id: "me", name: "You" };
 
 const Messages = () => {
-		const [conversations] = useState(conversationsDummy);
-		const location = useLocation();
-		const params = new URLSearchParams(location.search);
-		const initialConv = params.get('conversation') || conversationsDummy[0]?.id || "";
-		const [selectedId, setSelectedId] = useState(initialConv);
+	const location = useLocation();
+	const stateOwner = location.state && location.state.owner ? location.state.owner : null;
+	const params = new URLSearchParams(location.search);
+	// ignore invalid query strings like "[object Object]"
+	const rawConv = params.get('conversation');
+	const initialConv = (rawConv && rawConv !== '[object Object]') ? rawConv : (conversationsDummy[0]?.id || "");
+	// If the owner is passed via state, add/override the owner conversation at the start
+	const initialConversations = stateOwner ? [{ id: stateOwner.id?.toString() || 'owner-' + (stateOwner.id || 'x'), name: stateOwner.name, lastMessage: '', image: stateOwner.image || '', isOwner: true }, ...conversationsDummy] : conversationsDummy;
+	const [conversations] = useState(initialConversations);
+	const [selectedId, setSelectedId] = useState(stateOwner ? (stateOwner.id?.toString() || 'owner-' + (stateOwner.id || 'x')) : initialConv);
+	const [showSidebarMobile, setShowSidebarMobile] = useState(false);
 	const [messages, setMessages] = useState([]);
 	const [input, setInput] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -33,7 +39,7 @@ const Messages = () => {
 		return () => {
 			socket.disconnect();
 		};
-	}, [selectedId]);
+	}, [selectedId, stateOwner]);
 
 	// Listen for incoming messages
 	useEffect(() => {
@@ -50,17 +56,24 @@ const Messages = () => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
 
-	// Dummy: Load messages for selected conversation
+	// Load messages for selected conversation (dummy for now)
 	useEffect(() => {
 		setLoading(true);
 		setTimeout(() => {
-			setMessages([
-				{ id: 1, sender: { id: "1", name: "John Helper" }, text: "Hello! How can I help you?", time: "10:00" },
-				{ id: 2, sender: currentUser, text: "Hi! I need help with my request.", time: "10:01" },
-			]);
+			// For a real owner, show a welcome message from them
+			if (stateOwner && selectedId === (stateOwner.id?.toString() || 'owner-' + (stateOwner.id || 'x'))) {
+				setMessages([
+					{ id: 1, sender: { id: stateOwner.id || 'owner', name: stateOwner.name }, text: "Hi — I accepted your request. How can I help?", time: "10:00" },
+				]);
+			} else {
+				setMessages([
+					{ id: 1, sender: { id: "1", name: "John Helper" }, text: "Hello! How can I help you?", time: "10:00" },
+					{ id: 2, sender: currentUser, text: "Hi! I need help with my request.", time: "10:01" },
+				]);
+			}
 			setLoading(false);
 		}, 500);
-	}, [selectedId]);
+	}, [selectedId, stateOwner]);
 
 	const sendMessage = (e) => {
 		e.preventDefault();
@@ -78,7 +91,8 @@ const Messages = () => {
 		return (
 			<div className="flex h-[calc(100vh-64px)] bg-zinc-100">
 				{/* Sidebar */}
-				<aside className="w-80 bg-white border-r flex flex-col">
+				{/* Desktop sidebar */}
+				<aside className="w-80 bg-white border-r flex-col hidden md:flex">
 					<div className="p-6 border-b text-xl font-bold text-indigo-700 flex items-center justify-between">
 						Messages
 						{/* Always show Message Owner button for demonstration */}
@@ -109,14 +123,40 @@ const Messages = () => {
 					</div>
 				</aside>
 
+			{/* Mobile sidebar (overlay) */}
+			{showSidebarMobile && (
+				<div className="fixed inset-0 z-40 md:hidden">
+					<div className="absolute inset-0 bg-black/30" onClick={() => setShowSidebarMobile(false)} />
+					<aside className="absolute left-0 top-0 bottom-0 w-72 bg-white border-r overflow-y-auto p-0">
+						<div className="p-6 border-b text-xl font-bold text-indigo-700 flex items-center justify-between">
+							Conversations
+							<button className="text-zinc-600" onClick={() => setShowSidebarMobile(false)}>Close</button>
+						</div>
+						<div className="p-2">
+							{conversations.map((conv) => (
+								<button key={conv.id} className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition text-left ${selectedId === conv.id ? "bg-indigo-50" : ""}`} onClick={() => { setSelectedId(conv.id); setShowSidebarMobile(false); }}>
+									<Avatar user={conv} className="h-10 w-10" />
+									<div className="flex-1">
+										<div className="font-medium text-zinc-800">{conv.name}</div>
+										<div className="text-xs text-zinc-500 truncate">{conv.lastMessage}</div>
+									</div>
+								</button>
+							))}
+						</div>
+					</aside>
+				</div>
+			)}
+
 			{/* Main chat area */}
 			<main className="flex-1 flex flex-col">
 				{/* Header */}
-				<div className="h-16 flex items-center px-6 border-b bg-white shadow-sm">
+				<div className="h-16 flex items-center px-4 md:px-6 border-b bg-white shadow-sm">
 					<Avatar user={conversations.find((c) => c.id === selectedId) || {}} className="h-10 w-10 mr-3" />
 					<div className="font-semibold text-lg text-zinc-800">
 						{conversations.find((c) => c.id === selectedId)?.name || "Select a conversation"}
 					</div>
+					{/* On small screens, show a back button to reveal conversations */}
+					<button className="ml-auto md:hidden px-3 py-1 rounded bg-indigo-50 text-indigo-700 text-sm" onClick={() => setShowSidebarMobile(true)}>Conversations</button>
 				</div>
 
 				{/* Messages */}
@@ -146,7 +186,7 @@ const Messages = () => {
 				</div>
 
 				{/* Input */}
-				<form onSubmit={sendMessage} className="flex items-center gap-2 px-6 py-4 border-t bg-white">
+				<form onSubmit={sendMessage} className="flex items-center gap-2 px-4 md:px-6 py-4 border-t bg-white">
 					<input
 						type="text"
 						value={input}
