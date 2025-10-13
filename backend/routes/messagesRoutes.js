@@ -13,6 +13,27 @@ router.get('/conversation/:conversationId', async (req, res) => {
   }
 });
 
+// Get conversation metadata by id
+router.get('/conversations/:id', async (req, res) => {
+  try {
+    const convo = await Conversation.findById(req.params.id).populate('participants', 'name image email');
+    if (!convo) return res.status(404).json({ message: 'Conversation not found' });
+    res.json(convo);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// List conversations for a user
+router.get('/conversations/user/:userId', async (req, res) => {
+  try {
+    const convos = await Conversation.find({ participants: req.params.userId }).sort({ updatedAt: -1 }).populate('participants', 'name image');
+    res.json(convos);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 // Create or get conversation between two users
 router.post('/conversation', async (req, res) => {
   try {

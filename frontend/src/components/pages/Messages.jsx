@@ -24,9 +24,13 @@ const Messages = () => {
 	const [loading, setLoading] = useState(false);
 	const messagesEndRef = useRef(null);
 
-	// Connect to socket once and join conversation when selectedId changes
+	// Connect to socket once and join user room and join conversation when selectedId changes
 	useEffect(() => {
-		socket.connect();
+	socket.connect();
+	// join user room for notifications
+	const u = (() => { try { return JSON.parse(localStorage.getItem('userInfo') || '{}'); } catch (_err) { console.error('parse userInfo', _err); return {}; } })();
+		const userId = u._id || u.id || null;
+		if (userId) socket.emit('join-user-room', userId);
 		return () => {
 			try { socket.disconnect(); } catch (err) { console.error('Socket disconnect error', err); }
 		};
@@ -62,6 +66,38 @@ const Messages = () => {
 		};
 		createForOwner();
 	}, [stateOwner]);
+
+	// Load user's conversations list for sidebar
+	useEffect(() => {
+		const loadList = async () => {
+			try {
+				const stored = localStorage.getItem('userInfo');
+				if (!stored) return;
+				const u = JSON.parse(stored);
+				const userId = u._id || u.id;
+				if (!userId) return;
+				const apiUrl = `${import.meta.env.VITE_API_URL}/api/messages/conversations/user/${userId}`;
+				const { data } = await axios.get(apiUrl);
+				// map conversations to have display name
+				const mapped = data.map(c => {
+					// pick the other participant as the name
+					const other = c.participants.find(p => String(p._id || p.id) !== String(userId));
+					return { ...c, name: other ? other.name : 'Conversation', lastMessage: c.lastMessage || '' };
+				});
+				setConversations(prev => {
+					// Merge with any existing owner prepended convs without duplicating
+					const ids = new Set(mapped.map(m => m._id?.toString() || m.id?.toString()));
+					const extra = prev.filter(p => !(p._id && ids.has(String(p._id))) && !(p.id && ids.has(String(p.id))));
+					return [...mapped, ...extra];
+				});
+				// If there's a conversation in query param, ensure it's selected
+				if (initialConv) setSelectedId(initialConv);
+			} catch (err) {
+				console.error('Failed to load conversation list', err);
+			}
+		};
+		loadList();
+	}, [initialConv]);
 
 	// Listen for incoming messages and normalize them for the UI
 	useEffect(() => {
@@ -224,9 +260,12 @@ const Messages = () => {
 			<main className="flex-1 flex flex-col">
 				{/* Header */}
 				<div className="h-16 flex items-center px-4 md:px-6 border-b bg-white shadow-sm">
-					<Avatar user={conversations.find((c) => c.id === selectedId) || {}} className="h-10 w-10 mr-3" />
+					<Avatar user={conversations.find((c) => (c._id || c.id) === selectedId) || {}} className="h-10 w-10 mr-3" />
 					<div className="font-semibold text-lg text-zinc-800">
-						{conversations.find((c) => c.id === selectedId)?.name || "Select a conversation"}
+						{conversations.find((c) => (c._id || c.id) === selectedId)?.name || "Select a conversation"}
+					</div>
+					<div className="text-sm text-zinc-500 ml-3">
+						{selectedId ? (conversations.find((c) => (c._id || c.id) === selectedId)?.participants?.length ? `${conversations.find((c) => (c._id || c.id) === selectedId)?.participants?.length} participants` : '') : ''}
 					</div>
 					{/* On small screens, show a back button to reveal conversations */}
 					<button className="ml-auto md:hidden px-3 py-1 rounded bg-indigo-50 text-indigo-700 text-sm" onClick={() => setShowSidebarMobile(true)}>Conversations</button>
@@ -236,24 +275,30 @@ const Messages = () => {
 				<div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-zinc-50">
 					{loading ? (
 						<div className="text-zinc-400 text-center mt-10">Loading messages...</div>
-					) : (
-						messages.map((msg, idx) => {
-							const own = String(msg.sender?.id) === String(getUserId());
-							return (
-								<div key={msg.id || idx} className={`flex ${own ? "justify-end" : "justify-start"}`}>
-									{!own && (
-										<Avatar user={msg.sender} className="h-8 w-8 mr-2" />
-									)}
-									<div className={`max-w-xs px-4 py-2 rounded-2xl shadow text-sm ${own ? "bg-indigo-600 text-white" : "bg-white text-zinc-800"}`}>
-										{msg.text}
-										<div className="text-[10px] text-zinc-400 text-right mt-1">{msg.time}</div>
+					) : selectedId ? (
+						messages.length === 0 ? (
+							<div className="text-center text-zinc-500 mt-10">No messages yet. Say hello 👋</div>
+						) : (
+							messages.map((msg, idx) => {
+								const own = String(msg.sender?.id) === String(getUserId());
+								return (
+									<div key={msg.id || idx} className={`flex ${own ? "justify-end" : "justify-start"}`}>
+										{!own && (
+											<Avatar user={msg.sender} className="h-8 w-8 mr-2" />
+										)}
+										<div className={`max-w-xs px-4 py-2 rounded-2xl shadow text-sm ${own ? "bg-indigo-600 text-white" : "bg-white text-zinc-800"}`}>
+											{msg.text}
+											<div className="text-[10px] text-zinc-400 text-right mt-1">{msg.time}</div>
+										</div>
+										{own && (
+											<Avatar user={msg.sender} className="h-8 w-8 ml-2" />
+										)}
 									</div>
-									{own && (
-										<Avatar user={msg.sender} className="h-8 w-8 ml-2" />
-									)}
-								</div>
-							);
-						})
+								);
+							})
+						)
+					) : (
+						<div className="text-zinc-500 text-center mt-10">Select a conversation to start chatting</div>
 					)}
 					<div ref={messagesEndRef} />
 				</div>
