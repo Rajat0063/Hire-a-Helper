@@ -55,7 +55,7 @@ const Messages = () => {
 				const { data } = await axios.post(apiUrl, { participants: [userId, ownerId] });
 				const conv = data.conversation || data;
 				if (conv) {
-					setConversations(prev => [ { ...conv, name: stateOwner.name, ownerName: stateOwner.name }, ...prev ]);
+					setConversations(prev => [ { ...conv, name: stateOwner.name, ownerName: stateOwner.name, image: stateOwner.image || stateOwner.avatar || undefined }, ...prev ]);
 					setSelectedId(conv._id || conv.id);
 				}
 			} catch (err) {
@@ -78,11 +78,11 @@ const Messages = () => {
 				if (!userId) return;
 				const apiUrl = `${import.meta.env.VITE_API_URL}/api/messages/conversations/user/${userId}`;
 				const { data } = await axios.get(apiUrl);
-				// map conversations to have display name
+				// map conversations to have display name and image
 				const mapped = data.map(c => {
-					// pick the other participant as the name
+					// pick the other participant as the name and image
 					const other = c.participants.find(p => String(p._id || p.id) !== String(userId));
-					return { ...c, name: other ? other.name : 'Conversation', lastMessage: c.lastMessage || '' };
+					return { ...c, name: other ? other.name : 'Conversation', image: other ? other.image : undefined, lastMessage: c.lastMessage || '' };
 				});
 				setConversations(prev => {
 					// Merge with any existing owner prepended convs without duplicating
