@@ -69,6 +69,9 @@ app.use('/api/mytasks', require('./routes/myTaskRoutes'));
 // Mount the admin routes
 app.use('/api/admin', require('./routes/adminRoutes'));
 
+// Messages routes
+app.use('/api/messages', require('./routes/messagesRoutes'));
+
 
 // Define the port the server will listen on.
 const PORT = process.env.PORT || 5000;
