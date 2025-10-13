@@ -300,11 +300,13 @@ const Messages = () => {
 				<div className="h-16 flex items-center px-4 md:px-6 border-b bg-white shadow-sm">
 					{selectedId ? (
 						<>
+							{/* mobile back button */}
+							<button className="mr-3 md:hidden text-zinc-600 p-2 rounded hover:bg-zinc-100" onClick={() => { setSelectedId(''); setShowSidebarMobile(true); }} aria-label="Back to conversations">←</button>
 							<Avatar user={conversations.find((c) => (c._id || c.id) === selectedId) || {}} className="h-10 w-10 mr-3" />
-							<div className="font-semibold text-lg text-zinc-800">
+							<div className="font-semibold text-lg text-zinc-800 truncate">
 								{conversations.find((c) => (c._id || c.id) === selectedId)?.name}
 							</div>
-							<div className="text-sm text-zinc-500 ml-3">
+							<div className="text-sm text-zinc-500 ml-3 hidden sm:block">
 								{conversations.find((c) => (c._id || c.id) === selectedId)?.participants?.length ? `${conversations.find((c) => (c._id || c.id) === selectedId)?.participants?.length} participants` : ''}
 							</div>
 						</>
@@ -317,12 +319,14 @@ const Messages = () => {
 							</div>
 						</div>
 					)}
-					{/* On small screens, show a back button to reveal conversations */}
-					<button className="ml-auto md:hidden px-3 py-1 rounded bg-indigo-50 text-indigo-700 text-sm" onClick={() => setShowSidebarMobile(true)}>Conversations</button>
+					{/* On small screens, show a button to open conversations if none selected */}
+					{!selectedId && (
+						<button className="ml-auto md:hidden px-3 py-1 rounded bg-indigo-50 text-indigo-700 text-sm" onClick={() => setShowSidebarMobile(true)}>Conversations</button>
+					)}
 				</div>
 
 				{/* Messages */}
-				<div className="flex-1 overflow-y-auto px-6 py-4 space-y-2 bg-zinc-50">
+				<div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-4 space-y-2 bg-zinc-50 pb-36 md:pb-4">
 					{loading ? (
 						<div className="text-zinc-400 text-center mt-10">Loading messages...</div>
 					) : selectedId ? (
@@ -338,16 +342,16 @@ const Messages = () => {
 							messages.map((msg, idx) => {
 								const own = String(msg.sender?.id) === String(getUserId());
 								return (
-									<div key={msg.id || idx} className={`flex ${own ? "justify-end" : "justify-start"}`}>
+									<div key={msg.id || idx} className={`flex ${own ? "justify-end" : "justify-start"} px-2 md:px-0`}>
 										{!own && (
-											<Avatar user={msg.sender} className="h-8 w-8 mr-2" />
+											<Avatar user={msg.sender} className="h-8 w-8 mr-2 md:mr-3" />
 										)}
-										<div className={`max-w-xs px-4 py-2 rounded-2xl shadow text-sm ${own ? "bg-indigo-600 text-white" : "bg-white text-zinc-800"}`}>
+										<div className={`w-auto md:max-w-xs max-w-[70%] px-4 py-2 rounded-2xl shadow text-sm ${own ? "bg-indigo-600 text-white" : "bg-white text-zinc-800"}`}>
 											{msg.text}
 											<div className="text-[10px] text-zinc-400 text-right mt-1">{msg.time}</div>
 										</div>
 										{own && (
-											<Avatar user={msg.sender} className="h-8 w-8 ml-2" />
+											<Avatar user={msg.sender} className="h-8 w-8 ml-2 md:ml-3" />
 										)}
 									</div>
 								);
