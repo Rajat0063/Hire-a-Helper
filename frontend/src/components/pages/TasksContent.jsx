@@ -1,10 +1,11 @@
 // src/components/pages/TasksContent.jsx
 
-import { useOutletContext } from 'react-router-dom'; // 1. Import the hook
+import { useOutletContext, useNavigate } from 'react-router-dom';
 
 const TasksContent = () => {
-    // 2. Get the data and functions from the context
-    const { tasksData, handleMoveTask } = useOutletContext();
+  // 2. Get the data and functions from the context
+  const { tasksData, handleMoveTask } = useOutletContext();
+  const navigate = useNavigate();
     
     // The nested Column component and the JSX below require no changes
     const Column = ({ title, tasks, color, columnId }) => (
@@ -19,12 +20,23 @@ const TasksContent = () => {
                 <img src={task.userImage} alt="User" className="h-8 w-8 rounded-full flex-shrink-0" />
                 <p className="text-sm text-zinc-700 ml-3">{task.text}</p>
               </div>
-               <div className="mt-2 pt-2 border-t border-zinc-200 flex justify-end space-x-2 text-xs">
-                {columnId === 'todo' && (
-                    <button onClick={() => handleMoveTask(task.id, 'todo', 'inProgress')} className="font-semibold text-blue-600 hover:text-blue-800">Start Task &rarr;</button>
-                )}
-                {columnId === 'inProgress' && (
-                    <button onClick={() => handleMoveTask(task.id, 'inProgress', 'done')} className="font-semibold text-green-600 hover:text-green-800">Mark as Done ✓</button>
+              <div className="mt-2 pt-2 border-t border-zinc-200 flex justify-between items-center text-xs">
+                <div className="flex space-x-2">
+                  {columnId === 'todo' && (
+                      <button onClick={() => handleMoveTask(task.id, 'todo', 'inProgress')} className="font-semibold text-blue-600 hover:text-blue-800">Start Task &rarr;</button>
+                  )}
+                  {columnId === 'inProgress' && (
+                      <button onClick={() => handleMoveTask(task.id, 'inProgress', 'done')} className="font-semibold text-green-600 hover:text-green-800">Mark as Done ✓</button>
+                  )}
+                </div>
+                {/* Message Owner Button */}
+                {task.ownerId && (
+                  <button
+                    className="ml-2 px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 font-semibold transition"
+                    onClick={() => navigate(`/messages?conversation=${task.ownerId}`)}
+                  >
+                    Message Owner
+                  </button>
                 )}
               </div>
             </div>
