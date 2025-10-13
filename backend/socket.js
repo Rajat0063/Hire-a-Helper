@@ -53,6 +53,17 @@ function initSocket(server) {
           const msg = await Message.create({ conversationId: convoId, sender: payload.sender, text: payload.text });
           // emit to conversation room
           io.to(`conversation:${convoId}`).emit('receive_message', { ...msg.toObject(), sender: payload.sender });
+          // Also notify all participants directly (so offline or not-in-room users get notified)
+          try {
+            const convo = await Conversation.findById(convoId).lean();
+            if (convo && Array.isArray(convo.participants)) {
+              convo.participants.forEach(pid => {
+                io.to(`user:${pid.toString()}`).emit('new_message_notification', { conversationId: convoId, message: msg.text, from: payload.sender });
+              });
+            }
+          } catch (err) {
+            console.warn('Failed to notify participants via user room:', err && err.message ? err.message : err);
+          }
         }
       } catch (err) {
         console.error('Failed to handle send_message in socket:', err && err.message ? err.message : err);
