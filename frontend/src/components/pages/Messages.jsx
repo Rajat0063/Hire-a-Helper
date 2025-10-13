@@ -172,10 +172,8 @@ const Messages = () => {
 		}
 
 		const payload = { conversationId: selectedId, sender: userId, text: input, participants };
-		// optimistic UI
-		const optimistic = { sender: { id: userId, name: 'You' }, text: input, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-		setMessages(prev => [...prev, optimistic]);
-		setInput('');
+	// clear input immediately; rely on server's receive_message to append the real message
+	setInput('');
 		try {
 			// If conversationId missing, ensure it exists by POSTing participants
 			if (!selectedId && participants && participants.length >= 2) {
