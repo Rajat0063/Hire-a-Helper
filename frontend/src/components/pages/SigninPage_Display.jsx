@@ -1,5 +1,7 @@
 
 import React, { useState } from "react";
+import PasswordStrengthIndicator from "../ui/PasswordStrengthIndicator";
+import { Icon } from "../ui/Icon";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -12,6 +14,7 @@ export default function SignupPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { name, email, phoneNumber, password } = formData;
 
@@ -85,14 +88,31 @@ export default function SignupPage() {
             onChange={onChange}
             className="w-full border border-zinc-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white/90"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            className="w-full border border-zinc-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white/90"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              name="password"
+              value={password}
+              onChange={onChange}
+              className="w-full border border-zinc-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none bg-white/90 pr-12"
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-800"
+              onClick={() => setShowPassword((v) => !v)}
+            >
+              <Icon
+                path={showPassword
+                  ? "M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12zm11 4a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
+                  : "M17.94 17.94A10.94 10.94 0 0 1 12 20C5 20 1 12 1 12a21.8 21.8 0 0 1 4.06-5.94M9.9 9.9a4 4 0 0 1 5.66 5.66M1 1l22 22"}
+                viewBox="0 0 24 24"
+                className="w-5 h-5"
+              />
+            </button>
+            <PasswordStrengthIndicator password={password} />
+          </div>
           {error && <p className="text-sm text-red-600 text-center">{error}</p>}
           <label className="flex items-center text-sm text-zinc-600">
             <input type="checkbox" className="mr-2" required />I agree with
