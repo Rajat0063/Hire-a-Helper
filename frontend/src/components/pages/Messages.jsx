@@ -117,14 +117,48 @@ const Messages = () => {
 		if (!input.trim()) return;
 		const userId = getUserId();
 		if (!userId) return alert('Please log in to send messages');
-		const payload = { conversationId: selectedId, sender: userId, text: input };
+
+		// Determine participants: try to get from selected conversation if available
+		let participants = null;
+		try {
+			// try to find conversation object in state
+			const convObj = conversations.find(c => (c._id === selectedId || c.id === selectedId));
+			if (convObj && Array.isArray(convObj.participants) && convObj.participants.length >= 2) {
+				participants = convObj.participants.map(p => (p._id || p.id || p));
+			}
+		} catch (err) {
+			console.error('participants lookup error', err);
+		}
+		// fallback: use stateOwner if provided
+		if (!participants && stateOwner) {
+			const ownerId = stateOwner._id || stateOwner.id || stateOwner.userId || stateOwner;
+			if (ownerId) participants = [userId, ownerId];
+		}
+
+		const payload = { conversationId: selectedId, sender: userId, text: input, participants };
 		// optimistic UI
 		const optimistic = { sender: { id: userId, name: 'You' }, text: input, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
 		setMessages(prev => [...prev, optimistic]);
 		setInput('');
 		try {
+			// If conversationId missing, ensure it exists by POSTing participants
+			if (!selectedId && participants && participants.length >= 2) {
+				try {
+					const apiUrl = `${import.meta.env.VITE_API_URL}/api/messages/conversation`;
+					const { data } = await axios.post(apiUrl, { participants });
+					const conv = data.conversation || data;
+					const convId = conv?._id || conv?.id || (data?._id || data?.id);
+					if (convId) {
+						payload.conversationId = convId;
+						setSelectedId(convId);
+						// join the new conversation room
+						socket.emit('join_conversation', convId);
+					}
+				} catch (err) {
+					console.error('Failed to create conversation before sending message', err);
+				}
+			}
 			socket.emit('send_message', payload);
-			// ensure the conversation exists on server - optional: POST /api/messages/conversation
 		} catch (err) {
 			console.error('Failed to send message via socket', err);
 		}

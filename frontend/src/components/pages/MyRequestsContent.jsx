@@ -1,6 +1,7 @@
 // src/components/pages/MyRequestsContent.jsx
 
 import { useOutletContext, useNavigate } from 'react-router-dom'; // 1. Import the hook
+import axios from 'axios';
 import { useEffect, useState } from 'react';
 import socket from '../../utils/socket';
 import { Icon } from '../ui/Icon';
@@ -61,10 +62,34 @@ const MyRequestsContent = () => {
       name: request.taskOwnerName || request.taskOwner || 'Task Owner',
       image: request.taskOwnerImage || request.taskOwnerImg || ''
     };
+    const handleClick = async () => {
+      try {
+        const stored = localStorage.getItem('userInfo');
+        if (!stored) return navigate(`/dashboard/messages`, { state: { owner } });
+        const u = JSON.parse(stored);
+        const userId = u._id || u.id;
+        const ownerId = owner.id || owner.taskOwnerId || owner.userId;
+        if (!userId || !ownerId) return navigate(`/dashboard/messages`, { state: { owner } });
+        // Create or get conversation
+        const apiUrl = `${import.meta.env.VITE_API_URL}/api/messages/conversation`;
+        const { data } = await axios.post(apiUrl, { participants: [userId, ownerId] });
+        const conv = data.conversation || data;
+        const convId = conv?._id || conv?.id || (data?._id || data?.id);
+        if (convId) {
+          // navigate with conversation in query and owner in state so Messages loads it
+          navigate(`/dashboard/messages?conversation=${convId}`, { state: { owner } });
+        } else {
+          navigate(`/dashboard/messages`, { state: { owner } });
+        }
+      } catch (err) {
+        console.error('Failed to create/get conversation', err);
+        navigate(`/dashboard/messages`, { state: { owner } });
+      }
+    };
     return (
       <button
         className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 font-semibold"
-        onClick={() => navigate(`/dashboard/messages`, { state: { owner } })}
+        onClick={handleClick}
       >
         Message Owner
       </button>
