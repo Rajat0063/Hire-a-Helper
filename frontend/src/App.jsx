@@ -54,6 +54,7 @@ import MyRequestsContent from './components/pages/MyRequestsContent';
 import AddTaskContent from './components/pages/AddTaskContent';
 import SettingsContent from './components/pages/SettingsContent';
 import DashboardOverview from './components/pages/DashboardOverview';
+import Messages from './components/pages/Messages';
 
 function App() {
 
@@ -83,6 +84,7 @@ function App() {
             <Route path="feed" element={<FeedContent />} />
             <Route path="my-tasks" element={<MyTasksContent />} />
             <Route path="requests" element={<RequestsContent />} />
+            <Route path="messages" element={<Messages />} />
             <Route path="my-requests" element={<MyRequestsContent />} />
             <Route path="add-task" element={<AddTaskContent />} />
             <Route path="settings" element={<SettingsContent />} />

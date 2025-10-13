@@ -613,6 +613,7 @@ const DashboardLayout = () => {
     { name: 'Feed', path: 'feed', icon: <Icon className="h-5 w-5" path="M4 6h16v10H4z M4 4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2H4z M8 9h8v2H8V9z" />, count: null },
         { name: 'My Tasks', path: 'my-tasks', icon: <Icon className="h-5 w-5" path="M5 3a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2H5zm2 6h10v2H7V9zm0 4h6v2H7v-2z" />, count: null },
         { name: 'Requests', path: 'requests', icon: <Icon className="h-5 w-5" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />, count: requestCount },
+        { name: 'Messages', path: 'messages', icon: <Icon className="h-5 w-5" path="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z" />, count: null },
         { name: 'My Requests', path: 'my-requests', icon: <Icon className="h-5 w-5" path="M22 2l-7 20-4-9-9-4 20-7z" />, count: null },
         { name: 'Add Task', path: 'add-task', icon: <AddTaskIcon className="h-5 w-5" />, count: null },
         { name: 'Settings', path: 'settings', icon: <Icon className="h-5 w-5" path="M12 4.5c-4.142 0-7.5 3.358-7.5 7.5s3.358 7.5 7.5 7.5 7.5-3.358 7.5-7.5-3.358-7.5-7.5-7.5zm0 13a5.5 5.5 0 110-11 5.5 5.5 0 010 11zm0-9a3.5 3.5 0 100 7 3.5 3.5 0 000-7z" />, count: null },
