@@ -298,13 +298,25 @@ const Messages = () => {
 			<main className="flex-1 flex flex-col">
 				{/* Header */}
 				<div className="h-16 flex items-center px-4 md:px-6 border-b bg-white shadow-sm">
-					<Avatar user={conversations.find((c) => (c._id || c.id) === selectedId) || {}} className="h-10 w-10 mr-3" />
-					<div className="font-semibold text-lg text-zinc-800">
-						{conversations.find((c) => (c._id || c.id) === selectedId)?.name || "Select a conversation"}
-					</div>
-					<div className="text-sm text-zinc-500 ml-3">
-						{selectedId ? (conversations.find((c) => (c._id || c.id) === selectedId)?.participants?.length ? `${conversations.find((c) => (c._id || c.id) === selectedId)?.participants?.length} participants` : '') : ''}
-					</div>
+					{selectedId ? (
+						<>
+							<Avatar user={conversations.find((c) => (c._id || c.id) === selectedId) || {}} className="h-10 w-10 mr-3" />
+							<div className="font-semibold text-lg text-zinc-800">
+								{conversations.find((c) => (c._id || c.id) === selectedId)?.name}
+							</div>
+							<div className="text-sm text-zinc-500 ml-3">
+								{conversations.find((c) => (c._id || c.id) === selectedId)?.participants?.length ? `${conversations.find((c) => (c._id || c.id) === selectedId)?.participants?.length} participants` : ''}
+							</div>
+						</>
+					) : (
+						<div className="flex items-center gap-3">
+							<div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-semibold">💬</div>
+							<div>
+								<div className="font-semibold text-lg text-zinc-800">Messages</div>
+								<div className="text-sm text-zinc-500">Select a conversation to start chatting</div>
+							</div>
+						</div>
+					)}
 					{/* On small screens, show a back button to reveal conversations */}
 					<button className="ml-auto md:hidden px-3 py-1 rounded bg-indigo-50 text-indigo-700 text-sm" onClick={() => setShowSidebarMobile(true)}>Conversations</button>
 				</div>
@@ -315,7 +327,13 @@ const Messages = () => {
 						<div className="text-zinc-400 text-center mt-10">Loading messages...</div>
 					) : selectedId ? (
 						messages.length === 0 ? (
-							<div className="text-center text-zinc-500 mt-10">No messages yet. Say hello 👋</div>
+							<div className="flex flex-col items-center justify-center h-full text-center text-zinc-500 mt-6">
+								<div className="bg-white p-6 rounded-lg shadow-sm">
+									<div className="text-3xl mb-2">👋</div>
+									<div className="text-lg font-semibold">No messages yet</div>
+									<div className="text-sm text-zinc-400 mt-1">Send the first message to start the conversation.</div>
+								</div>
+							</div>
 						) : (
 							messages.map((msg, idx) => {
 								const own = String(msg.sender?.id) === String(getUserId());
