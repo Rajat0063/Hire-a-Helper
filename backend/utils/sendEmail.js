@@ -11,15 +11,17 @@ const sendEmail = async (options) => {
         if (!apiKey) throw new Error('SendGrid API key not configured');
         sgMail.setApiKey(apiKey);
 
+        const fromEmail = process.env.EMAIL_FROM;
+        const fromName = process.env.EMAIL_FROM_NAME || 'Hire-a-Helper';
         const msg = {
             to: options.email,
-            from: process.env.EMAIL_FROM, // should be a verified sender/domain in SendGrid
+            from: fromEmail ? { email: fromEmail, name: fromName } : fromName,
             subject: options.subject || 'Notification from Hire-a-Helper',
             text: options.message || '',
             html: options.html || `<div>${options.message || ''}</div>`,
             headers: {
                 // Encourage unsubscribe handling and better deliverability
-                'List-Unsubscribe': `<mailto:${process.env.EMAIL_FROM}>`,
+                'List-Unsubscribe': `<mailto:${fromEmail || process.env.EMAIL_FROM}>`,
             },
         };
 
