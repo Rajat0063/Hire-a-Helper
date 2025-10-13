@@ -10,11 +10,16 @@ export default function DashboardOverview() {
   const [myRequests, setMyRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
       const stored = localStorage.getItem('userInfo');
-      if (!stored) return;
+      if (!stored) {
+        // No user in localStorage — stop loading and bail (user likely logged out)
+        console.warn('No userInfo in localStorage while loading Overview');
+        setLoading(false);
+        return;
+      }
       const user = JSON.parse(stored);
       try {
         // Tasks (public endpoint) - client-side filter for tasks created by this user
