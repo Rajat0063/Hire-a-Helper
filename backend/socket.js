@@ -51,14 +51,22 @@ function initSocket(server) {
           console.warn('No conversation id for message, skipping DB save');
         } else {
           const msg = await Message.create({ conversationId: convoId, sender: payload.sender, text: payload.text });
-          // emit to conversation room
-          io.to(`conversation:${convoId}`).emit('receive_message', { ...msg.toObject(), sender: payload.sender });
+          // populate sender so clients receive name + image (not just id)
+          let populatedMsg = msg;
+          try {
+            populatedMsg = await Message.findById(msg._id).populate('sender', 'name image');
+          } catch (err) {
+            // fallback to original msg if populate fails
+            console.warn('Failed to populate message sender:', err && err.message ? err.message : err);
+          }
+          // emit to conversation room with populated sender
+          io.to(`conversation:${convoId}`).emit('receive_message', populatedMsg.toObject ? populatedMsg.toObject() : populatedMsg);
           // Also notify all participants directly (so offline or not-in-room users get notified)
           try {
             const convo = await Conversation.findById(convoId).lean();
             if (convo && Array.isArray(convo.participants)) {
               convo.participants.forEach(pid => {
-                io.to(`user:${pid.toString()}`).emit('new_message_notification', { conversationId: convoId, message: msg.text, from: payload.sender });
+                io.to(`user:${pid.toString()}`).emit('new_message_notification', { conversationId: convoId, message: msg.text, from: (populatedMsg.sender && (populatedMsg.sender._id || populatedMsg.sender.id)) ? populatedMsg.sender : payload.sender });
               });
             }
           } catch (err) {

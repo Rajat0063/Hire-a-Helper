@@ -102,10 +102,50 @@ const Messages = () => {
 	// Listen for incoming messages and normalize them for the UI
 	useEffect(() => {
 		const handler = (msg) => {
-			// msg may be a raw DB message or a simplified object
-			const sender = msg.sender && (msg.sender._id || msg.sender.id) ? (msg.sender._id ? { id: msg.sender._id, name: msg.sender.name, image: msg.sender.image } : { id: msg.sender.id, name: msg.sender.name, image: msg.sender.image }) : { id: msg.sender || 'unknown', name: msg.senderName || 'Unknown' };
+			// msg may be a DB message or a minimal object. Derive sender id and try to get name/image from available sources
 			const text = msg.text || msg.message || '';
 			const time = msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+			// determine sender id
+			let senderId = null;
+			let senderName = null;
+			let senderImage = undefined;
+			if (!msg.sender) {
+				// nothing
+			} else if (typeof msg.sender === 'string') {
+				senderId = msg.sender;
+			} else if (msg.sender._id || msg.sender.id) {
+				senderId = msg.sender._id || msg.sender.id;
+				senderName = msg.sender.name || msg.sender.username || null;
+				senderImage = msg.sender.image || msg.sender.avatar || undefined;
+			}
+
+			// try to resolve participant details from conversations state
+			if ((!senderName || senderName === null) && senderId && conversations && conversations.length) {
+				// find conversation object
+				const conv = conversations.find(c => (c._id || c.id) === (msg.conversationId || selectedId || ''));
+				if (conv && Array.isArray(conv.participants)) {
+					const other = conv.participants.find(p => String(p._id || p.id) === String(senderId));
+					if (other) {
+						senderName = other.name || other.fullName || senderName;
+						senderImage = other.image || other.avatar || senderImage;
+					}
+				}
+			}
+
+			// fallback to provided stateOwner if it matches
+			if ((!senderName || senderName === null) && stateOwner) {
+				const ownerId = stateOwner._id || stateOwner.id || stateOwner.userId || stateOwner;
+				if (String(ownerId) === String(senderId)) {
+					senderName = stateOwner.name || senderName;
+					senderImage = stateOwner.image || stateOwner.avatar || senderImage;
+				}
+			}
+
+			// final fallbacks
+			if (!senderId) senderId = msg.sender && (msg.sender._id || msg.sender.id) ? (msg.sender._id || msg.sender.id) : (msg.sender || 'unknown');
+			if (!senderName) senderName = (msg.sender && msg.sender.name) || msg.senderName || 'Unknown';
+
+			const sender = { id: senderId, name: senderName, image: senderImage };
 			const normalized = { id: msg._id || msg.id || Math.random().toString(36).slice(2,9), sender, text, time };
 			setMessages((prev) => [...prev, normalized]);
 		};
@@ -113,7 +153,7 @@ const Messages = () => {
 		return () => {
 			socket.off("receive_message", handler);
 		};
-	}, []);
+	}, [conversations, selectedId, stateOwner]);
 
 	// Scroll to bottom on new message
 	useEffect(() => {
