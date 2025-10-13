@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+
 import io from "socket.io-client";
+import { fetchMessages, sendMessageApi } from "../../utils/messagesApi";
 
-// You may want to move this to a config file
 const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
-const socket = io(SOCKET_URL, { autoConnect: false });
+let socket;
 
 const Messages = ({ user, recipient }) => {
   const [messages, setMessages] = useState([]);
@@ -12,18 +12,35 @@ const Messages = ({ user, recipient }) => {
   const [connected, setConnected] = useState(false);
   const messagesEndRef = useRef(null);
 
+
   useEffect(() => {
     if (!user || !recipient) return;
-    socket.connect();
+    let isMounted = true;
+    // Fetch chat history
+    const token = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo")).token : null;
+    fetchMessages(user._id, recipient._id, token)
+      .then((msgs) => {
+        if (isMounted) setMessages(msgs);
+      })
+      .catch(() => {});
+
+    // Setup socket
+    socket = io(SOCKET_URL, { autoConnect: true });
     setConnected(true);
     socket.emit("joinRoom", { userId: user._id, recipientId: recipient._id });
-    socket.on("message", (msg) => {
-      setMessages((prev) => [...prev, msg]);
-    });
+    const handleMessage = (msg) => {
+      // Only add if not duplicate (avoid double add on send)
+      setMessages((prev) => {
+        if (prev.length && prev[prev.length - 1]._id === msg._id) return prev;
+        return [...prev, msg];
+      });
+    };
+    socket.on("message", handleMessage);
     return () => {
       socket.emit("leaveRoom", { userId: user._id, recipientId: recipient._id });
       socket.disconnect();
       setConnected(false);
+      isMounted = false;
     };
   }, [user, recipient]);
 
@@ -31,18 +48,19 @@ const Messages = ({ user, recipient }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = (e) => {
+  const sendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
-    const msg = {
-      sender: user._id,
-      recipient: recipient._id,
-      text: input,
-      createdAt: new Date().toISOString(),
-    };
-    socket.emit("message", msg);
-    setMessages((prev) => [...prev, msg]);
-    setInput("");
+    const token = localStorage.getItem("userInfo") ? JSON.parse(localStorage.getItem("userInfo")).token : null;
+    try {
+      const sent = await sendMessageApi(user._id, recipient._id, input, token);
+      // The socket will also emit this, but for instant feedback:
+      setMessages((prev) => [...prev, sent]);
+      socket.emit("message", sent);
+      setInput("");
+    } catch {
+      // Optionally show error
+    }
   };
 
   return (
