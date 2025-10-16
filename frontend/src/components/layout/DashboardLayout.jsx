@@ -222,16 +222,14 @@ const DashboardLayout = () => {
             setNewRequesters([]);
             // Mark all unseen requests as seen
             if (user && requests.length) {
-                const userIdForSeen = user._id || user.id;
                 const unseenRequestIds = requests
-                    .filter(r => !(r.seenBy && r.seenBy.includes(userIdForSeen)))
+                    .filter(r => !(r.seenBy && r.seenBy.includes(user._id)))
                     .map(r => r._id || r.id);
                 if (unseenRequestIds.length) {
-                    const apiBase = import.meta.env.VITE_API_URL || '';
-                    fetch(`${apiBase}/api/incoming-requests/mark-seen`, {
+                    fetch('/api/incoming-requests/mark-seen', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: userIdForSeen, requestIds: unseenRequestIds }),
+                        body: JSON.stringify({ userId: user._id, requestIds: unseenRequestIds }),
                     }).catch(err => console.error('Failed to mark requests as seen:', err));
                 }
             }
@@ -243,9 +241,8 @@ const DashboardLayout = () => {
     const fetchIncomingRequests = useCallback(async () => {
         if (!user) return;
         setRequestsLoading(true);
-    try {
-        const userIdForFetch = user._id || user.id;
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/incoming-requests/received/${userIdForFetch}`);
+        try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/incoming-requests/received/${user._id}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             setRequests(data);
