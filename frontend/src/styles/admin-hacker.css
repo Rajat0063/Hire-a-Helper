@@ -104,3 +104,26 @@
 .theme-dark .terminal-panel { background: rgba(255,255,255,0.02); color: #e6eef6; border-color: rgba(255,255,255,0.02); }
 .theme-hacker .hacker-bg { display: block; }
 
+/* Skeleton / shimmer for hacker theme */
+.hacker-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.02));
+  border-radius: 8px;
+  box-shadow: inset 0 0 18px rgba(57,255,20,0.02);
+  height: 1em;
+  position: relative;
+  overflow: hidden;
+}
+.hacker-skeleton::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(57,255,20,0.06), transparent);
+  transform: translateX(-120%);
+  animation: hacker-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes hacker-shimmer{ 0%{ transform: translateX(-120%);} 100%{ transform: translateX(120%);} }
+
+.neon-btn { --neon-text: var(--neon-green); }
+.text-neon-green{ color: var(--neon-green); }
+.font-mono{ font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace; }
+

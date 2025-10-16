@@ -32,12 +32,13 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white shadow hover:bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold transition w-full sm:w-auto justify-center"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg neon-btn border border-green-800 text-neon-green font-semibold transition w-full sm:w-auto justify-center"
+            style={{ background: 'linear-gradient(90deg, rgba(57,255,20,0.04), rgba(0,0,0,0.0))' }}
           >
-            <ArrowLeftIcon className="h-5 w-5" />
-            <span>Back to Dashboard</span>
+            <ArrowLeftIcon className="h-5 w-5 text-neon-green" />
+            <span className="hacker-invert">Back to Dashboard</span>
           </button>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-800 drop-shadow-sm text-center w-full sm:w-auto">Admin Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold hacker-header hacker-invert text-center w-full sm:w-auto">Admin Dashboard</h1>
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-4 mb-6 justify-center">
           {TABS.map(t => (
@@ -61,8 +62,9 @@ export default function AdminDashboard() {
           {tab === 'analytics' && <AnalyticsAdmin />}
         </div>
         {/* Friendly admin info message */}
-        <div className="mt-4 text-center text-sm text-indigo-700 bg-indigo-50 rounded-lg px-4 py-2 shadow-sm font-medium">
-          Welcome, Admin! Manage users, tasks, and analytics in real time. <span className="text-indigo-400">All changes are instantly reflected for your team.</span>
+        <div className="mt-4 text-center text-sm hacker-invert terminal-panel px-4 py-2 shadow-sm font-medium">
+          <span className="font-mono">Welcome, Admin! Manage users, tasks, and analytics in real time.</span>
+          <div className="mt-1 text-sm" style={{ color: 'rgba(57,255,20,0.6)' }}>All changes are instantly reflected for your team.</div>
         </div>
       </div>
     </div>
