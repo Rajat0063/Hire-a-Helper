@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import DashboardLayout from '../layout/DashboardLayout';
 
 export default function DashboardOverview() {
   const [userTasksCount, setUserTasksCount] = useState(null);
@@ -23,17 +24,7 @@ export default function DashboardOverview() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Top Header */}
-      <div className="sticky top-0 z-10 bg-white flex items-center px-4 py-3 border-b border-gray-200" style={{ minHeight: '64px' }}>
-        <div className="flex-1 flex items-center">
-          <span className="font-bold text-lg text-indigo-700">Dashboard Overview</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* ...profile/avatar/search/actions... */}
-        </div>
-      </div>
-      {/* Main Content */}
+    <DashboardLayout>
       <div className="flex-1 overflow-y-auto px-2 pt-4 pb-8" style={{ background: '#f8f9fa' }}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="p-4 rounded-lg shadow bg-gradient-to-br from-indigo-500 to-blue-500 text-white">
@@ -104,6 +95,6 @@ export default function DashboardOverview() {
           )}
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
