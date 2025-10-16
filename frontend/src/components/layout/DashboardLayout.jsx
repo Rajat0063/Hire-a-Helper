@@ -198,24 +198,13 @@ const DashboardLayout = () => {
         return () => clearInterval(intervalId);
     }, [fetchTasks]); // FIXED: Added 'fetchTasks' as a dependency
 
-    // Notification effect: compute actionable requests and show bar if new unseen incoming requests arrive
+    // Notification effect: show bar if new unseen incoming requests arrive
     useEffect(() => {
         if (!user) return;
-        // Requests that are unseen by the current user (for notification bar)
         const unseenRequests = requests.filter(r => !(r.seenBy && r.seenBy.includes(user._id)));
-
-        // Compute actionable requests: those that still require an action from the owner
-        const actionable = requests.filter(r => {
-            const status = (r.status || 'pending').toString().toLowerCase();
-            // Consider action required when status is neither accepted nor rejected and actions aren't disabled
-            return status !== 'accepted' && status !== 'rejected' && !r._actionDisabled;
-        });
-
-        // requestCount now reflects number of requests that require action (shows numeric red badge)
-        setRequestCount(actionable.length);
-
-        // Show notification bar for newly unseen requests (keeps existing behavior)
+        setRequestCount(unseenRequests.length);
         if (unseenRequests.length > prevRequestCount.current) {
+            // Find new requester names
             const newOnes = unseenRequests.slice(0, unseenRequests.length - prevRequestCount.current).map(r => r.requesterName || r.requester?.name || 'Someone');
             setNewRequesters(newOnes);
             setShowNotificationBar(true);

@@ -138,8 +138,7 @@ router.post('/', async (req, res) => {
 // Only show pending requests to the task owner
 router.get('/received/:userId', async (req, res) => {
     try {
-        // Return ALL requests for this task owner, regardless of status
-        const requests = await IncomingRequest.find({ taskOwner: req.params.userId })
+        const requests = await IncomingRequest.find({ taskOwner: req.params.userId, status: 'pending' })
             .sort({ createdAt: -1 })
             .populate({ path: 'requester', select: 'name email image' })
             .populate({ path: 'task', select: 'title description location category imageUrl' });

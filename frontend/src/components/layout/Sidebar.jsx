@@ -67,7 +67,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                                             {isSidebarOpen && <span className={`ml-3 ${isActive ? 'text-white' : 'text-gray-800'}`}>{item.name}</span>}
                                 </div>
                                 {item.count > 0 && isSidebarOpen && (
-                                    <span aria-label={`${item.count} requests need action`} className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-gray-800' : 'bg-gray-100 text-gray-800'}`}>
+                                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-gray-800' : 'bg-gray-100 text-gray-800'}`}>
                                         {item.count}
                                     </span>
                                 )}

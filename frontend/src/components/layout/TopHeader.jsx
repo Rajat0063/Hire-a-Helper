@@ -9,9 +9,9 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
     const inputRef = useRef(null);
 
     return (
-        <header className="sticky top-0 z-10 flex items-center justify-between h-16 md:h-20 px-3 sm:px-8 bg-white border-b border-zinc-200 shadow-sm">
+        <header className="sticky top-0 z-10 flex items-center justify-between h-20 px-4 sm:px-8 bg-white border-b border-zinc-200 shadow-sm">
             {/* Search Bar */}
-            <div className="relative flex-1 max-w-lg md:max-w-xl">
+            <div className="relative flex-1 max-w-lg">
                 <input
                     ref={inputRef}
                     type="text"
@@ -20,7 +20,7 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
                     onChange={e => setSearchQuery(e.target.value)}
                     onFocus={() => setShowTooltip(true)}
                     onBlur={() => setShowTooltip(false)}
-                    className="w-full px-3 py-2 pl-10 rounded-full bg-zinc-100 border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm"
+                    className="w-full px-4 py-2 pl-10 rounded-full bg-zinc-100 border border-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition"
                 />
                 <Icon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400 h-5 w-5" path="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 {showTooltip && (
@@ -37,9 +37,9 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
                 <Link to="/dashboard/requests" className="relative p-2 rounded-full text-zinc-600 hover:bg-zinc-100 transition-colors">
                     <Icon className="h-6 w-6" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                     {requestCount > 0 && (
-                        <span className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 inline-flex items-center justify-center">
-                            <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-red-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full bg-red-500 text-white text-[10px] font-semibold leading-none h-5 min-w-[20px] px-1.5 py-0.5 items-center justify-center">{requestCount}</span>
+                        <span className="absolute top-0 right-0 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                         </span>
                     )}
                 </Link>
