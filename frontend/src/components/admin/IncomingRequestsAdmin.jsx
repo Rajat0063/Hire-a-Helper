@@ -1,22 +1,95 @@
+
+// Default avatar image (fallback)
+const defaultAvatar = "https://ui-avatars.com/api/?name=User&background=random";
+
+// Format date utility
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+  return d.toLocaleString('en-US', options);
+}
+
+// Add styles for mobile responsiveness
+const cardStyles = {
+  container: {
+    width: "100%",
+    maxWidth: 400,
+    margin: "0 auto 1rem auto",
+    padding: "1rem",
+    borderRadius: 12,
+    background: "#fff",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
+  },
+  actions: {
+    display: "flex",
+    flexDirection: "row",
+    gap: "0.5rem",
+    marginTop: "0.5rem",
+    width: "100%",
+    justifyContent: "space-between",
+  },
+  acceptBtn: {
+    flex: 1,
+    background: "#4ade80",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    padding: "0.5rem 0",
+    fontWeight: 600,
+    fontSize: "1rem",
+    cursor: "pointer",
+  },
+  declineBtn: {
+    flex: 1,
+    background: "#f3f4f6",
+    color: "#374151",
+    border: "none",
+    borderRadius: 6,
+    padding: "0.5rem 0",
+    fontWeight: 600,
+    fontSize: "1rem",
+    cursor: "pointer",
+  },
+  rejectedText: {
+    background: "#ef4444",
+    color: "#fff",
+    borderRadius: 6,
+    padding: "0.25rem 0.5rem",
+    fontWeight: 600,
+    fontSize: "0.95rem",
+    textAlign: "center",
+    marginTop: "0.5rem",
+    width: "fit-content",
+    alignSelf: "flex-end",
+  },
+};
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import SkeletonLoader from '../ui/SkeletonLoader';
+
+
 
 const API = import.meta.env.VITE_API_URL || '';
 
 export default function IncomingRequestsAdmin() {
   const [incomingRequests, setIncomingRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   // Use localStorage cache for snappy UX, like RequestsAdmin
   useEffect(() => {
-    setLoading(true);
     const cached = localStorage.getItem('admin_incoming_requests');
     if (cached) {
       setIncomingRequests(JSON.parse(cached));
-      // Always show skeleton for at least 1s
-      setTimeout(() => setLoading(false), 1000);
     }
     const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
     axios.get(`${API}/api/incoming-requests`, {
@@ -26,96 +99,96 @@ export default function IncomingRequestsAdmin() {
       .then(res => {
         setIncomingRequests(res.data);
         localStorage.setItem('admin_incoming_requests', JSON.stringify(res.data));
-      })
-      .catch(() => setError('Failed to load incoming requests'))
-      .finally(() => {
-        // If no cache, show loader for 1s; else, loader already hidden
-        if (!cached) setTimeout(() => setLoading(false), 1000);
       });
   }, []);
 
-  const handleDelete = id => {
-    if (!window.confirm('Delete this incoming request?')) return;
-    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
-    axios.delete(`${API}/api/incoming-requests/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      withCredentials: true
-    })
-      .then(() => {
-        setIncomingRequests(reqs => {
-          const updated = reqs.filter(r => r._id !== id);
-          localStorage.setItem('admin_incoming_requests', JSON.stringify(updated));
-          return updated;
-        });
-      })
-      .catch(() => alert('Delete failed. Please refresh.'));
-  };
 
-  const handleAction = (id, action) => {
-    // action: 'accept' or 'decline'
+  // Accept handler
+  const handleAccept = (id) => {
     const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
-    axios.patch(`${API}/api/incoming-requests/${action}/${id}`, {}, {
+    axios.patch(`${API}/api/incoming-requests/accept/${id}`, {}, {
       headers: { Authorization: `Bearer ${token}` },
       withCredentials: true
-  }).then(() => {
-      // update the status locally and disable actions
+    }).then(() => {
       setIncomingRequests(reqs => {
-        const updated = reqs.map(r => r._id === id ? { ...r, status: action === 'accept' ? 'accepted' : 'rejected', _actionDisabled: true } : r);
+        const updated = reqs.map(r => r._id === id ? { ...r, status: 'accepted', _actionDisabled: true } : r);
         localStorage.setItem('admin_incoming_requests', JSON.stringify(updated));
         return updated;
       });
-    }).catch(() => alert('Action failed. Please refresh.'));
+    }).catch(() => alert('Accept failed. Please refresh.'));
   };
 
-  if (loading) return <SkeletonLoader rows={5} cols={4} headers={["From","Task","Message","Actions"]} />;
-  if (error) return <div className="text-red-500">{error}</div>;
+  // Decline handler
+  const handleDecline = (id) => {
+    const token = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')).token : '';
+    axios.patch(`${API}/api/incoming-requests/decline/${id}`, {}, {
+      headers: { Authorization: `Bearer ${token}` },
+      withCredentials: true
+    }).then(() => {
+      setIncomingRequests(reqs => {
+        const updated = reqs.map(r => r._id === id ? { ...r, status: 'rejected', _actionDisabled: true } : r);
+        localStorage.setItem('admin_incoming_requests', JSON.stringify(updated));
+        return updated;
+      });
+    }).catch(() => alert('Decline failed. Please refresh.'));
+  };
 
+  // Render
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Incoming Requests</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full border min-w-[600px]">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2">From</th>
-              <th className="p-2">Task</th>
-              <th className="p-2">Message</th>
-              <th className="p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {incomingRequests.map(r => (
-              <tr
-                key={r._id}
-                className={`border-t ${r.status === 'rejected' ? 'bg-red-100' : ''}`}
-              >
-                <td className="p-2">{r.requesterName || r.requester || '-'}</td>
-                <td className="p-2">{r.taskTitle || r.taskId}</td>
-                <td className="p-2">{r.message}</td>
-                <td className="p-2">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => handleAction(r._id, 'accept')}
-                      disabled={r._actionDisabled || r.status === 'accepted'}
-                      className={`px-2 py-1 rounded ${r._actionDisabled || r.status === 'accepted' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}`}
-                    >
-                      {r.status === 'accepted' ? 'Accepted' : 'Accept'}
-                    </button>
-                    <button
-                      onClick={() => handleAction(r._id, 'decline')}
-                      disabled={r._actionDisabled || r.status === 'rejected'}
-                      className={`px-2 py-1 rounded ${r._actionDisabled || r.status === 'rejected' ? 'bg-gray-300 text-gray-600' : 'bg-red-600 text-white'}`}
-                    >
-                      {r.status === 'rejected' ? 'Declined' : 'Decline'}
-                    </button>
-                    <button onClick={() => handleDelete(r._id)} className="px-2 py-1 rounded bg-zinc-200 text-zinc-800">Delete</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="incoming-requests-container" style={{ padding: '0 0.5rem' }}>
+      <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>
+        Incoming <span>Requests</span>
+        <span className="incoming-requests-subtext" style={{ display: 'block', fontSize: '1rem', fontWeight: 400 }}>
+          People who want to help with your tasks
+        </span>
+      </h2>
+      {incomingRequests.length === 0 ? (
+        <div className="no-requests">No incoming requests.</div>
+      ) : (
+        incomingRequests.map((request, idx) => (
+          <div key={request._id || idx} style={cardStyles.container}>
+            <div style={cardStyles.header}>
+              <img
+                src={request.avatarUrl || defaultAvatar}
+                alt="avatar"
+                style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{request.username}</div>
+                <div style={{ color: '#374151', fontSize: '1rem' }}>{request.message}</div>
+              </div>
+            </div>
+            <div style={{ background: '#f3f4f6', borderRadius: 6, padding: '0.5rem', margin: '0.5rem 0' }}>
+              Requesting for: <b>{request.requestedFor}</b>
+            </div>
+            <div style={{ color: '#6b7280', fontSize: '0.95rem', marginBottom: '0.5rem' }}>
+              <span role="img" aria-label="calendar">📅</span> {formatDate(request.date)}
+            </div>
+            <div style={cardStyles.actions}>
+              {request.status === "pending" ? (
+                <>
+                  <button
+                    style={cardStyles.acceptBtn}
+                    onClick={() => handleAccept(request._id)}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    style={cardStyles.declineBtn}
+                    onClick={() => handleDecline(request._id)}
+                  >
+                    Decline
+                  </button>
+                </>
+              ) : request.status === "accepted" ? (
+                <span style={{ ...cardStyles.acceptBtn, background: '#4ade80', color: '#fff', cursor: 'default' }}>Accepted</span>
+              ) : (
+                <span style={cardStyles.rejectedText}>Rejected</span>
+              )}
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
