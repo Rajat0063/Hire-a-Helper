@@ -127,3 +127,25 @@
 .text-neon-green{ color: var(--neon-green); }
 .font-mono{ font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace; }
 
+/* Smooth transitions when switching themes */
+html.theme-light, html.theme-dark, html.theme-hacker {
+  transition: background-color 260ms ease, color 260ms ease;
+}
+
+/* Global element overrides keyed to theme variables */
+.theme-light body, .theme-light .terminal-panel { background: #f8fafc; color: #0f1724; }
+.theme-dark body, .theme-dark .terminal-panel { background: #07121a; color: #e6eef6; }
+.theme-hacker body { background: var(--hacker-bg-1); }
+
+.theme-light .neon-btn { background: linear-gradient(90deg,#eef2ff,#fff); color: #111827; border-color: rgba(15,23,42,0.04); }
+.theme-dark .neon-btn { background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color: #e6eef6; border-color: rgba(255,255,255,0.02); }
+.theme-hacker .neon-btn { border-color: rgba(57,255,20,0.12); color: var(--neon-green); }
+
+/* Headings */
+.theme-light h1, .theme-light h2, .theme-light h3 { color: #0f1724; }
+.theme-dark h1, .theme-dark h2, .theme-dark h3 { color: #e6eef6; }
+.theme-hacker h1, .theme-hacker h2, .theme-hacker h3 { color: var(--neon-green); text-shadow: 0 0 8px rgba(57,255,20,0.06); }
+
+/* Make skeletons fade more smoothly on theme change */
+.hacker-skeleton, .hacker-skeleton::after { transition: background 260ms ease, box-shadow 260ms ease; }
+

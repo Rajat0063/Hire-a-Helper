@@ -2,6 +2,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
+// Global theme styles (make sure this is loaded early)
+import './styles/admin-hacker.css';
 import App from './App.jsx';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import socket from './utils/socket';
@@ -35,4 +37,18 @@ try {
   }
 } catch (e) {
   console.warn('Global socket setup failed:', e && e.message ? e.message : e);
+}
+
+// Apply saved theme as early as possible to avoid flash
+try {
+  const saved = localStorage.getItem('admin_theme');
+  const storedUser = localStorage.getItem('userInfo');
+  let user = null;
+  try { user = storedUser ? JSON.parse(storedUser) : null; } catch (err) { console.warn('Failed to parse stored user for theme check', err); }
+  let themeToApply = saved || 'light';
+  if (themeToApply === 'hacker' && !(user && user.isAdmin)) themeToApply = 'dark';
+  document.documentElement.classList.remove('theme-light', 'theme-dark', 'theme-hacker');
+  document.documentElement.classList.add(`theme-${themeToApply}`);
+} catch (err) {
+  console.warn('Failed to apply saved theme early:', err);
 }
