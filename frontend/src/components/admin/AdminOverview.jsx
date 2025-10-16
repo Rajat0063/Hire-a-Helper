@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import '../../styles/admin-hacker.css';
 import socket from '../../utils/socket';
 import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
 import axios from 'axios';
@@ -67,36 +68,36 @@ export default function AdminOverview() {
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Overview</h2>
+    <div className="hacker-bg">
+      <h2 className="text-2xl font-bold mb-4 hacker-header">Overview</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="p-4 bg-white rounded shadow">
-          <div className="text-sm text-gray-500">Users</div>
-          <div className="text-3xl font-extrabold">{analytics?.userCount ?? '-'}</div>
+        <div className="terminal-panel">
+          <div className="text-sm hacker-invert">Users</div>
+          <div className="text-3xl font-extrabold hacker-invert">{analytics?.userCount ?? '-'}</div>
         </div>
-        <div className="p-4 bg-white rounded shadow">
-          <div className="text-sm text-gray-500">Tasks</div>
-          <div className="text-3xl font-extrabold">{analytics?.taskCount ?? '-'}</div>
+        <div className="terminal-panel">
+          <div className="text-sm hacker-invert">Tasks</div>
+          <div className="text-3xl font-extrabold hacker-invert">{analytics?.taskCount ?? '-'}</div>
         </div>
-        <div className="p-4 bg-white rounded shadow">
-          <div className="text-sm text-gray-500">Recent Actions</div>
-          <div className="text-3xl font-extrabold">{actions.length}</div>
+        <div className="terminal-panel">
+          <div className="text-sm hacker-invert">Recent Actions</div>
+          <div className="text-3xl font-extrabold hacker-invert">{actions.length}</div>
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded shadow">
-        <h3 className="font-semibold mb-3">Recent Admin Activity</h3>
+      <div className="terminal-panel">
+        <h3 className="font-semibold mb-3 hacker-invert">Recent Admin Activity</h3>
         {actions.length === 0 ? (
-          <div className="text-gray-500">No recent actions</div>
+          <div className="hacker-invert">No recent actions</div>
         ) : (
           <ul className="space-y-2">
             {actions.map(a => (
               <li key={a._id} className="flex items-start justify-between">
                 <div>
-                  <div className="text-sm text-gray-700">{a.actionType.replace('_', ' ')} on <span className="font-medium">{a.targetType}</span></div>
-                  <div className="text-xs text-gray-400">{new Date(a.createdAt).toLocaleString()}</div>
+                  <div className="text-sm hacker-invert">{a.actionType.replace('_', ' ')} on <span className="font-medium hacker-invert">{a.targetType}</span></div>
+                  <div className="text-xs hacker-invert">{new Date(a.createdAt).toLocaleString()}</div>
                 </div>
-                <div className="text-sm text-gray-500">by {a.adminId ? (a.adminId.name || a.adminId) : 'unknown'}</div>
+                <div className="text-sm hacker-invert">by {a.adminId ? (a.adminId.name || a.adminId) : 'unknown'}</div>
               </li>
             ))}
           </ul>

@@ -20,12 +20,14 @@ const TABS = [
   { label: 'Analytics', value: 'analytics' },
 ];
 
+import '../../styles/admin-hacker.css';
+
 export default function AdminDashboard() {
   const [tab, setTab] = useState('overview');
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-blue-50 to-white py-4 px-2 sm:px-8 flex flex-col items-center w-full">
+    <div className="min-h-screen hacker-bg py-6 px-2 sm:px-8 flex flex-col items-center w-full">
       <div className="w-full max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
           <button
@@ -41,16 +43,15 @@ export default function AdminDashboard() {
           {TABS.map(t => (
             <button
               key={t.value}
-              className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-full shadow transition font-semibold text-base sm:text-lg border-2 focus:outline-none ${tab === t.value
-                ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white border-indigo-500 scale-105'
-                : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'}`}
+              className={`neon-tab flex items-center gap-2 focus:outline-none ${tab === t.value ? 'active' : ''}`}
               onClick={() => setTab(t.value)}
             >
               {t.label}
             </button>
           ))}
         </div>
-  <div className="bg-white/95 rounded-2xl shadow-2xl p-4 sm:p-8 min-h-[300px] sm:min-h-[400px] border border-indigo-200 overflow-x-auto transition-all duration-300">
+  <div className="terminal-panel rounded-2xl p-4 sm:p-8 min-h-[300px] sm:min-h-[400px] overflow-x-auto transition-all duration-300 relative">
+    <div className="matrix-dots" aria-hidden></div>
           {tab === 'overview' && <AdminOverview />}
           {tab === 'users' && <UsersAdmin />}
           {tab === 'tasks' && <TasksAdmin />}

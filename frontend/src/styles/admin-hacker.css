@@ -1,0 +1,74 @@
+/* Hacker-style admin theme - neon green on dark, monospace, subtle matrix animation */
+:root{
+  --hacker-bg-1: #06070a;
+  --hacker-bg-2: #071014;
+  --neon-green: #39ff14;
+  --neon-accent: rgba(57,255,20,0.12);
+  --panel-bg: rgba(0,0,0,0.55);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
+
+.hacker-bg {
+  background: radial-gradient(ellipse at 10% 10%, rgba(57,255,20,0.02), transparent 5%), linear-gradient(180deg,var(--hacker-bg-1),var(--hacker-bg-2));
+  color: var(--neon-green);
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.hacker-header {
+  text-shadow: 0 0 12px rgba(57,255,20,0.25), 0 0 30px rgba(57,255,20,0.06);
+  letter-spacing: 1px;
+}
+
+.terminal-panel {
+  background: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(6,8,10,0.5));
+  border: 1px solid rgba(57,255,20,0.12);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.neon-tab {
+  background: transparent;
+  color: var(--neon-green);
+  border: 1px solid transparent;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 160ms ease;
+}
+.neon-tab:hover{ transform: translateY(-2px); box-shadow: 0 6px 20px rgba(57,255,20,0.04);} 
+.neon-tab.active{
+  background: rgba(57,255,20,0.06);
+  border-color: rgba(57,255,20,0.18);
+  box-shadow: 0 6px 36px rgba(57,255,20,0.06), 0 0 18px rgba(57,255,20,0.04) inset;
+}
+
+.neon-btn {
+  background: linear-gradient(90deg, rgba(57,255,20,0.12), rgba(57,255,20,0.06));
+  color: var(--neon-green);
+  border: 1px solid rgba(57,255,20,0.12);
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+}
+
+.neon-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--neon-green);
+  font-size: 0.95rem;
+}
+.neon-table thead th{ color: rgba(57,255,20,0.85); text-align:left; padding:0.65rem; border-bottom:1px dashed rgba(57,255,20,0.06); font-weight:700;}
+.neon-table tbody td{ padding:0.65rem; border-bottom:1px dashed rgba(57,255,20,0.03);}
+.neon-table tbody tr:hover{ background: rgba(57,255,20,0.02); box-shadow: inset 0 0 18px rgba(57,255,20,0.02); }
+
+.chip-accepted{ background: rgba(0,200,90,0.12); color:#9bffb8; padding:0.25rem 0.5rem; border-radius:6px; font-weight:700;}
+.chip-declined{ background: rgba(200,0,0,0.08); color:#ff8b8b; padding:0.25rem 0.5rem; border-radius:6px; font-weight:700;}
+
+.matrix-dots { position: absolute; inset:0; pointer-events:none; background-image: radial-gradient(rgba(57,255,20,0.02) 1px, transparent 1px); background-size: 8px 8px; mix-blend-mode: screen; }
+
+/* ensure good contrast for light elements inside hacker panels */
+.hacker-invert { color: #e6ffe6; }

@@ -1,6 +1,7 @@
 
 
 import React, { useEffect, useState } from 'react';
+import '../../styles/admin-hacker.css';
 import axios from 'axios';
 import socket from '../../utils/socket';
 import { ADMIN_EVENTS } from '../../utils/requestSocketEvents';
@@ -117,43 +118,45 @@ export default function UsersAdmin() {
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Users</h2>
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="p-2">Name</th>
-            <th className="p-2">Email</th>
-            <th className="p-2">Admin</th>
-            <th className="p-2">Blocked</th>
-            <th className="p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(u => (
-            <tr key={u._id} className="border-t">
-              <td className="p-2">{u.name}</td>
-              <td className="p-2">{u.email}</td>
-              <td className="p-2">{u.isAdmin ? 'Yes' : 'No'}</td>
-              <td className="p-2">{u.isBlocked ? 'Yes' : 'No'}</td>
-              <td className="p-2 flex gap-2">
-                <button
-                  className={`px-2 py-1 rounded ${u.isBlocked ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}
-                  onClick={() => handleBlock(u._id, !u.isBlocked)}
-                >
-                  {u.isBlocked ? 'Unblock' : 'Block'}
-                </button>
-                <button
-                  className="px-2 py-1 rounded bg-gray-700 text-white"
-                  onClick={() => handleDelete(u._id)}
-                >
-                  Delete
-                </button>
-              </td>
+    <div className="hacker-bg">
+      <h2 className="text-xl font-semibold mb-4 hacker-header">Users</h2>
+      <div className="terminal-panel">
+        <table className="neon-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Admin</th>
+              <th>Blocked</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u._id}>
+                <td>{u.name}</td>
+                <td>{u.email}</td>
+                <td>{u.isAdmin ? 'Yes' : 'No'}</td>
+                <td>{u.isBlocked ? 'Yes' : 'No'}</td>
+                <td className="flex gap-2">
+                  <button
+                    className={`neon-btn ${u.isBlocked ? 'opacity-90' : ''}`}
+                    onClick={() => handleBlock(u._id, !u.isBlocked)}
+                  >
+                    {u.isBlocked ? 'Unblock' : 'Block'}
+                  </button>
+                  <button
+                    className="neon-btn"
+                    onClick={() => handleDelete(u._id)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

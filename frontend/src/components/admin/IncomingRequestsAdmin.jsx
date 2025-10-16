@@ -67,104 +67,49 @@ export default function IncomingRequestsAdmin() {
     }).catch(() => alert('Action failed. Please refresh.'));
   };
 
-    // Helper to render a colored status pill
-    const statusClass = (s) => {
-      if (!s) return 'bg-yellow-100 text-yellow-700';
-      const st = String(s).toLowerCase();
-      if (st === 'pending') return 'bg-yellow-100 text-yellow-700';
-      if (st === 'accepted') return 'bg-green-100 text-green-700';
-      if (st === 'rejected' || st === 'declined') return 'bg-red-100 text-red-700';
-      return 'bg-gray-100 text-gray-700';
-    };
-
-    if (loading) return <SkeletonLoader rows={5} cols={4} headers={["From","Task","Message","Actions"]} />;
+  if (loading) return <SkeletonLoader rows={5} cols={4} headers={["From","Task","Message","Actions"]} />;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Incoming Requests</h2>
-      {/* Desktop/table view (md and up) */}
-      <div className="hidden md:block">
-        <table className="w-full border">
+    <div className="hacker-bg">
+      <h2 className="text-xl font-semibold mb-4 hacker-header">Incoming Requests</h2>
+      <div className="terminal-panel">
+        <table className="neon-table">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2">From</th>
-              <th className="p-2">Task</th>
-              <th className="p-2">Message</th>
-              <th className="p-2">Actions</th>
+            <tr>
+              <th>From</th>
+              <th>Task</th>
+              <th>Message</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {incomingRequests.map(r => (
-              <tr key={r._id} className="border-t">
-                <td className="p-2">{r.requesterName || r.requester || '-'}</td>
-                <td className="p-2">{r.taskTitle || r.taskId}</td>
-                <td className="p-2">{r.message}</td>
-                <td className="p-2 flex items-center gap-2">
+              <tr key={r._id}>
+                <td>{r.requesterName || r.requester || '-'}</td>
+                <td>{r.taskTitle || r.taskId}</td>
+                <td>{r.message}</td>
+                <td className="flex items-center gap-2">
                   <button
                     onClick={() => handleAction(r._id, 'accept')}
-                    disabled={r._actionDisabled || String(r.status).toLowerCase() === 'accepted'}
-                    className={`px-2 py-1 rounded ${String(r.status).toLowerCase() === 'accepted' ? 'bg-green-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}`}
+                    disabled={r._actionDisabled || r.status === 'accepted'}
+                    className={`neon-btn ${r._actionDisabled || r.status === 'accepted' ? 'opacity-40 cursor-not-allowed' : ''}`}
                   >
-                    {String(r.status).toLowerCase() === 'accepted' ? 'Accepted' : 'Accept'}
+                    {r.status === 'accepted' ? <span className="chip-accepted">Accepted</span> : 'Accept'}
                   </button>
                   <button
                     onClick={() => handleAction(r._id, 'decline')}
-                    disabled={r._actionDisabled || (String(r.status).toLowerCase() === 'rejected' || String(r.status).toLowerCase() === 'declined')}
-                    className={`px-2 py-1 rounded ${['rejected','declined'].includes(String(r.status).toLowerCase()) ? 'bg-red-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-red-500 text-white'}`}
+                    disabled={r._actionDisabled || r.status === 'rejected'}
+                    className={`neon-btn ${r._actionDisabled || r.status === 'rejected' ? 'opacity-40 cursor-not-allowed' : ''}`}
                   >
-                    {['rejected','declined'].includes(String(r.status).toLowerCase()) ? 'Declined' : 'Decline'}
+                    {r.status === 'rejected' ? <span className="chip-declined">Declined</span> : 'Decline'}
                   </button>
-                  <button onClick={() => handleDelete(r._id)} className="px-2 py-1 rounded bg-zinc-200 text-zinc-800">Delete</button>
-                  {/* Status badge */}
-                  <span className={`ml-2 px-3 py-1 rounded text-xs font-semibold ${statusClass(r.status)}`}>{r.status ? String(r.status).charAt(0).toUpperCase() + String(r.status).slice(1) : 'Pending'}</span>
+                  <button onClick={() => handleDelete(r._id)} className="neon-btn">Delete</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
-
-      {/* Mobile/card view (below md) */}
-      <div className="md:hidden">
-        {incomingRequests.map(r => (
-          <div key={r._id} className="bg-white rounded-lg p-4 shadow mb-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="font-medium">{r.requesterName || r.requester || '-'}</div>
-                <div className="text-sm text-gray-600">{r.taskTitle || r.taskId}</div>
-              </div>
-              <div className="text-sm text-gray-500">{r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</div>
-            </div>
-
-            <div className="mt-3 text-gray-800">{r.message}</div>
-
-            <div className="mt-4 flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={() => handleAction(r._id, 'accept')}
-                disabled={r._actionDisabled || String(r.status).toLowerCase() === 'accepted'}
-                className={`w-full sm:w-auto text-center px-3 py-2 rounded ${String(r.status).toLowerCase() === 'accepted' ? 'bg-green-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}`}
-              >
-                {String(r.status).toLowerCase() === 'accepted' ? 'Accepted' : 'Accept'}
-              </button>
-
-              <button
-                onClick={() => handleAction(r._id, 'decline')}
-                disabled={r._actionDisabled || (String(r.status).toLowerCase() === 'rejected' || String(r.status).toLowerCase() === 'declined')}
-                className={`w-full sm:w-auto text-center px-3 py-2 rounded ${['rejected','declined'].includes(String(r.status).toLowerCase()) ? 'bg-red-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-red-500 text-white'}`}
-              >
-                {['rejected','declined'].includes(String(r.status).toLowerCase()) ? 'Declined' : 'Decline'}
-              </button>
-
-              <button onClick={() => handleDelete(r._id)} className="w-full sm:w-auto text-center px-3 py-2 rounded bg-zinc-200 text-zinc-800">Delete</button>
-
-              {/* Status badge for mobile */}
-              <div className="mt-1 sm:mt-0 sm:ml-2 flex items-center">
-                <span className={`px-3 py-1 rounded text-xs font-semibold ${statusClass(r.status)}`}>{r.status ? String(r.status).charAt(0).toUpperCase() + String(r.status).slice(1) : 'Pending'}</span>
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
