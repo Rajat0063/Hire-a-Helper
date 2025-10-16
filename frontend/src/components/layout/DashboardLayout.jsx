@@ -281,13 +281,18 @@ const DashboardLayout = () => {
     // Apply theme to document body and persist selection
     useEffect(() => {
         try {
+            // Prevent non-admins from using the hacker theme
+            let appliedTheme = theme;
+            if (theme === 'hacker' && !(user && user.isAdmin)) {
+                appliedTheme = 'dark';
+            }
             document.documentElement.classList.remove('theme-light', 'theme-dark', 'theme-hacker');
-            document.documentElement.classList.add(`theme-${theme}`);
-            localStorage.setItem('admin_theme', theme);
+            document.documentElement.classList.add(`theme-${appliedTheme}`);
+            localStorage.setItem('admin_theme', appliedTheme);
         } catch (e) {
             console.warn('Failed to apply theme:', e);
         }
-    }, [theme]);
+    }, [theme, user]);
 
     const handleOpenRequestModal = useCallback((task) => {
         setSelectedTask(task);
