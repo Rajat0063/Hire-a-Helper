@@ -69,7 +69,7 @@ export default function DashboardOverview() {
     </>
   );
   if (loading) return (
-    <div className="p-6">
+      <div className="animate-pulse space-y-4">
       <div className="animate-pulse space-y-4">
         <div className="h-8 w-3/4 bg-gray-200 rounded" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -78,12 +78,12 @@ export default function DashboardOverview() {
           <div className="h-24 bg-gray-200 rounded" />
         </div>
       </div>
-    </div>
+      </div>
   );
 
   return (
     <>
-      <div className="p-6">
+    <div>
       <h2 className="text-2xl font-bold mb-4 text-indigo-700">Overview</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
