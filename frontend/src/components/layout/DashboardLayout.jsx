@@ -61,6 +61,14 @@ const DashboardLayout = () => {
         return window.innerWidth > 768; // >768px open, <=768px collapsed (mobile)
     };
     const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState);
+    // Theme: 'light' | 'dark' | 'hacker'
+    const getInitialTheme = () => {
+        try {
+            const t = localStorage.getItem('admin_theme');
+            return t || 'light';
+        } catch { return 'light'; }
+    };
+    const [theme, setTheme] = useState(getInitialTheme);
     const [feedTasks, setFeedTasks] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [tasksData, setTasksData] = useState({ todo: [], inProgress: [], done: [] });
@@ -269,6 +277,17 @@ const DashboardLayout = () => {
         window.addEventListener('resize', onResize);
         return () => window.removeEventListener('resize', onResize);
     }, [isSidebarOpen]);
+
+    // Apply theme to document body and persist selection
+    useEffect(() => {
+        try {
+            document.documentElement.classList.remove('theme-light', 'theme-dark', 'theme-hacker');
+            document.documentElement.classList.add(`theme-${theme}`);
+            localStorage.setItem('admin_theme', theme);
+        } catch (e) {
+            console.warn('Failed to apply theme:', e);
+        }
+    }, [theme]);
 
     const handleOpenRequestModal = useCallback((task) => {
         setSelectedTask(task);
@@ -660,6 +679,8 @@ const DashboardLayout = () => {
                     user={user}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
+                    theme={theme}
+                    setTheme={setTheme}
                 />
                 {/* Notification Bar for requester when their request is accepted */}
                 <RequesterNotificationBar

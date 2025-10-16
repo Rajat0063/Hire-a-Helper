@@ -4,9 +4,13 @@ import { Link } from 'react-router-dom';
 import { Icon, AddTaskIcon } from '../ui/Icon';
 import Avatar from '../ui/Avatar';
 
-const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
+const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery, theme, setTheme }) => {
     const [showTooltip, setShowTooltip] = useState(false);
     const inputRef = useRef(null);
+
+    const handleThemeChange = (t) => {
+        if (typeof setTheme === 'function') setTheme(t);
+    };
 
     return (
         <header className="sticky top-0 z-10 flex items-center justify-between h-16 md:h-20 px-3 sm:px-8 bg-white border-b border-zinc-200 shadow-sm">
@@ -32,8 +36,14 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
                 )}
             </div>
 
-            {/* Right Side Icons & Profile */}
+            {/* Right Side Icons, Theme & Profile */}
             <div className="flex items-center space-x-4 sm:space-x-6">
+                {/* Theme toggle: light / dark / hacker */}
+                <div className="flex items-center bg-zinc-100 rounded-full p-1">
+                    <button aria-pressed={theme === 'light'} onClick={() => handleThemeChange('light')} className={`px-3 py-1 rounded-full text-sm ${theme === 'light' ? 'bg-white shadow' : 'text-zinc-600'}`}>Light</button>
+                    <button aria-pressed={theme === 'dark'} onClick={() => handleThemeChange('dark')} className={`px-3 py-1 rounded-full text-sm ${theme === 'dark' ? 'bg-white shadow' : 'text-zinc-600'}`}>Dark</button>
+                    <button aria-pressed={theme === 'hacker'} onClick={() => handleThemeChange('hacker')} className={`px-3 py-1 rounded-full text-sm ${theme === 'hacker' ? 'bg-white shadow' : 'text-zinc-600'}`}>Hacker</button>
+                </div>
                 <Link to="/dashboard/requests" className="relative p-2 rounded-full text-zinc-600 hover:bg-zinc-100 transition-colors">
                     <Icon className="h-6 w-6" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                     {requestCount > 0 && (

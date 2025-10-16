@@ -72,3 +72,35 @@
 
 /* ensure good contrast for light elements inside hacker panels */
 .hacker-invert { color: #e6ffe6; }
+
+/* Global theme wrappers -------------------------------------------------- */
+.theme-light {
+  --bg-page: #f7fafc;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  color-scheme: light;
+  background: var(--bg-page);
+}
+
+.theme-dark {
+  --bg-page: #0b1220;
+  --surface: #0f1724;
+  --muted: #9ca3af;
+  color-scheme: dark;
+  background: linear-gradient(180deg,#071326,#07121a);
+  color: #e6eef6;
+}
+
+/* Hacker theme attaches the hacker classes globally; using .theme-hacker
+   makes it easy to toggle via a root class on <html> or <body> */
+.theme-hacker {
+  --bg-page: var(--hacker-bg-1);
+  background: radial-gradient(ellipse at 10% 10%, rgba(57,255,20,0.02), transparent 5%), linear-gradient(180deg,var(--hacker-bg-1),var(--hacker-bg-2));
+}
+
+/* Lightweight defaults for panels using theme variables */
+.terminal-panel { background-color: rgba(255,255,255,0.02); }
+.theme-light .terminal-panel { background: var(--surface); color: #111827; border-color: rgba(15,23,42,0.04); }
+.theme-dark .terminal-panel { background: rgba(255,255,255,0.02); color: #e6eef6; border-color: rgba(255,255,255,0.02); }
+.theme-hacker .hacker-bg { display: block; }
+
