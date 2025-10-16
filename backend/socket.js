@@ -3,10 +3,10 @@ const { Server } = require('socket.io');
 
 let io;
 function initSocket(server) {
-  // Allow all origins for testing purposes
+  // Allow only the deployed frontend origin for credentials
   io = new Server(server, {
     cors: {
-      origin: '*',
+      origin: 'https://hire-a-helper-yr.vercel.app',
       credentials: true,
     }
   });
