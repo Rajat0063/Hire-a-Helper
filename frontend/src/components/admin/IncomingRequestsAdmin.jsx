@@ -71,46 +71,44 @@ export default function IncomingRequestsAdmin() {
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
-    <div className="hacker-bg">
-      <h2 className="text-xl font-semibold mb-4 hacker-header">Incoming Requests</h2>
-      <div className="terminal-panel">
-        <table className="neon-table">
-          <thead>
-            <tr>
-              <th>From</th>
-              <th>Task</th>
-              <th>Message</th>
-              <th>Actions</th>
+    <div>
+      <h2 className="text-xl font-semibold mb-4">Incoming Requests</h2>
+      <table className="w-full border">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="p-2">From</th>
+            <th className="p-2">Task</th>
+            <th className="p-2">Message</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {incomingRequests.map(r => (
+            <tr key={r._id} className="border-t">
+              <td className="p-2">{r.requesterName || r.requester || '-'}</td>
+              <td className="p-2">{r.taskTitle || r.taskId}</td>
+              <td className="p-2">{r.message}</td>
+              <td className="p-2 flex items-center gap-2">
+                <button
+                  onClick={() => handleAction(r._id, 'accept')}
+                  disabled={r._actionDisabled || r.status === 'accepted'}
+                  className={`px-2 py-1 rounded ${r._actionDisabled || r.status === 'accepted' ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}`}
+                >
+                  {r.status === 'accepted' ? 'Accepted' : 'Accept'}
+                </button>
+                <button
+                  onClick={() => handleAction(r._id, 'decline')}
+                  disabled={r._actionDisabled || r.status === 'rejected'}
+                  className={`px-2 py-1 rounded ${r._actionDisabled || r.status === 'rejected' ? 'bg-gray-300 text-gray-600' : 'bg-red-500 text-white'}`}
+                >
+                  {r.status === 'rejected' ? 'Declined' : 'Decline'}
+                </button>
+                <button onClick={() => handleDelete(r._id)} className="px-2 py-1 rounded bg-zinc-200 text-zinc-800">Delete</button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {incomingRequests.map(r => (
-              <tr key={r._id}>
-                <td>{r.requesterName || r.requester || '-'}</td>
-                <td>{r.taskTitle || r.taskId}</td>
-                <td>{r.message}</td>
-                <td className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleAction(r._id, 'accept')}
-                    disabled={r._actionDisabled || r.status === 'accepted'}
-                    className={`neon-btn ${r._actionDisabled || r.status === 'accepted' ? 'opacity-40 cursor-not-allowed' : ''}`}
-                  >
-                    {r.status === 'accepted' ? <span className="chip-accepted">Accepted</span> : 'Accept'}
-                  </button>
-                  <button
-                    onClick={() => handleAction(r._id, 'decline')}
-                    disabled={r._actionDisabled || r.status === 'rejected'}
-                    className={`neon-btn ${r._actionDisabled || r.status === 'rejected' ? 'opacity-40 cursor-not-allowed' : ''}`}
-                  >
-                    {r.status === 'rejected' ? <span className="chip-declined">Declined</span> : 'Decline'}
-                  </button>
-                  <button onClick={() => handleDelete(r._id)} className="neon-btn">Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
