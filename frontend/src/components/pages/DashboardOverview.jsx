@@ -1,22 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import TopHeader from '../layout/TopHeader';
 
 const API = import.meta.env.VITE_API_URL || '';
 
 export default function DashboardOverview() {
   // Get user and search state for TopHeader (mimic DashboardLayout)
-  const [searchQuery, setSearchQuery] = useState('');
-  const [user] = useState(() => {
-    try {
-      const storedUserInfo = localStorage.getItem('userInfo');
-      if (storedUserInfo) {
-        return JSON.parse(storedUserInfo);
-      }
-    } catch {/* ignore */}
-    return null;
-  });
   // Optionally, you can fetch requestCount if needed for TopHeader
-  const [requestCount] = useState(0);
   const [userTasksCount, setUserTasksCount] = useState(null);
   const [myRequestsCount, setMyRequestsCount] = useState(null);
   const [incomingRequestsCount, setIncomingRequestsCount] = useState(null);
@@ -68,7 +56,6 @@ export default function DashboardOverview() {
 
   if (loading) return (
     <>
-      <TopHeader user={user} requestCount={requestCount} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       <div className="p-6">
         <div className="animate-pulse space-y-4">
           <div className="h-8 w-3/4 bg-gray-200 rounded" />
@@ -81,10 +68,21 @@ export default function DashboardOverview() {
       </div>
     </>
   );
+  if (loading) return (
+    <div className="p-6">
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 w-3/4 bg-gray-200 rounded" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="h-24 bg-gray-200 rounded" />
+          <div className="h-24 bg-gray-200 rounded" />
+          <div className="h-24 bg-gray-200 rounded" />
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
-      <TopHeader user={user} requestCount={requestCount} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       <div className="p-6">
       <h2 className="text-2xl font-bold mb-4 text-indigo-700">Overview</h2>
 
