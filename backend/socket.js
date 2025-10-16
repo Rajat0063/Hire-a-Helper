@@ -3,14 +3,10 @@ const { Server } = require('socket.io');
 
 let io;
 function initSocket(server) {
-  const allowedOrigins = [
-    process.env.FRONTEND_URL, // e.g. https://hire-a-helper-yr.vercel.app
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ].filter(Boolean);
+  // Allow all origins for testing purposes
   io = new Server(server, {
     cors: {
-      origin: allowedOrigins,
+      origin: '*',
       credentials: true,
     }
   });
