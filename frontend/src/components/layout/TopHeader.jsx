@@ -37,9 +37,9 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
                 <Link to="/dashboard/requests" className="relative p-2 rounded-full text-zinc-600 hover:bg-zinc-100 transition-colors">
                     <Icon className="h-6 w-6" path="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
                     {requestCount > 0 && (
-                        <span className="absolute top-0 right-0 flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        <span className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 inline-flex items-center justify-center">
+                            <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full bg-red-500 text-white text-[10px] font-semibold leading-none h-5 min-w-[20px] px-1.5 py-0.5 items-center justify-center">{requestCount}</span>
                         </span>
                     )}
                 </Link>
