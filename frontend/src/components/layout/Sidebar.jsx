@@ -61,16 +61,16 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                         {({ isActive }) => (
                             <>
                                 <div className="flex items-center">
-                                        {React.isValidElement(item.icon)
-                                            ? React.cloneElement(item.icon, { className: `h-5 w-5 ${isActive ? 'text-white' : 'text-gray-700'}` })
-                                            : item.icon}
-                                        {isSidebarOpen && <span className={`ml-3 ${isActive ? 'text-white' : 'text-gray-800'}`}>{item.name}</span>}
-                                    </div>
-                                    {item.name === 'Requests' && item.count > 0 && isSidebarOpen && (
-                                        <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-red-600' : 'bg-red-500 text-white'} animate-pulse`}>
-                                            {item.count}
-                                        </span>
-                                    )}
+                                            {React.isValidElement(item.icon)
+                                                ? React.cloneElement(item.icon, { className: `h-5 w-5 ${isActive ? 'text-white' : 'text-gray-700'}` })
+                                                : item.icon}
+                                            {isSidebarOpen && <span className={`ml-3 ${isActive ? 'text-white' : 'text-gray-800'}`}>{item.name}</span>}
+                                </div>
+                                {item.count > 0 && isSidebarOpen && (
+                                    <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${isActive ? 'bg-white text-gray-800' : 'bg-gray-100 text-gray-800'}`}>
+                                        {item.count}
+                                    </span>
+                                )}
                                 {!isSidebarOpen && (
                                     <span className={`absolute left-full rounded-md px-2 py-1 ml-6 bg-gray-100 text-gray-800 text-sm invisible opacity-20 -translate-x-3 transition-all group-hover:visible group-hover:opacity-100 group-hover:translate-x-0`}>
                                         {item.name}
@@ -84,7 +84,10 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
         </nav>
         <div className="p-4 border-t border-zinc-200">
             <div className={`flex items-center mb-4 ${!isSidebarOpen && 'justify-center'}`}>
+                
+                {/* 2. Replace the old <img> tag with the new Avatar component */}
                 <Avatar user={user} className="h-10 w-10 flex-shrink-0" />
+
                 {isSidebarOpen && (
                     <div className="ml-3 overflow-hidden">
                         <p className="font-semibold text-zinc-800 truncate">{user.name}</p>
@@ -92,6 +95,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, navItems, user, handleLogout })
                     </div>
                 )}
             </div>
+            
             <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-red-600 hover:bg-red-100 transition-colors duration-200 group"
