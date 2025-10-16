@@ -67,13 +67,22 @@ export default function IncomingRequestsAdmin() {
     }).catch(() => alert('Action failed. Please refresh.'));
   };
 
-  if (loading) return <SkeletonLoader rows={5} cols={4} headers={["From","Task","Message","Actions"]} />;
+    // Helper to render a colored status pill
+    const statusClass = (s) => {
+      if (!s) return 'bg-yellow-100 text-yellow-700';
+      const st = String(s).toLowerCase();
+      if (st === 'pending') return 'bg-yellow-100 text-yellow-700';
+      if (st === 'accepted') return 'bg-green-100 text-green-700';
+      if (st === 'rejected' || st === 'declined') return 'bg-red-100 text-red-700';
+      return 'bg-gray-100 text-gray-700';
+    };
+
+    if (loading) return <SkeletonLoader rows={5} cols={4} headers={["From","Task","Message","Actions"]} />;
   if (error) return <div className="text-red-500">{error}</div>;
 
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Incoming Requests</h2>
-
       {/* Desktop/table view (md and up) */}
       <div className="hidden md:block">
         <table className="w-full border">
@@ -94,19 +103,21 @@ export default function IncomingRequestsAdmin() {
                 <td className="p-2 flex items-center gap-2">
                   <button
                     onClick={() => handleAction(r._id, 'accept')}
-                    disabled={r._actionDisabled || r.status === 'accepted'}
-                    className={`px-2 py-1 rounded ${r.status === 'accepted' ? 'bg-green-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}`}
+                    disabled={r._actionDisabled || String(r.status).toLowerCase() === 'accepted'}
+                    className={`px-2 py-1 rounded ${String(r.status).toLowerCase() === 'accepted' ? 'bg-green-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}`}
                   >
-                    {r.status === 'accepted' ? 'Accepted' : 'Accept'}
+                    {String(r.status).toLowerCase() === 'accepted' ? 'Accepted' : 'Accept'}
                   </button>
                   <button
                     onClick={() => handleAction(r._id, 'decline')}
-                    disabled={r._actionDisabled || r.status === 'rejected'}
-                    className={`px-2 py-1 rounded ${r.status === 'rejected' ? 'bg-red-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-red-500 text-white'}`}
+                    disabled={r._actionDisabled || (String(r.status).toLowerCase() === 'rejected' || String(r.status).toLowerCase() === 'declined')}
+                    className={`px-2 py-1 rounded ${['rejected','declined'].includes(String(r.status).toLowerCase()) ? 'bg-red-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-red-500 text-white'}`}
                   >
-                    {r.status === 'rejected' ? 'Declined' : 'Decline'}
+                    {['rejected','declined'].includes(String(r.status).toLowerCase()) ? 'Declined' : 'Decline'}
                   </button>
                   <button onClick={() => handleDelete(r._id)} className="px-2 py-1 rounded bg-zinc-200 text-zinc-800">Delete</button>
+                  {/* Status badge */}
+                  <span className={`ml-2 px-3 py-1 rounded text-xs font-semibold ${statusClass(r.status)}`}>{r.status ? String(r.status).charAt(0).toUpperCase() + String(r.status).slice(1) : 'Pending'}</span>
                 </td>
               </tr>
             ))}
@@ -128,24 +139,29 @@ export default function IncomingRequestsAdmin() {
 
             <div className="mt-3 text-gray-800">{r.message}</div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => handleAction(r._id, 'accept')}
-                disabled={r._actionDisabled || r.status === 'accepted'}
-                className={`flex-1 min-w-[110px] text-center px-3 py-2 rounded ${r.status === 'accepted' ? 'bg-green-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}`}
+                disabled={r._actionDisabled || String(r.status).toLowerCase() === 'accepted'}
+                className={`w-full sm:w-auto text-center px-3 py-2 rounded ${String(r.status).toLowerCase() === 'accepted' ? 'bg-green-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-green-500 text-white'}`}
               >
-                {r.status === 'accepted' ? 'Accepted' : 'Accept'}
+                {String(r.status).toLowerCase() === 'accepted' ? 'Accepted' : 'Accept'}
               </button>
 
               <button
                 onClick={() => handleAction(r._id, 'decline')}
-                disabled={r._actionDisabled || r.status === 'rejected'}
-                className={`flex-1 min-w-[110px] text-center px-3 py-2 rounded ${r.status === 'rejected' ? 'bg-red-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-red-500 text-white'}`}
+                disabled={r._actionDisabled || (String(r.status).toLowerCase() === 'rejected' || String(r.status).toLowerCase() === 'declined')}
+                className={`w-full sm:w-auto text-center px-3 py-2 rounded ${['rejected','declined'].includes(String(r.status).toLowerCase()) ? 'bg-red-500 text-white' : r._actionDisabled ? 'bg-gray-300 text-gray-600' : 'bg-red-500 text-white'}`}
               >
-                {r.status === 'rejected' ? 'Declined' : 'Decline'}
+                {['rejected','declined'].includes(String(r.status).toLowerCase()) ? 'Declined' : 'Decline'}
               </button>
 
-              <button onClick={() => handleDelete(r._id)} className="flex-1 min-w-[110px] text-center px-3 py-2 rounded bg-zinc-200 text-zinc-800">Delete</button>
+              <button onClick={() => handleDelete(r._id)} className="w-full sm:w-auto text-center px-3 py-2 rounded bg-zinc-200 text-zinc-800">Delete</button>
+
+              {/* Status badge for mobile */}
+              <div className="mt-1 sm:mt-0 sm:ml-2 flex items-center">
+                <span className={`px-3 py-1 rounded text-xs font-semibold ${statusClass(r.status)}`}>{r.status ? String(r.status).charAt(0).toUpperCase() + String(r.status).slice(1) : 'Pending'}</span>
+              </div>
             </div>
           </div>
         ))}
