@@ -149,3 +149,113 @@ html.theme-light, html.theme-dark, html.theme-hacker {
 /* Make skeletons fade more smoothly on theme change */
 .hacker-skeleton, .hacker-skeleton::after { transition: background 260ms ease, box-shadow 260ms ease; }
 
+/* --------------------------
+   Professional theme palettes
+   -------------------------- */
+/* Define detailed variables per theme to allow complete color swaps */
+:root {
+  /* fallback (light) */
+  --bg-page: #f8fafc;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #0f1724;
+  --border: rgba(15,23,42,0.06);
+  --accent: #4f46e5; /* indigo */
+  --accent-2: #06b6d4; /* cyan */
+  --success: #16a34a;
+  --danger: #ef4444;
+  --shadow: 0 8px 24px rgba(2,6,23,0.08);
+}
+
+.theme-light {
+  --bg-page: #f8fafc;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #0f1724;
+  --border: rgba(15,23,42,0.06);
+  --accent: #4f46e5;
+  --accent-2: #06b6d4;
+  --success: #16a34a;
+  --danger: #ef4444;
+  --panel: linear-gradient(180deg,#ffffff,#fbfdff);
+}
+
+.theme-dark {
+  --bg-page: #071327; /* dark navy */
+  --surface: #0b1220;
+  --muted: #9ca3af;
+  --text: #e6eef6;
+  --border: rgba(255,255,255,0.03);
+  --accent: #60a5fa; /* soft blue */
+  --accent-2: #34d399; /* soft green */
+  --success: #34d399;
+  --danger: #fb7185;
+  --panel: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));
+}
+
+.theme-hacker {
+  --bg-page: var(--hacker-bg-1);
+  --surface: rgba(0,0,0,0.55);
+  --muted: rgba(57,255,20,0.6);
+  --text: var(--neon-green);
+  --border: rgba(57,255,20,0.06);
+  --accent: var(--neon-green);
+  --accent-2: #8be04b;
+  --success: #9bffb8;
+  --danger: #ff8b8b;
+  --panel: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(6,8,10,0.5));
+}
+
+/* Apply base page backgrounds and text */
+html.theme-light, html.theme-dark, html.theme-hacker { background: var(--bg-page); color: var(--text); }
+body { background: var(--bg-page); color: var(--text); }
+
+/* Global transition for smooth professional switching */
+* { transition: background-color 240ms ease, color 240ms ease, border-color 240ms ease, box-shadow 260ms ease; }
+
+/* Header / Top bar */
+header.sticky { background: transparent; }
+.theme-light header.sticky { background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(255,255,255,0.6)); box-shadow: var(--shadow); }
+.theme-dark header.sticky { background: rgba(6,10,18,0.6); box-shadow: 0 8px 20px rgba(2,6,23,0.6); }
+.theme-hacker header.sticky { background: rgba(0,0,0,0.28); box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+
+/* Sidebar */
+aside { background: var(--surface); border-right: 1px solid var(--border); }
+.theme-hacker aside { background: linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.12)); }
+.theme-light aside { background: var(--surface); }
+.theme-dark aside { background: var(--surface); }
+
+/* Nav links in sidebar and tabs */
+.neon-tab { color: var(--text); border-color: transparent; }
+.neon-tab.active { background: rgba(0,0,0,0.04); box-shadow: 0 8px 24px rgba(2,6,23,0.06); }
+.theme-light .neon-tab { color: var(--text); }
+.theme-dark .neon-tab { color: var(--text); }
+.theme-hacker .neon-tab { color: var(--neon-green); }
+
+/* Active nav accent */
+.theme-light .neon-tab.active { background: linear-gradient(90deg, rgba(79,70,229,0.06), rgba(6,182,212,0.03)); border-color: rgba(79,70,229,0.12); }
+.theme-dark .neon-tab.active { background: linear-gradient(90deg, rgba(96,165,250,0.06), rgba(52,211,153,0.03)); border-color: rgba(96,165,250,0.12); }
+.theme-hacker .neon-tab.active { background: rgba(57,255,20,0.06); border-color: rgba(57,255,20,0.12); }
+
+/* Terminal panel uses theme panel variable */
+.terminal-panel { background: var(--panel); border: 1px solid var(--border); box-shadow: 0 12px 30px rgba(2,6,23,0.06); }
+
+/* Buttons */
+.neon-btn { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.theme-light .neon-btn { background: linear-gradient(90deg,#f8fafc,#ffffff); color: var(--text); }
+.theme-dark .neon-btn { background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); color: var(--text); }
+.theme-hacker .neon-btn { background: linear-gradient(90deg, rgba(57,255,20,0.04), rgba(0,0,0,0.01)); color: var(--neon-green); border-color: rgba(57,255,20,0.12); }
+
+/* Table / list */
+.neon-table thead th{ color: var(--muted); border-bottom: 1px solid var(--border); }
+.neon-table tbody td{ color: var(--text); }
+.theme-hacker .neon-table tbody td{ color: var(--neon-green); }
+
+/* Misc accents */
+.chip-accepted{ background: rgba(0,200,90,0.12); color: var(--success); }
+.chip-declined{ background: rgba(200,0,0,0.08); color: var(--danger); }
+
+/* Footer/info strip */
+.terminal-panel .info-strip, .info-strip { background: var(--panel); color: var(--text); border-radius: 8px; padding: 0.5rem 1rem; }
+
+
