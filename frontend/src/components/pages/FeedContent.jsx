@@ -95,7 +95,7 @@ const FeedContent = () => {
     );
   }
   return (
-    <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 p-4 sm:p-6 md:p-8">
+  <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 px-0 pt-4 pb-8">
       <PageHeader
         title="Feed"
         subtitle="Browse and discover tasks you can help with."
