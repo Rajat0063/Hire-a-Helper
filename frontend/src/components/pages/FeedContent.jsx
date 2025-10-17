@@ -98,7 +98,7 @@ const FeedContent = () => {
       <PageHeader
         title="Feed"
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4 mb-6">
         {filteredTasks.map((item) => (
           <div key={item.id || item._id} className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group transform hover:-translate-y-2 transition-transform duration-300">
             <img src={item.image} alt={item.title} className="w-full h-48 object-cover" />
