@@ -297,7 +297,7 @@ const Messages = () => {
 			{/* Main chat area */}
 			<main className="flex-1 flex flex-col">
 				{/* Header */}
-				<div className="h-16 flex items-center px-4 md:px-6 border-b bg-white shadow-sm">
+				<div className="h-16 flex items-center px-0 md:px-6 border-b bg-white shadow-sm">
 					{selectedId ? (
 						<>
 							{/* mobile back button */}
@@ -326,7 +326,7 @@ const Messages = () => {
 				</div>
 
 				{/* Messages */}
-				<div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-4 space-y-2 bg-zinc-50 pb-36 md:pb-4">
+				<div className="flex-1 overflow-y-auto px-0 md:px-6 py-4 md:py-4 space-y-2 bg-zinc-50 pb-36 md:pb-4">
 					{loading ? (
 						<div className="text-zinc-400 text-center mt-10">Loading messages...</div>
 					) : selectedId ? (
@@ -342,7 +342,7 @@ const Messages = () => {
 							messages.map((msg, idx) => {
 								const own = String(msg.sender?.id) === String(getUserId());
 								return (
-									<div key={msg.id || idx} className={`flex ${own ? "justify-end" : "justify-start"} px-2 md:px-0`}>
+									<div key={msg.id || idx} className={`flex ${own ? "justify-end" : "justify-start"} px-0`}>
 										{!own && (
 											<Avatar user={msg.sender} className="h-8 w-8 mr-2 md:mr-3" />
 										)}
@@ -364,7 +364,7 @@ const Messages = () => {
 				</div>
 
 				{/* Input */}
-				<form onSubmit={sendMessage} className="flex items-center gap-2 px-4 md:px-6 py-4 border-t bg-white">
+				<form onSubmit={sendMessage} className="flex items-center gap-2 px-0 md:px-6 py-4 border-t bg-white">
 					<input
 						type="text"
 						value={input}
