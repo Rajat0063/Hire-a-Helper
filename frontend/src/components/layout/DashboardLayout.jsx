@@ -39,7 +39,7 @@ function RequesterNotificationBar({ notification, onClick, onClose }) {
     const isDeclined = notification.type === 'request-declined';
     return (
         <div
-            className={`text-white py-2 px-4 font-semibold z-40 mt-4 mb-4 mx-4 rounded-lg shadow-lg cursor-pointer transition flex items-center justify-between ${isDeclined ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+            className={`text-white py-2 px-4 font-semibold z-40 mt-4 mb-4 rounded-lg shadow-lg cursor-pointer transition flex items-center justify-between ${isDeclined ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
             onClick={onClick}
         >
             <span className="w-full text-center">{notification.message}</span>
@@ -655,44 +655,48 @@ const DashboardLayout = () => {
                 handleLogout={handleLogout}
             />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <TopHeader 
-                    requestCount={requestCount}
-                    user={user}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                />
-                {/* Notification Bar for requester when their request is accepted */}
-                <RequesterNotificationBar
-                    notification={requesterNotification}
-                    onClick={async () => {
-                        if (requesterNotification) {
-                            // Mark as read in backend
-                            await fetch(`/api/incoming-requests/notifications/read/${requesterNotification._id}`, { method: 'PATCH' });
-                            setRequesterNotification(null);
-                            navigate('/dashboard/my-requests');
-                        }
-                    }}
-                    onClose={async () => {
-                        if (requesterNotification) {
-                            await fetch(`/api/incoming-requests/notifications/read/${requesterNotification._id}`, { method: 'PATCH' });
-                            setRequesterNotification(null);
-                        }
-                    }}
-                />
-                {/* Existing notification bar for task owner */}
-                {showNotificationBar && notificationActive && (
-                    <div className="bg-indigo-600 text-white text-center py-2 px-4 font-semibold z-40 mt-4 mb-4 mx-4 rounded-lg shadow-lg cursor-pointer transition hover:bg-indigo-700 flex items-center justify-between"
-                        onClick={() => { navigate('/dashboard/requests'); setShowNotificationBar(false); setNotificationActive(false); setNewRequesters([]); }}
-                    >
-                        <span className="w-full text-center">
-                            {newRequesters.length === 1
-                                ? `${newRequesters[0]} sent you a new request! Click to view.`
-                                : `${newRequesters.join(', ')} sent you new requests! Click to view.`}
-                        </span>
-                        <button className="ml-4 text-white text-lg font-bold" onClick={e => { e.stopPropagation(); setShowNotificationBar(false); setNotificationActive(false); setNewRequesters([]); }}>&#10005;</button>
-                    </div>
-                )}
-                <Outlet context={{ 
+                <div className="px-4 sm:px-8">
+                    <TopHeader 
+                        requestCount={requestCount}
+                        user={user}
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                    />
+                    {/* Notification Bar for requester when their request is accepted */}
+                    <RequesterNotificationBar
+                        notification={requesterNotification}
+                        onClick={async () => {
+                            if (requesterNotification) {
+                                // Mark as read in backend
+                                await fetch(`/api/incoming-requests/notifications/read/${requesterNotification._id}`, { method: 'PATCH' });
+                                setRequesterNotification(null);
+                                navigate('/dashboard/my-requests');
+                            }
+                        }}
+                        onClose={async () => {
+                            if (requesterNotification) {
+                                await fetch(`/api/incoming-requests/notifications/read/${requesterNotification._id}`, { method: 'PATCH' });
+                                setRequesterNotification(null);
+                            }
+                        }}
+                    />
+                    {/* Existing notification bar for task owner */}
+                    {showNotificationBar && notificationActive && (
+                        <div className="bg-indigo-600 text-white text-center py-2 px-4 font-semibold z-40 mt-4 mb-4 rounded-lg shadow-lg cursor-pointer transition hover:bg-indigo-700 flex items-center justify-between"
+                            onClick={() => { navigate('/dashboard/requests'); setShowNotificationBar(false); setNotificationActive(false); setNewRequesters([]); }}
+                        >
+                            <span className="w-full text-center">
+                                {newRequesters.length === 1
+                                    ? `${newRequesters[0]} sent you a new request! Click to view.`
+                                    : `${newRequesters.join(', ')} sent you new requests! Click to view.`}
+                            </span>
+                            <button className="ml-4 text-white text-lg font-bold" onClick={e => { e.stopPropagation(); setShowNotificationBar(false); setNotificationActive(false); setNewRequesters([]); }}>&#10005;</button>
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex-1 overflow-auto px-4 sm:px-8">
+                    <Outlet context={{ 
                     feedTasks, 
                     tasksData, 
                     requests, 
@@ -708,6 +712,7 @@ const DashboardLayout = () => {
                     feedLoading,
                     searchQuery,
                 }} />
+                </div>
             </div>
             <RequestModal 
                 isOpen={isRequestModalOpen}
