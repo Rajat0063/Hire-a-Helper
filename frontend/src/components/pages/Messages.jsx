@@ -342,17 +342,16 @@ const Messages = () => {
 							messages.map((msg, idx) => {
 								const own = String(msg.sender?.id) === String(getUserId());
 								return (
-									<div key={msg.id || idx} className={`flex ${own ? "justify-end" : "justify-start"} px-2 md:px-0`}> 
+									<div key={msg.id || idx} className={`flex ${own ? "justify-end" : "justify-start"} px-2 md:px-0`}>
 										{!own && (
-											// hide avatar on very small screens to save space
-											<Avatar user={msg.sender} className="h-8 w-8 mr-2 md:mr-3 hidden sm:block" />
+											<Avatar user={msg.sender} className="h-8 w-8 mr-2 md:mr-3" />
 										)}
-										<div className={`w-auto md:max-w-xs max-w-[80%] px-3 py-2 rounded-2xl shadow text-sm break-words ${own ? "bg-indigo-600 text-white" : "bg-white text-zinc-800"}`}>
+										<div className={`w-auto md:max-w-xs max-w-[70%] px-4 py-2 rounded-2xl shadow text-sm ${own ? "bg-indigo-600 text-white" : "bg-white text-zinc-800"}`}>
 											{msg.text}
 											<div className="text-[10px] text-zinc-400 text-right mt-1">{msg.time}</div>
 										</div>
 										{own && (
-											<Avatar user={msg.sender} className="h-8 w-8 ml-2 md:ml-3 hidden sm:block" />
+											<Avatar user={msg.sender} className="h-8 w-8 ml-2 md:ml-3" />
 										)}
 									</div>
 								);
@@ -365,18 +364,18 @@ const Messages = () => {
 				</div>
 
 				{/* Input */}
-				<form onSubmit={sendMessage} className="flex items-center gap-2 px-4 md:px-6 py-3 border-t bg-white">
+				<form onSubmit={sendMessage} className="flex items-center gap-2 px-4 md:px-6 py-4 border-t bg-white">
 					<input
 						type="text"
 						value={input}
 						onChange={(e) => setInput(e.target.value)}
 						placeholder="Type your message..."
-						className="flex-1 min-w-0 border rounded-full px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none bg-zinc-50"
+						className="flex-1 border rounded-full px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none bg-zinc-50"
 						autoComplete="off"
 					/>
 					<button
 						type="submit"
-						className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-full font-semibold shadow text-sm"
+						className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-full font-semibold shadow"
 						disabled={!input.trim()}
 					>
 						Send
