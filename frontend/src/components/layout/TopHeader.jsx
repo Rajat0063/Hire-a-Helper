@@ -10,7 +10,6 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
 
     return (
         <header className="sticky top-0 z-10 flex items-center justify-between h-20 px-0 bg-white border-b border-zinc-200 shadow-sm">
-            <div className="w-full flex items-center justify-between px-4 sm:px-8">
             {/* Search Bar */}
             <div className="relative flex-1 max-w-lg">
                 <input
@@ -52,7 +51,6 @@ const TopHeader = ({ requestCount, user, searchQuery, setSearchQuery }) => {
                 <Link to="/dashboard/settings" className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     <Avatar user={user} className="h-10 w-10" />
                 </Link>
-            </div>
             </div>
         </header>
     );
