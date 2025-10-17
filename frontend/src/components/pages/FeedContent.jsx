@@ -39,7 +39,7 @@ const FeedSkeleton = () => (
         </div>
     </main>
 );
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { Icon, AddTaskIcon } from '../ui/Icon';
 
 // Helper for category badge color
@@ -68,7 +68,6 @@ const FeedContent = () => {
   const handleOpenRequestModal = context.handleOpenRequestModal;
   const user = context.user;
   const searchQuery = context.searchQuery || '';
-  const navigate = useNavigate();
 
   // Filter tasks by search query (title, description, location, type)
   const filteredTasks = activeTasks.filter(task => {
@@ -98,16 +97,6 @@ const FeedContent = () => {
   <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 px-0 pt-4 pb-8">
       <PageHeader
         title="Feed"
-        subtitle="Browse and discover tasks you can help with."
-        actions={
-          <button
-            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200"
-            onClick={() => navigate('/dashboard/add-task')}
-          >
-            <AddTaskIcon className="h-5 w-5" />
-            <span>Post a Task</span>
-          </button>
-        }
       />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTasks.map((item) => (
