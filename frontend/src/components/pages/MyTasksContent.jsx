@@ -39,6 +39,7 @@ const MyTasksSkeleton = () => {
   );
 };
 import { useOutletContext } from 'react-router-dom';
+import PageHeader from '../ui/PageHeader';
 
 const MyTasksContent = () => {
   const { user } = useOutletContext();
@@ -107,9 +108,7 @@ const MyTasksContent = () => {
 
   return (
     <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 p-4 sm:p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-zinc-800">My Tasks</h1>
-      </div>
+      <PageHeader title="My Tasks" subtitle="" />
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {columns.map(col => (
           <div key={col.key} className="p-4 rounded-xl shadow-lg bg-white">

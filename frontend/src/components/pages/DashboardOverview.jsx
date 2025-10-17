@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import PageHeader from '../ui/PageHeader';
 
 export default function DashboardOverview() {
   const [userTasksCount, setUserTasksCount] = useState(null);
@@ -24,7 +25,9 @@ export default function DashboardOverview() {
 
   return (
     <div className="px-4 sm:px-8 pt-4 pb-8" style={{ background: '#f8f9fa', minHeight: '100vh' }}>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+  <PageHeader title="Overview" subtitle="" />
+
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="p-4 rounded-lg shadow bg-gradient-to-br from-indigo-500 to-blue-500 text-white">
           <div className="flex flex-col">
             <div className="text-sm opacity-90">Your Tasks</div>
@@ -95,3 +98,4 @@ export default function DashboardOverview() {
     </div>
   );
 }
+

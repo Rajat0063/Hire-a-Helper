@@ -40,6 +40,7 @@ const FeedSkeleton = () => (
 );
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { Icon, AddTaskIcon } from '../ui/Icon';
+import PageHeader from '../ui/PageHeader';
 
 // Helper for category badge color
 const getCategoryClass = (type) => {
@@ -94,9 +95,8 @@ const FeedContent = () => {
     );
   }
   return (
-    <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 p-4 sm:p-6 md:p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-zinc-800">Feed</h1>
+    <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 px-4 sm:px-8 pt-4 pb-8">
+      <PageHeader title="Feed" subtitle="" actions={(
         <button 
             className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200" 
             onClick={() => navigate('/dashboard/add-task')}
@@ -104,7 +104,7 @@ const FeedContent = () => {
             <AddTaskIcon className="h-5 w-5" />
             <span>Post a Task</span>
         </button>
-      </div>
+      )} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTasks.map((item) => (
           <div key={item.id || item._id} className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group transform hover:-translate-y-2 transition-transform duration-300">

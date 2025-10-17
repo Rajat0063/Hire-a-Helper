@@ -368,13 +368,7 @@ const Messages = () => {
 							</div>
 						</>
 					) : (
-						<div className="flex items-center gap-3">
-							<div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-semibold">💬</div>
-							<div>
-								<div className="font-semibold text-lg text-zinc-800">Messages</div>
-								<div className="text-sm text-zinc-500">Select a conversation to start chatting</div>
-							</div>
-						</div>
+						<PageHeader title="Messages" subtitle="Select a conversation to start chatting" />
 					)}
 					{/* On small screens, show a button to open conversations if none selected */}
 					{!selectedId && (

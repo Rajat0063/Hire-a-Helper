@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import socket from '../../utils/socket';
 import { Icon } from '../ui/Icon';
+import PageHeader from '../ui/PageHeader';
 
 // Professional skeleton for My Requests page
 const MyRequestsSkeleton = () => (
@@ -152,10 +153,9 @@ const MyRequestsContent = () => {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-zinc-50 p-4 sm:p-6 md:p-8">
+    <main className="flex-1 overflow-y-auto bg-zinc-50 px-4 sm:px-8 pt-4 pb-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-zinc-800 mb-1">My Requests</h1>
-        <div className="text-zinc-500 mb-4">Track the help requests you've sent</div>
+        <PageHeader title="My Requests" subtitle="Track the help requests you've sent" />
         <div className="space-y-8">
           {myRequests.map(request => {
             // Prefer taskImage (from backend), then image, then placeholder
