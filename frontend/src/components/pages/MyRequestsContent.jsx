@@ -1,18 +1,17 @@
 // src/components/pages/MyRequestsContent.jsx
 
 import { useOutletContext, useNavigate } from 'react-router-dom'; // 1. Import the hook
+import PageHeader from '../ui/PageHeader';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import socket from '../../utils/socket';
 import { Icon } from '../ui/Icon';
-import PageHeader from '../ui/PageHeader';
 
 // Professional skeleton for My Requests page
 const MyRequestsSkeleton = () => (
-  <main className="flex-1 overflow-y-auto bg-zinc-50 px-4 sm:px-8 pt-4 pb-8">
+  <main className="flex-1 overflow-y-auto bg-zinc-50 p-4 sm:p-6 md:p-8">
     <div className="max-w-4xl mx-auto">
-            <div className="h-10 w-48 bg-gray-200 rounded animate-pulse mb-2" />
-            <div className="h-5 w-64 bg-gray-200 rounded animate-pulse mb-6" />
+      <PageHeader title="My Requests" />
             <div className="mt-6 space-y-6">
                 {[1,2,3].map(i => (
                     <div key={i} className="bg-white rounded-xl shadow-lg p-6 border border-zinc-200">
@@ -134,9 +133,9 @@ const MyRequestsContent = () => {
   if (context.myRequests === undefined) return <MyRequestsSkeleton />;
   if (!Array.isArray(myRequests) || myRequests.length === 0) {
     return (
-      <main className="flex-1 flex items-center justify-center bg-zinc-50 px-4 sm:px-8 pt-4 pb-8">
-        <div className="text-center max-w-3xl w-full">
-          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-gray-200" />
+      <main className="flex-1 flex items-center justify-center bg-zinc-50 p-4 sm:p-6 md:p-8">
+        <div className="text-center">
+          <Icon className="mx-auto mb-4 h-12 w-12 text-zinc-400" path="M12 8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 10c-2.21 0-4-1.79-4-4h2a2 2 0 004 0h2c0 2.21-1.79 4-4 4zm6-8V7a6 6 0 10-12 0v3a6 6 0 0012 0z" />
           <h2 className="text-2xl font-bold text-zinc-700 mb-2">No requests sent</h2>
           <p className="text-zinc-500">You haven't sent any requests yet.</p>
         </div>
@@ -153,9 +152,10 @@ const MyRequestsContent = () => {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-zinc-50 px-4 sm:px-8 pt-4 pb-8">
+    <main className="flex-1 overflow-y-auto bg-zinc-50 p-4 sm:p-6 md:p-8">
       <div className="max-w-3xl mx-auto">
-        <PageHeader title="My Requests" subtitle="Track the help requests you've sent" />
+        <h1 className="text-2xl font-bold text-zinc-800 mb-1">My Requests</h1>
+        <div className="text-zinc-500 mb-4">Track the help requests you've sent</div>
         <div className="space-y-8">
           {myRequests.map(request => {
             // Prefer taskImage (from backend), then image, then placeholder

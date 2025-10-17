@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import PageHeader from '../ui/PageHeader';
 import Cropper from 'react-easy-crop';
 import Slider from '@mui/material/Slider';
 import Modal from '@mui/material/Modal';
@@ -6,7 +7,6 @@ import getCroppedImg from '../../utils/cropImage';
 import { useOutletContext } from 'react-router-dom';
 import { Icon } from '../ui/Icon';
 import Avatar from '../ui/Avatar'; // 1. Import the new Avatar component
-import PageHeader from '../ui/PageHeader';
 
 const SettingsContent = () => {
     const { user, handleUserUpdate } = useOutletContext();
@@ -83,6 +83,7 @@ const SettingsContent = () => {
 
     return (
         <>
+        <PageHeader title="Settings" />
         <Modal open={cropModalOpen} onClose={() => setCropModalOpen(false)}>
             <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: '#fff', padding: 24, borderRadius: 8, outline: 'none', width: 350 }}>
                 <div style={{ position: 'relative', width: 300, height: 300, background: '#333' }}>
@@ -109,10 +110,10 @@ const SettingsContent = () => {
                 <button onClick={() => setCropModalOpen(false)} className="px-4 py-2 bg-zinc-300 rounded">Cancel</button>
             </div>
         </Modal>
-        <main className="flex-1 overflow-y-auto bg-zinc-100 px-4 sm:px-8 pt-4 pb-8">
+        <main className="flex-1 overflow-y-auto bg-zinc-100 p-8">
             <div className="max-w-3xl mx-auto">
                 <div className="bg-white rounded-xl shadow-lg p-8">
-                    <PageHeader title="Profile Settings" subtitle="" />
+                    <h1 className="text-3xl font-bold text-zinc-800 mb-8">Profile Settings</h1>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="flex items-center space-x-6">
                             

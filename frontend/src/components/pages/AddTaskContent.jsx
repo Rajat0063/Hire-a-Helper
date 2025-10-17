@@ -1,8 +1,8 @@
 // src/pages/AddTaskContent.jsx
 
 import { useState } from 'react';
-import { useOutletContext } from 'react-router-dom'; // 1. Import the hook
 import PageHeader from '../ui/PageHeader';
+import { useOutletContext } from 'react-router-dom'; // 1. Import the hook
 
 const AddTaskContent = () => {
     // 2. Get the handleAddTask function from the context
@@ -68,9 +68,9 @@ const AddTaskContent = () => {
 
     // The entire JSX return block below requires no changes.
     return (
-        <main className="flex-1 overflow-y-auto bg-zinc-100 px-4 sm:px-8 pt-4 pb-8">
+        <main className="flex-1 overflow-y-auto bg-zinc-100 p-8">
             <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8">
-                <PageHeader title="Post a New Task" subtitle="" />
+                <PageHeader title="Post a New Task" />
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="title" className="block text-sm font-medium text-zinc-700">Task Title</label>
