@@ -68,7 +68,7 @@ const AddTaskContent = () => {
 
     // The entire JSX return block below requires no changes.
     return (
-        <main className="flex-1 overflow-y-auto bg-zinc-100 p-8">
+    <main className="flex-1 overflow-y-auto bg-zinc-100 px-0 pt-4 pb-8">
             <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8">
                 <PageHeader title="Post a New Task" />
                 <form onSubmit={handleSubmit} className="space-y-6">

@@ -110,7 +110,7 @@ const SettingsContent = () => {
                 <button onClick={() => setCropModalOpen(false)} className="px-4 py-2 bg-zinc-300 rounded">Cancel</button>
             </div>
         </Modal>
-        <main className="flex-1 overflow-y-auto bg-zinc-100 p-8">
+    <main className="flex-1 overflow-y-auto bg-zinc-100 px-0 pt-4 pb-8">
             <div className="max-w-3xl mx-auto">
                 <div className="bg-white rounded-xl shadow-lg p-8">
                     <h1 className="text-3xl font-bold text-zinc-800 mb-8">Profile Settings</h1>

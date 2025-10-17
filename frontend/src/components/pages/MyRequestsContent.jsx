@@ -9,7 +9,7 @@ import { Icon } from '../ui/Icon';
 
 // Professional skeleton for My Requests page
 const MyRequestsSkeleton = () => (
-  <main className="flex-1 overflow-y-auto bg-zinc-50 p-4 sm:p-6 md:p-8">
+  <main className="flex-1 overflow-y-auto bg-zinc-50 px-0 pt-4 pb-8">
     <div className="max-w-4xl mx-auto">
       <PageHeader title="My Requests" />
             <div className="mt-6 space-y-6">

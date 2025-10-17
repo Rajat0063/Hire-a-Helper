@@ -4,7 +4,7 @@ import React from 'react';
 import PageHeader from '../ui/PageHeader';
 // Professional skeleton for Feed page
 const FeedSkeleton = () => (
-    <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 p-4 sm:p-6 md:p-8">
+  <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 px-0 pt-4 pb-8">
         <div className="flex justify-between items-center mb-6">
             <div className="h-10 w-48 bg-gray-200 rounded animate-pulse" />
             <div className="h-10 w-40 bg-indigo-200 rounded animate-pulse" />
