@@ -96,8 +96,9 @@ const FeedContent = () => {
   }
   return (
     <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 p-4 sm:p-6 md:p-8">
-      <PageHeader 
-        title="Feed" 
+      <PageHeader
+        title="Feed"
+        subtitle="Browse and discover tasks you can help with."
         actions={
           <button
             className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200"
