@@ -24,10 +24,9 @@ export default function DashboardOverview() {
   }, []);
 
   return (
-    <div className="px-4 sm:px-8 pt-4 pb-8" style={{ background: '#f8f9fa', minHeight: '100vh' }}>
-  <PageHeader title="Overview" subtitle="" />
-
-  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+    <main className="flex-1 overflow-x-hidden overflow-y-auto bg-zinc-100 p-4 sm:p-6 md:p-8">
+      <PageHeader title="Overview" subtitle="" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="p-4 rounded-lg shadow bg-gradient-to-br from-indigo-500 to-blue-500 text-white">
           <div className="flex flex-col">
             <div className="text-sm opacity-90">Your Tasks</div>
@@ -95,7 +94,7 @@ export default function DashboardOverview() {
           </ul>
         )}
       </div>
-    </div>
+    </main>
   );
 }
 
