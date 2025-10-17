@@ -22,6 +22,23 @@ const Messages = () => {
 	const [messages, setMessages] = useState([]);
 	const [input, setInput] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [msgOwnerLoading, setMsgOwnerLoading] = useState(false);
+
+	// Helper to prepend or select a conversation with dedupe
+	const addOrSelectConversation = (convObj, owner) => {
+		setConversations(prev => {
+			const merged = [ { ...convObj, name: owner?.name || convObj.name, ownerName: owner?.name || convObj.ownerName, image: owner?.image || convObj.image }, ...prev ];
+			const map = new Map();
+			for (const c of merged) {
+				const id = String(c._id || c.id || '');
+				if (!map.has(id)) map.set(id, c);
+			}
+			return Array.from(map.values());
+		});
+		setSelectedId(convObj._id || convObj.id);
+		// join socket room
+	try { socket.emit('join_conversation', convObj._id || convObj.id); } catch (err) { console.debug('socket join error', err); }
+	};
 	const messagesEndRef = useRef(null);
 
 	// Connect to socket once and join user room and join conversation when selectedId changes
@@ -247,10 +264,50 @@ const Messages = () => {
 						Messages
 						{/* Always show Message Owner button for demonstration */}
 						<button
-							className="ml-2 px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 font-semibold text-xs"
-							onClick={() => setSelectedId("owner-123")}
+							className={`ml-2 px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 font-semibold text-xs ${msgOwnerLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+							onClick={async () => {
+								if (msgOwnerLoading) return;
+								setMsgOwnerLoading(true);
+								try {
+									// Create/get conversation with the owner (for demo use a fixed owner id or use first conv user)
+									const stored = localStorage.getItem('userInfo');
+									if (!stored) return;
+									const u = JSON.parse(stored);
+									const userId = u._id || u.id;
+									// Here we choose the first conversation's participant as owner if available
+									let ownerId = null;
+									let ownerObj = null;
+									if (conversations && conversations.length) {
+										const first = conversations[0];
+										if (Array.isArray(first.participants)) {
+											const other = first.participants.find(p => String(p._id || p.id) !== String(userId));
+											if (other) { ownerId = other._id || other.id || other; ownerObj = other; }
+										}
+									}
+									// fallback: if no owner found, try to call API with a demo owner id
+									if (!ownerId) {
+										// try to pick from conversations list (any participant that's not the user)
+										for (const c of conversations) {
+											if (Array.isArray(c.participants)) {
+												const other = c.participants.find(p => String(p._id || p.id) !== String(userId));
+												if (other) { ownerId = other._id || other.id || other; ownerObj = other; break; }
+											}
+										}
+									}
+									if (!ownerId) return;
+									const apiUrl = `${import.meta.env.VITE_API_URL}/api/messages/conversation`;
+									const { data } = await axios.post(apiUrl, { participants: [userId, ownerId] });
+									const conv = data.conversation || data;
+									if (conv) addOrSelectConversation(conv, ownerObj || stateOwner || {});
+									// navigate or focus is handled by setSelectedId
+								} catch (err) {
+									console.error('Failed to create/get conversation for message owner', err);
+								} finally {
+									setMsgOwnerLoading(false);
+								}
+							}}
 						>
-							Message Owner
+							{msgOwnerLoading ? 'Please wait...' : 'Message Owner'}
 						</button>
 					</div>
 					<div className="flex-1 overflow-y-auto">
