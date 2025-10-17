@@ -239,7 +239,7 @@ const Messages = () => {
 	};
 
 		return (
-			<div className="flex h-[calc(100vh-64px)] bg-zinc-100">
+			<div className="flex h-[calc(100vh-64px)] bg-zinc-100 -mx-4 sm:-mx-8">
 				{/* Sidebar */}
 				{/* Desktop sidebar */}
 				<aside className="w-80 bg-white border-r flex-col hidden md:flex">
