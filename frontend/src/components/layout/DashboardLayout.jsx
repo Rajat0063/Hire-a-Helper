@@ -655,14 +655,15 @@ const DashboardLayout = () => {
                 handleLogout={handleLogout}
             />
             <div className="flex-1 flex flex-col overflow-hidden">
+                <TopHeader 
+                    requestCount={requestCount}
+                    user={user}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                />
+
+                {/* Notification bars (padded to match content) */}
                 <div className="px-4 sm:px-8">
-                    <TopHeader 
-                        requestCount={requestCount}
-                        user={user}
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
-                    />
-                    {/* Notification Bar for requester when their request is accepted */}
                     <RequesterNotificationBar
                         notification={requesterNotification}
                         onClick={async () => {
@@ -680,7 +681,6 @@ const DashboardLayout = () => {
                             }
                         }}
                     />
-                    {/* Existing notification bar for task owner */}
                     {showNotificationBar && notificationActive && (
                         <div className="bg-indigo-600 text-white text-center py-2 px-4 font-semibold z-40 mt-4 mb-4 rounded-lg shadow-lg cursor-pointer transition hover:bg-indigo-700 flex items-center justify-between"
                             onClick={() => { navigate('/dashboard/requests'); setShowNotificationBar(false); setNotificationActive(false); setNewRequesters([]); }}
