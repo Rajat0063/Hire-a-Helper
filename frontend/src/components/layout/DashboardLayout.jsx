@@ -695,7 +695,7 @@ const DashboardLayout = () => {
                     )}
                 </div>
 
-                <div className="flex-1 overflow-auto px-4 sm:px-8">
+                <div className="flex-1 px-4 sm:px-8">
                     <Outlet context={{ 
                     feedTasks, 
                     tasksData, 

@@ -295,7 +295,7 @@ const Messages = () => {
 			)}
 
 			{/* Main chat area */}
-			<main className="flex-1 flex flex-col">
+			<main className="flex-1 flex flex-col min-h-0">
 				{/* Header */}
 				<div className="h-16 flex items-center px-0 md:px-6 border-b bg-white shadow-sm">
 					{selectedId ? (
@@ -326,7 +326,7 @@ const Messages = () => {
 				</div>
 
 				{/* Messages */}
-				<div className="flex-1 overflow-y-auto px-0 md:px-6 py-4 md:py-4 space-y-2 bg-zinc-50 pb-36 md:pb-4">
+				<div className="flex-1 overflow-y-auto min-h-0 px-0 md:px-6 py-4 md:py-4 space-y-2 bg-zinc-50 pb-36 md:pb-4">
 					{loading ? (
 						<div className="text-zinc-400 text-center mt-10">Loading messages...</div>
 					) : selectedId ? (
