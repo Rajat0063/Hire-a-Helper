@@ -1,7 +1,7 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Sparkles, Upload, X } from "lucide-react";
+import { Sparkles, Upload, X, Locate } from "lucide-react";
 import api from "../../services/api";
 
 const CATEGORIES = [
@@ -9,44 +9,71 @@ const CATEGORIES = [
   "Tech", "Tutoring", "Delivery", "Car Repairing", "Pet Care", "Cooking", "Other",
 ];
 const CURRENCIES = [
-  { code: "USD", label: "USD - $" },
-  { code: "EUR", label: "EUR - €" },
-  { code: "GBP", label: "GBP - £" },
-  { code: "INR", label: "INR - ₹" },
+  { code: "INR", label: "INR - ₹" }, { code: "USD", label: "USD - $" },
+  { code: "EUR", label: "EUR - €" }, { code: "GBP", label: "GBP - £" },
 ];
 
 // === AddTask ===
-// Drag & drop image upload — file is read as base64 and submitted as a
-// data URL so it persists in MongoDB (no external storage needed).
+// "Use mine" now ALSO reverse-geocodes via OpenStreetMap Nominatim (free, no
+// key) and fills the Location text box automatically so the user doesn't
+// have to type the city manually.
 export default function AddTask() {
   const nav = useNavigate();
   const fileRef = useRef(null);
   const [f, setF] = useState({
     title: "", description: "", location: "",
     startDate: "", startTime: "", endDate: "", endTime: "",
-    category: "", paymentAmount: 0, currency: "USD", image: "",
+    category: "", paymentAmount: 0, currency: "INR", image: "",
+    lat: null, lng: null,
   });
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [categories, setCategories] = useState(CATEGORIES);
+
+  useEffect(() => {
+    api.get("/settings").then(({ data }) => {
+      if (Array.isArray(data.categories) && data.categories.length) setCategories(data.categories);
+    }).catch(() => {});
+  }, []);
 
   const set = (k, v) => setF((p) => ({ ...p, [k]: v }));
 
-  // ~ AI description generator: builds a friendly description client-side ~
   const aiGenerate = () => {
     if (!f.title) return toast.error("Add a title first");
     const cat = f.category || "task";
     const loc = f.location ? ` in ${f.location}` : "";
-    const desc =
-      `I need help with ${f.title.toLowerCase()}${loc}. ` +
-      `This ${cat.toLowerCase()} task should take a few hours and I'll provide all needed materials. ` +
-      `Please reach out if you're interested and available — looking forward to working together!`;
-    set("description", desc);
+    set("description",
+      `I need help with ${f.title.toLowerCase()}${loc}. This ${cat.toLowerCase()} task should take a few hours and I'll provide all needed materials. Please reach out if you're interested and available — looking forward to working together!`);
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return toast.error("Geolocation not supported");
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
+      set("lat", lat); set("lng", lng);
+      try {
+        // reverse-geocode -> "City, Town" string
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+          { headers: { Accept: "application/json" } });
+        const d = await r.json();
+        const a = d?.address || {};
+        const parts = [a.city || a.town || a.village || a.county, a.suburb || a.neighbourhood, a.state]
+          .filter(Boolean);
+        const label = parts.slice(0, 2).join(", ") || d?.display_name?.split(",").slice(0, 2).join(", ") || "";
+        if (label) set("location", label);
+        toast.success(label ? `Location set: ${label}` : "Coordinates captured");
+      } catch {
+        toast.success("Coordinates captured");
+      } finally { setLocating(false); }
+    }, () => { toast.error("Couldn't get location"); setLocating(false); },
+    { enableHighAccuracy: true, timeout: 9000 });
   };
 
   const handleFile = (file) => {
     if (!file) return;
-    if (!/^image\/(png|jpe?g|gif|webp)$/.test(file.type))
-      return toast.error("Only PNG, JPG, GIF or WebP");
+    if (!/^image\/(png|jpe?g|gif|webp)$/.test(file.type)) return toast.error("Only PNG, JPG, GIF or WebP");
     if (file.size > 10 * 1024 * 1024) return toast.error("Max 10 MB");
     const reader = new FileReader();
     reader.onload = () => set("image", reader.result);
@@ -56,10 +83,9 @@ export default function AddTask() {
   const submit = async (e) => {
     e.preventDefault();
     if (!f.startDate || !f.startTime) return toast.error("Pick a start date & time");
-
+    if (!f.image) return toast.error("A task image is required");
     const start = new Date(`${f.startDate}T${f.startTime}`);
     const end = f.endDate && f.endTime ? new Date(`${f.endDate}T${f.endTime}`) : undefined;
-
     setLoading(true);
     try {
       await api.post("/tasks", {
@@ -67,6 +93,7 @@ export default function AddTask() {
         category: f.category || "Other",
         startTime: start, endTime: end,
         image: f.image, paymentAmount: Number(f.paymentAmount) || 0, currency: f.currency,
+        lat: f.lat, lng: f.lng,
       });
       toast.success("Task posted!");
       nav("/dashboard/feed");
@@ -105,8 +132,15 @@ export default function AddTask() {
         </div>
 
         <Field label="Location">
-          <input className="input" required placeholder="e.g., Downtown Seattle, WA"
-            value={f.location} onChange={(e) => set("location", e.target.value)} />
+          <div className="flex gap-2">
+            <input className="input" required placeholder="e.g., Downtown Seattle, WA"
+              value={f.location} onChange={(e) => set("location", e.target.value)} />
+            <button type="button" onClick={useMyLocation} disabled={locating}
+              className="btn-ghost text-sm py-2 whitespace-nowrap">
+              <Locate size={14} /> {locating ? "Locating…" : "Use mine"}
+            </button>
+          </div>
+          {f.lat != null && <p className="text-xs text-emerald-600 mt-1">Coords saved — task will appear in Nearby.</p>}
         </Field>
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -127,7 +161,7 @@ export default function AddTask() {
         <Field label="Category">
           <select className="input" value={f.category} onChange={(e) => set("category", e.target.value)}>
             <option value="">Select a category</option>
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
 
@@ -143,26 +177,21 @@ export default function AddTask() {
           </Field>
         </div>
 
-        {/* ~ Drag & drop image upload ~ */}
         <div>
-          <label className="label">Task Image <span className="text-slate-400">(Optional)</span></label>
+          <label className="label">Task Image <span className="text-rose-500">*</span></label>
           {f.image ? (
             <div className="mt-2 relative">
               <img src={f.image} alt="preview" className="rounded-xl w-full max-h-72 object-cover" />
               <button type="button" onClick={() => set("image", "")}
-                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5">
-                <X size={14} />
-              </button>
+                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5"><X size={14} /></button>
             </div>
           ) : (
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]); }}
               onClick={() => fileRef.current?.click()}
               className={`mt-2 border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition
-                ${dragOver ? "border-brand-500 bg-brand-50/40 dark:bg-brand-900/20" : "border-slate-200 dark:border-slate-700"}`}
-            >
+                ${dragOver ? "border-brand-500 bg-brand-50/40 dark:bg-brand-900/20" : "border-slate-200 dark:border-slate-700"}`}>
               <Upload className="mx-auto text-slate-400" />
               <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">Upload a file or drag and drop</div>
               <div className="text-xs text-slate-400">PNG, JPG, GIF up to 10MB</div>

@@ -1,33 +1,27 @@
 const mongoose = require("mongoose");
 
 // === Task schema ===
-// `image` is a base64 data URL (uploaded via drag & drop on the Add Task page)
-// or a remote URL. `paymentAmount` + `currency` power the price chip in the feed.
+// lat/lng power the "Nearby Tasks" page (haversine query in taskController.nearby)
 const taskSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     title: { type: String, required: true },
     description: { type: String, required: true },
     location: { type: String, required: true },
-    category: {
-      type: String,
-      enum: [
-        "Moving", "Cleaning", "Gardening", "Painting", "Repairs",
-        "Tech", "Tutoring", "Delivery", "Car Repairing", "Pet Care",
-        "Cooking", "Other",
-      ],
-      default: "Other",
-    },
+    // ~ optional geo coords (used by /api/tasks/nearby) ~
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
+
+    // Admin-managed categories are stored in Settings, so this must stay open.
+    category: { type: String, default: "Other", trim: true },
     startTime: { type: Date, required: true },
     endTime: { type: Date },
     status: { type: String, enum: ["open", "in_progress", "completed", "cancelled"], default: "open" },
     paymentAmount: { type: Number, default: 0 },
-    currency: { type: String, default: "USD" },
+    currency: { type: String, default: "INR" },
 
-    // ~ Image (base64 data URL or http URL) ~
-    image: { type: String, default: "" },
-    // ! Legacy field kept for backward compatibility with old docs
-    picture: { type: String, default: "" },
+    image: { type: String, required: true },
+    picture: { type: String, default: "" }, // !legacy
   },
   { timestamps: true }
 );

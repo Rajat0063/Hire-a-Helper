@@ -46,4 +46,16 @@ async function sendResetEmail(to, code) {
   });
 }
 
-module.exports = { sendOtpEmail, sendResetEmail };
+async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
+  await sendMail({
+    to,
+    subject: `[HireHelper feedback · ${type}] ${subject}`,
+    html: `<h2 style="margin:0 0 8px">New ${type} from ${from}</h2>
+           <p style="color:#64748b;margin:0 0 12px">Rating: ${rating ? "★".repeat(rating) : "—"}</p>
+           <h3 style="margin:12px 0 4px">${subject}</h3>
+           <pre style="white-space:pre-wrap;font-family:inherit;background:#f8fafc;padding:12px;border-radius:8px">${message}</pre>
+           <p style="color:#94a3b8;font-size:12px">Open the admin dashboard to reply or resolve.</p>`,
+  });
+}
+
+module.exports = { sendOtpEmail, sendResetEmail, sendFeedbackEmail };

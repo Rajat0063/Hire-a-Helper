@@ -12,6 +12,9 @@ import Requests from "./pages/dashboard/Requests";
 import MyRequests from "./pages/dashboard/MyRequests";
 import AddTask from "./pages/dashboard/AddTask";
 import SettingsPage from "./pages/dashboard/Settings";
+import Messages from "./pages/dashboard/Messages";
+import Nearby from "./pages/dashboard/Nearby";
+import PublicProfile from "./pages/dashboard/PublicProfile";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import DashboardLayout from "./components/DashboardLayout";
@@ -37,8 +40,11 @@ export default function App() {
       <Route path="/dashboard/mine" element={<Dash><MyTasks /></Dash>} />
       <Route path="/dashboard/requests" element={<Dash><Requests /></Dash>} />
       <Route path="/dashboard/my-requests" element={<Dash><MyRequests /></Dash>} />
+      <Route path="/dashboard/messages" element={<Dash><Messages /></Dash>} />
+      <Route path="/dashboard/nearby" element={<Dash><Nearby /></Dash>} />
       <Route path="/dashboard/add-task" element={<Dash><AddTask /></Dash>} />
       <Route path="/dashboard/settings" element={<Dash><SettingsPage /></Dash>} />
+      <Route path="/dashboard/profile/:id" element={<Dash><PublicProfile /></Dash>} />
 
       {/* === Admin === */}
       <Route path="/admin/login" element={<AdminLogin />} />

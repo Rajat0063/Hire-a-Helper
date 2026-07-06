@@ -1,24 +1,55 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, Shield, Zap, Users, MapPin, Bell, Star, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Sparkles, Shield, ShieldCheck, Zap, Users, MapPin, Bell, Star, CheckCircle2, Menu, X } from "lucide-react";
 
 export default function Landing() {
+  const [nav, setNav] = useState(false);
+  const links = [
+    { href: "#features", label: "Features" },
+    { href: "#how", label: "How it works" },
+    { href: "#testimonials", label: "Reviews" },
+  ];
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-brand-50/40 to-white">
       {/* Nav */}
       <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="font-extrabold text-xl text-brand-700">HireHelper<span className="text-brand-500">.</span></Link>
+        <div className="max-w-7xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between gap-3">
+          <Link to="/" className="font-extrabold text-lg sm:text-xl text-brand-700 inline-flex items-center gap-2">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 grid place-items-center text-white">
+              <ShieldCheck size={20} />
+            </div>
+            HireHelper
+          </Link>
           <nav className="hidden md:flex gap-8 text-sm font-medium text-slate-600">
-            <a href="#features" className="hover:text-brand-700">Features</a>
-            <a href="#how" className="hover:text-brand-700">How it works</a>
-            <a href="#testimonials" className="hover:text-brand-700">Reviews</a>
+            {links.map((l) => <a key={l.href} href={l.href} className="hover:text-brand-700">{l.label}</a>)}
             <Link to="/admin/login" className="hover:text-brand-700">Admin</Link>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2">
             <Link to="/login" className="btn-ghost text-sm">Sign in</Link>
             <Link to="/signup" className="btn-primary text-sm">Get started</Link>
           </div>
+          <button
+            onClick={() => setNav((v) => !v)}
+            className="sm:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100"
+            aria-label="Toggle menu"
+          >{nav ? <X size={22} /> : <Menu size={22} />}</button>
         </div>
+        {nav && (
+          <div className="sm:hidden border-t border-slate-100 bg-white/95 backdrop-blur">
+            <div className="px-4 py-3 flex flex-col gap-1 text-sm font-medium">
+              {links.map((l) => (
+                <a key={l.href} href={l.href} onClick={() => setNav(false)}
+                  className="py-2 px-2 rounded-lg text-slate-700 hover:bg-slate-100">{l.label}</a>
+              ))}
+              <Link to="/admin/login" onClick={() => setNav(false)}
+                className="py-2 px-2 rounded-lg text-slate-700 hover:bg-slate-100">Admin</Link>
+              <div className="flex gap-2 mt-2">
+                <Link to="/login" onClick={() => setNav(false)} className="btn-ghost text-sm flex-1 justify-center">Sign in</Link>
+                <Link to="/signup" onClick={() => setNav(false)} className="btn-primary text-sm flex-1 justify-center">Get started</Link>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero */}

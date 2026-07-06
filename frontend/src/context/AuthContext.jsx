@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../services/api";
+import { getSocket, disconnectSocket } from "../services/socket";
 
 // === AuthContext ===
 // Holds the JWT + user. Re-fetches /users/me on every mount so a page refresh
-// always shows the latest profile data from MongoDB (no stale cache).
+// shows the latest profile (no stale cache). Also (re)connects the realtime
+// socket whenever the token changes.
 const AuthCtx = createContext(null);
 export const useAuth = () => useContext(AuthCtx);
 
@@ -15,18 +17,44 @@ export function AuthProvider({ children }) {
   const [booting, setBooting] = useState(!!localStorage.getItem("hh_token"));
   const [loading, setLoading] = useState(false);
 
-  // ~ persist token & user ~
   useEffect(() => {
-    if (token) localStorage.setItem("hh_token", token);
-    else localStorage.removeItem("hh_token");
+    if (token) { localStorage.setItem("hh_token", token); getSocket(); }
+    else { localStorage.removeItem("hh_token"); disconnectSocket(); }
   }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const s = getSocket();
+    if (!s) return;
+    const onBlocked = () => {
+      sessionStorage.setItem("hh_blocked", "1");
+      setToken(null);
+      setUser(null);
+      disconnectSocket();
+      window.location.replace("/login?blocked=1");
+    };
+    const onMaintenance = (payload) => {
+      // Admins keep working — everyone else is logged out with the friendly banner.
+      if (user?.role === "admin") return;
+      sessionStorage.setItem("hh_maintenance_msg", payload?.message || "The platform is under maintenance.");
+      setToken(null);
+      setUser(null);
+      disconnectSocket();
+      window.location.replace("/login?maintenance=1");
+    };
+    s.on("account:blocked", onBlocked);
+    s.on("maintenance:on", onMaintenance);
+    return () => {
+      s.off("account:blocked", onBlocked);
+      s.off("maintenance:on", onMaintenance);
+    };
+  }, [token, user?.role]);
 
   useEffect(() => {
     if (user) localStorage.setItem("hh_user", JSON.stringify(user));
     else localStorage.removeItem("hh_user");
   }, [user]);
 
-  // ~ refresh user from server on first load when a token exists ~
   useEffect(() => {
     if (!token) { setBooting(false); return; }
     api.get("/users/me")
@@ -45,7 +73,11 @@ export function AuthProvider({ children }) {
     } finally { setLoading(false); }
   };
 
-  const signup = async (payload) => (await api.post("/auth/signup", payload)).data;
+  const signup = async (payload) => {
+    const { data } = await api.post("/auth/signup", payload);
+    if (data.token) { setToken(data.token); setUser(data.user); }
+    return data;
+  };
   const verifyOtp = async (email, otp) => {
     const { data } = await api.post("/auth/verify-otp", { email, otp });
     setToken(data.token); setUser(data.user);
@@ -63,7 +95,7 @@ export function AuthProvider({ children }) {
     setUser(data.user);
     return data.user;
   };
-  const logout = () => { setToken(null); setUser(null); };
+  const logout = () => { setToken(null); setUser(null); disconnectSocket(); };
 
   return (
     <AuthCtx.Provider value={{
