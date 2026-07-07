@@ -1,9 +1,16 @@
-// Workaround for environments where TypeScript can't find vite types
-// @ts-ignore: suppress missing type declarations for 'vite'
-const { defineConfig } = require("vite");
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import path from 'path'
 
 export default defineConfig({
-  tanstackStart: {
-    server: { entry: "server" },
+  plugins: [
+    TanStackRouterVite(),
+    react()
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
   },
-});
+})
