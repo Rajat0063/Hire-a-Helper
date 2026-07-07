@@ -5,10 +5,13 @@ export default defineConfig({
   plugins: [react()],
   server: { port: 5173 },
   optimizeDeps: {
-    include: ["lucide-react"],
+    include: ["lucide-react", "react", "react-dom"],
   },
   ssr: {
-    noExternal: ["lucide-react"],
+    noExternal: ["lucide-react", "react", "react-dom"],
+  },
+  resolve: {
+    dedupe: ["react", "react-dom"],
   },
   build: {
     commonjsOptions: {

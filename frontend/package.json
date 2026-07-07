@@ -1,5 +1,5 @@
 {
-  
+  "$schema": "https://json.schemastore.org/package",
   "name": "hirehelper-frontend",
   "private": true,
   "version": "1.0.0",
