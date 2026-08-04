@@ -13,6 +13,9 @@ function normalizeSocketUrl(url) {
     const firstProto = match.split("://").filter(Boolean)[0];
     return `${firstProto}://`;
   });
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    value = value.replace(/^http:\/\//i, "https://");
+  }
   value = value.replace(/\/api\/?$/, "").replace(/\/+$/, "");
   return value || "http://localhost:5000";
 }
