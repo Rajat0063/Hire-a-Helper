@@ -2,8 +2,14 @@
 import axios from "axios";
 
 function normalizeApiUrl(url) {
-  const trimmed = url.replace(/\/+$/, "");
-  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+  if (!url) return "http://localhost:5000/api";
+  let value = String(url).trim();
+  if (value.startsWith("VITE_API_URL=")) {
+    value = value.split("=").slice(1).join("=");
+  }
+  value = value.replace(/^"|"$/g, "").replace(/^'|'$/g, "").trim();
+  value = value.replace(/\/+$/, "");
+  return value.endsWith("/api") ? value : `${value}/api`;
 }
 
 const api = axios.create({
