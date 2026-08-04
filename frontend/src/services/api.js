@@ -8,6 +8,10 @@ function normalizeApiUrl(url) {
     value = value.split("=").slice(1).join("=");
   }
   value = value.replace(/^"|"$/g, "").replace(/^'|'$/g, "").trim();
+  value = value.replace(/^(https?:\/\/)+/, (match) => {
+    const firstProto = match.split("://").filter(Boolean)[0];
+    return `${firstProto}://`;
+  });
   value = value.replace(/\/+$/, "");
   return value.endsWith("/api") ? value : `${value}/api`;
 }

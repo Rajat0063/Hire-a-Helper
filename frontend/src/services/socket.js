@@ -9,6 +9,10 @@ function normalizeSocketUrl(url) {
     value = value.split("=").slice(1).join("=");
   }
   value = value.replace(/^"|"$/g, "").replace(/^'|'$/g, "").trim();
+  value = value.replace(/^(https?:\/\/)+/, (match) => {
+    const firstProto = match.split("://").filter(Boolean)[0];
+    return `${firstProto}://`;
+  });
   value = value.replace(/\/api\/?$/, "").replace(/\/+$/, "");
   return value || "http://localhost:5000";
 }
