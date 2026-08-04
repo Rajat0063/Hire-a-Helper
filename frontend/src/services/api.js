@@ -1,8 +1,13 @@
 // !! Axios instance — base URL comes from VITE_API_URL
 import axios from "axios";
 
+function normalizeApiUrl(url) {
+  const trimmed = url.replace(/\/+$/, "");
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: normalizeApiUrl(import.meta.env.VITE_API_URL || "http://localhost:5000/api"),
 });
 
 api.interceptors.request.use((cfg) => {
