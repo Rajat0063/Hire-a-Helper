@@ -41,9 +41,16 @@ async function getTransporter() {
 }
 
 async function sendMail({ to, subject, html }) {
-  const message = { from: process.env.SMTP_FROM || process.env.SMTP_USER || "HireHelper <no-reply@hirehelper.com>", to, subject, html };
+  const message = {
+    from: process.env.SMTP_FROM || process.env.SMTP_USER || "HireHelper <no-reply@hirehelper.com>",
+    to,
+    subject,
+    html,
+  };
+
+  const transport = await getTransporter();
   try {
-    const info = await (await getTransporter()).sendMail(message);
+    const info = await transport.sendMail(message);
     if (usingEthereal) {
       console.log(`[mailer:DEV] Email preview URL: ${nodemailer.getTestMessageUrl(info)}`);
       console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
@@ -51,6 +58,27 @@ async function sendMail({ to, subject, html }) {
     return info;
   } catch (err) {
     console.error("[mailer:error]", err && (err.stack || err.message || err));
+    const port = Number(process.env.SMTP_PORT || 587);
+    const canRetryWith465 = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && port === 587;
+    if (canRetryWith465 && err.code && err.code.toString().includes("ETIMEDOUT")) {
+      try {
+        console.warn("[mailer:retry] primary SMTP port timed out. Retrying on port 465 with secure connection.");
+        const fallbackTransport = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: 465,
+          secure: true,
+          auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+          tls: { rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== "false" },
+          connectionTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
+          greetingTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
+        });
+        const info = await fallbackTransport.sendMail(message);
+        console.warn("[mailer:retry] email sent on fallback SMTP port 465.");
+        return info;
+      } catch (fallbackErr) {
+        console.error("[mailer:retry-error]", fallbackErr && (fallbackErr.stack || fallbackErr.message || fallbackErr));
+      }
+    }
     return null;
   }
 }
