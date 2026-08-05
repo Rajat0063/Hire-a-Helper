@@ -12,30 +12,36 @@ const genOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
 // === POST /api/auth/signup ===
 exports.signup = async (req, res) => {
-  const { firstName, lastName, email, phone, password } = req.body;
-  const settings = await Settings.findOne({ key: "platform" });
-  if (settings && settings.enableRegistrations === false) {
-    return res.status(403).json({ code: "REGISTRATION_DISABLED", message: "New registrations are currently disabled." });
-  }
-  const existing = await User.findOne({ email });
-  if (existing) {
-    // !! Distinguish blocked vs already-exists so the UI can show the right alert
-    if (existing.isBlocked)
-      return res.status(403).json({ code: "USER_BLOCKED",
-        message: "This email is blocked by an administrator and cannot be used." });
-    return res.status(409).json({ code: "EMAIL_EXISTS",
-      message: "An account with this email already exists. Please sign in instead." });
-  }
+  try {
+    const { firstName, lastName, email, phone, password } = req.body;
+    const settings = await Settings.findOne({ key: "platform" });
+    if (settings && settings.enableRegistrations === false) {
+      return res.status(403).json({ code: "REGISTRATION_DISABLED", message: "New registrations are currently disabled." });
+    }
+    const existing = await User.findOne({ email });
+    if (existing) {
+      if (existing.isBlocked)
+        return res.status(403).json({ code: "USER_BLOCKED",
+          message: "This email is blocked by an administrator and cannot be used." });
+      return res.status(409).json({ code: "EMAIL_EXISTS",
+        message: "An account with this email already exists. Please sign in instead." });
+    }
 
-  const requireEmailVerification = settings?.requireEmailVerification !== false;
-  const user = await User.create({ firstName, lastName, email, phone, password, isVerified: !requireEmailVerification });
-  if (!requireEmailVerification) {
-    return res.status(201).json({ token: sign(user._id), user: stripUser(user), message: "Signup successful." });
+    const requireEmailVerification = settings?.requireEmailVerification !== false;
+    const user = await User.create({ firstName, lastName, email, phone, password, isVerified: !requireEmailVerification });
+    if (!requireEmailVerification) {
+      return res.status(201).json({ token: sign(user._id), user: stripUser(user), message: "Signup successful." });
+    }
+
+    const code = genOtp();
+    await Otp.create({ email: user.email, code });
+    // Attempt to send OTP email; if it fails we catch below and return a 500
+    await sendOtpEmail(user.email, code);
+    return res.status(201).json({ message: "Signup successful. OTP sent to email.", email: user.email });
+  } catch (err) {
+    console.error("[signup:error]", err && (err.stack || err.message || err));
+    return res.status(500).json({ message: err?.message || "Server error" });
   }
-  const code = genOtp();
-  await Otp.create({ email: user.email, code });
-  await sendOtpEmail(user.email, code);
-  res.status(201).json({ message: "Signup successful. OTP sent to email.", email: user.email });
 };
 
 // === POST /api/auth/login ===
