@@ -71,10 +71,9 @@ async function sendOtpEmail(to, code) {
 async function sendResetEmail(to, code) {
   await sendMail({
     to,
-    subject: "HireHelper password reset code",
-    html: `<p>Use the code below to reset your HireHelper password. It expires in 10 minutes.</p>
-           <p style="font-size:26px;font-weight:800;letter-spacing:6px">${code}</p>
-           <p>If you did not request this, you can safely ignore the email.</p>`,
+    subject: "Your HireHelper password reset code",
+    html: `<p>Your password reset code is <b style="font-size:22px">${code}</b>. It expires in 10 minutes.</p>
+           <p>If you did not request this, you can safely ignore this email.</p>`,
   });
 }
 
