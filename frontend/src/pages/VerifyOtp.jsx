@@ -14,7 +14,7 @@ export default function VerifyOtp() {
   const [otp, setOtp] = useState("");
 
   useEffect(() => {
-    if (devCode) setOtp(String(devCode).trim());
+    if (import.meta.env.DEV && devCode) setOtp(String(devCode).trim());
   }, [devCode]);
   const [loading, setLoading] = useState(false);
   const [resendBusy, setResendBusy] = useState(false);

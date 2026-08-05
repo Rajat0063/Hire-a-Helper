@@ -56,7 +56,7 @@ exports.signup = async (req, res) => {
 
     try {
       const mailResult = await sendOtpEmail(email, code);
-      if (mailResult?.delivered === false) {
+      if (mailResult?.devMode && process.env.NODE_ENV !== "production") {
         return res.status(201).json({
           message: "Signup received. OTP sent to email.",
           email,
@@ -66,10 +66,8 @@ exports.signup = async (req, res) => {
       return res.status(201).json({ message: "Signup received. OTP sent to email.", email });
     } catch (mailErr) {
       console.error("[signup:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
-      return res.status(201).json({
-        message: "Signup received. OTP sent to email.",
-        email,
-        devCode: code,
+      return res.status(503).json({
+        message: "Unable to send verification email right now. Please try again in a moment.",
       });
     }
   } catch (err) {
@@ -96,13 +94,15 @@ exports.login = async (req, res) => {
 
     try {
       const mailResult = await sendOtpEmail(email, code);
-      if (mailResult?.delivered === false) {
+      if (mailResult?.devMode && process.env.NODE_ENV !== "production") {
         return res.status(200).json({ requireOtp: true, email, devCode: code });
       }
       return res.status(200).json({ requireOtp: true, email });
     } catch (mailErr) {
       console.error("[login:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
-      return res.status(200).json({ requireOtp: true, email, devCode: code });
+      return res.status(503).json({
+        message: "Unable to send verification email right now. Please try again in a moment.",
+      });
     }
   }
 
@@ -151,13 +151,13 @@ exports.resendOtp = async (req, res) => {
 
   try {
     const mailResult = await sendOtpEmail(email, code);
-    if (mailResult?.delivered === false) {
+    if (mailResult?.devMode && process.env.NODE_ENV !== "production") {
       return res.json({ message: "OTP resent", devCode: code });
     }
     res.json({ message: "OTP resent" });
   } catch (mailErr) {
     console.error("[resendOtp:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
-    res.json({ message: "OTP resent", devCode: code });
+    res.status(503).json({ message: "Unable to resend verification email right now. Please try again in a moment." });
   }
 };
 
@@ -172,12 +172,12 @@ exports.forgotPassword = async (req, res) => {
 
     try {
       const mailResult = await sendResetEmail(email, code);
-      if (mailResult?.delivered === false) {
+      if (mailResult?.devMode && process.env.NODE_ENV !== "production") {
         return res.json({ message: "If an account exists for that email, a reset code has been sent.", devCode: code });
       }
     } catch (mailErr) {
       console.error("[forgotPassword:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
-      return res.json({ message: "If an account exists for that email, a reset code has been sent.", devCode: code });
+      return res.status(503).json({ message: "Unable to send the reset email right now. Please try again in a moment." });
     }
   }
   res.json({ message: "If an account exists for that email, a reset code has been sent." });

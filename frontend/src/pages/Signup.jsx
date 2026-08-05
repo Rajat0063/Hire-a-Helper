@@ -17,12 +17,12 @@ export default function Signup() {
     try {
       const data = await signup(f);
       if (data.token) { toast.success("Account created"); nav("/dashboard"); return; }
-      if (data.devCode) {
+      if (import.meta.env.DEV && data.devCode) {
         toast.success(`OTP sent to your email (dev code: ${data.devCode})`);
       } else {
         toast.success("OTP sent to your email");
       }
-      nav("/verify-otp", { state: { email: f.email, devCode: data.devCode || "" } });
+      nav("/verify-otp", { state: { email: f.email, devCode: import.meta.env.DEV ? (data.devCode || "") : "" } });
     } catch (e2) {
       const code = e2.response?.data?.code;
       const message = e2.response?.data?.message || "Signup failed";
