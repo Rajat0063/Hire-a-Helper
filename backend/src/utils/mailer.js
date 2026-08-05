@@ -27,6 +27,20 @@ function isSmtpConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
+function buildFromAddress() {
+  const smtpUser = String(process.env.SMTP_USER || "").trim().toLowerCase();
+  const smtpFrom = String(process.env.SMTP_FROM || "").trim();
+  const smtpFromEmail = smtpFrom.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]?.toLowerCase() || "";
+
+  if (!smtpUser) return "";
+  if (!smtpFrom) return smtpUser;
+  if (smtpFromEmail && smtpFromEmail !== smtpUser) {
+    console.warn(`[mailer:WARN] SMTP_FROM (${smtpFromEmail}) does not match SMTP_USER (${smtpUser}). Gmail delivery is usually tied to the authenticated sender. Falling back to SMTP_USER.`);
+    return smtpUser;
+  }
+  return smtpFrom;
+}
+
 async function sendMail({ to, subject, html }) {
   if (!isSmtpConfigured()) {
     console.warn(`[mailer:WARN] SMTP is not fully configured; email to ${to} will be logged instead.`);
@@ -35,7 +49,7 @@ async function sendMail({ to, subject, html }) {
   }
   try {
     await getTransporter().sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: buildFromAddress(),
       to,
       subject,
       html,
