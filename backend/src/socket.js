@@ -7,10 +7,7 @@ let io = null;
 
 function init(httpServer) {
   io = new Server(httpServer, {
-    cors: {
-      origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",") : true,
-      credentials: true,
-    },
+    cors: { origin: process.env.CLIENT_URL || "*", credentials: true },
   });
 
   io.use((socket, next) => {

@@ -99,25 +99,20 @@ exports.resendOtp = async (req, res) => {
 
 // === POST /api/auth/forgot-password ===
 exports.forgotPassword = async (req, res) => {
-  const email = String(req.body.email || "").trim().toLowerCase();
-  try {
-    const user = await User.findOne({ email });
-    if (user) {
-      const code = genOtp();
-      await Otp.deleteMany({ email });
-      await Otp.create({ email, code });
-      sendResetEmail(email, code).catch((e) => console.error("[forgotPassword:mail]", e && (e.stack || e.message || e)));
-    }
-  } catch (err) {
-    console.error("[forgotPassword:error]", err && (err.stack || err.message || err));
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (user) {
+    const code = genOtp();
+    await Otp.deleteMany({ email });
+    await Otp.create({ email, code });
+    sendResetEmail(email, code).catch((e) => console.error("[forgotPassword:mail]", e && (e.stack || e.message || e)));
   }
   res.json({ message: "If an account exists for that email, a reset code has been sent." });
 };
 
 // === POST /api/auth/reset-password ===
 exports.resetPassword = async (req, res) => {
-  const email = String(req.body.email || "").trim().toLowerCase();
-  const { otp, newPassword } = req.body;
+  const { email, otp, newPassword } = req.body;
   if (!email || !otp || !newPassword || newPassword.length < 6)
     return res.status(400).json({ message: "Invalid request" });
 
