@@ -15,17 +15,23 @@ function getTransporter() {
     tls: {
       rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== "false",
     },
-    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 10000),
+    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 30000),
+    greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 30000),
+    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT || 30000),
+    pool: process.env.SMTP_POOL === "true",
   });
   return transporter;
 }
 
+function isSmtpConfigured() {
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
 async function sendMail({ to, subject, html }) {
-  const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
-  if (!smtpConfigured) {
+  if (!isSmtpConfigured()) {
     console.warn(`[mailer:WARN] SMTP is not fully configured; email to ${to} will be logged instead.`);
     console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
-    return;
+    return false;
   }
   try {
     await getTransporter().sendMail({
@@ -34,6 +40,7 @@ async function sendMail({ to, subject, html }) {
       subject,
       html,
     });
+    return true;
   } catch (err) {
     console.error(`[mailer:ERROR] Failed to send email to ${to}:`, err && (err.stack || err.message || err));
     throw err;
@@ -58,7 +65,7 @@ async function verifyTransporter() {
 }
 
 async function sendOtpEmail(to, code) {
-  await sendMail({
+  return await sendMail({
     to,
     subject: "Your HireHelper verification code",
     html: `<p>Your verification code is <b style="font-size:22px">${code}</b>. It expires in 10 minutes.</p>`,
@@ -66,7 +73,7 @@ async function sendOtpEmail(to, code) {
 }
 
 async function sendResetEmail(to, code) {
-  await sendMail({
+  return await sendMail({
     to,
     subject: "HireHelper password reset code",
     html: `<p>Use the code below to reset your HireHelper password. It expires in 10 minutes.</p>
@@ -76,7 +83,7 @@ async function sendResetEmail(to, code) {
 }
 
 async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
-  await sendMail({
+  return await sendMail({
     to,
     subject: `[HireHelper feedback · ${type}] ${subject}`,
     html: `<h2 style="margin:0 0 8px">New ${type} from ${from}</h2>

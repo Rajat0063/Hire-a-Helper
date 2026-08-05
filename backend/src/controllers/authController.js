@@ -53,9 +53,14 @@ exports.signup = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    // Fire-and-forget email send so SMTP connectivity doesn't block the request
-    sendOtpEmail(email, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
-    return res.status(201).json({ message: "Signup received. OTP sent to email.", email });
+
+    try {
+      await sendOtpEmail(email, code);
+      return res.status(201).json({ message: "Signup received. OTP sent to email.", email });
+    } catch (mailErr) {
+      console.error("[signup:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
+      return res.status(503).json({ message: "Unable to send verification email right now. Please try again in a moment." });
+    }
   } catch (err) {
     console.error("[signup:error]", err && (err.stack || err.message || err));
     return res.status(500).json({ message: err?.message || "Server error" });
@@ -77,9 +82,14 @@ exports.login = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    // Do not await email send during login flow to avoid timeouts
-    sendOtpEmail(email, code).catch((e) => console.error("[login:mail]", e && (e.stack || e.message || e)));
-    return res.status(200).json({ requireOtp: true, email });
+
+    try {
+      await sendOtpEmail(email, code);
+      return res.status(200).json({ requireOtp: true, email });
+    } catch (mailErr) {
+      console.error("[login:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
+      return res.status(503).json({ message: "Unable to send verification email right now. Please try again in a moment." });
+    }
   }
 
   user.stats = user.stats || {};
@@ -124,8 +134,14 @@ exports.resendOtp = async (req, res) => {
   const code = genOtp();
   await Otp.deleteMany({ email });
   await Otp.create({ email, code });
-  sendOtpEmail(email, code).catch((e) => console.error("[resendOtp:mail]", e && (e.stack || e.message || e)));
-  res.json({ message: "OTP resent" });
+
+  try {
+    await sendOtpEmail(email, code);
+    res.json({ message: "OTP resent" });
+  } catch (mailErr) {
+    console.error("[resendOtp:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
+    res.status(503).json({ message: "Unable to resend verification email right now. Please try again in a moment." });
+  }
 };
 
 // === POST /api/auth/forgot-password ===
@@ -136,7 +152,13 @@ exports.forgotPassword = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    sendResetEmail(email, code).catch((e) => console.error("[forgotPassword:mail]", e && (e.stack || e.message || e)));
+
+    try {
+      await sendResetEmail(email, code);
+    } catch (mailErr) {
+      console.error("[forgotPassword:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
+      return res.status(503).json({ message: "Unable to send the reset email right now. Please try again in a moment." });
+    }
   }
   res.json({ message: "If an account exists for that email, a reset code has been sent." });
 };
