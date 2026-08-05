@@ -20,6 +20,9 @@ async function getTransporter() {
       port: testAccount.smtp.port,
       secure: testAccount.smtp.secure,
       auth: { user: testAccount.user, pass: testAccount.pass },
+      connectionTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
+      greetingTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
+      socketTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
     });
     usingEthereal = true;
     console.warn("[mailer:DEV] SMTP is not configured; using Ethereal preview mail account.");
@@ -35,7 +38,9 @@ async function getTransporter() {
     tls: {
       rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== "false",
     },
-    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 10000),
+    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
+    greetingTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
+    socketTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
   });
   return transporter;
 }
@@ -58,6 +63,9 @@ async function sendMail({ to, subject, html }) {
     return info;
   } catch (err) {
     console.error("[mailer:error]", err && (err.stack || err.message || err));
+    transporter = null;
+    usingEthereal = false;
+
     const port = Number(process.env.SMTP_PORT || 587);
     const canRetryWith465 = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && port === 587;
     if (canRetryWith465 && err.code && err.code.toString().includes("ETIMEDOUT")) {
@@ -71,6 +79,7 @@ async function sendMail({ to, subject, html }) {
           tls: { rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== "false" },
           connectionTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
           greetingTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
+          socketTimeout: Number(process.env.SMTP_TIMEOUT || 20000),
         });
         const info = await fallbackTransport.sendMail(message);
         console.warn("[mailer:retry] email sent on fallback SMTP port 465.");
