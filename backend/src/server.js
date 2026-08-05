@@ -7,7 +7,12 @@ const User = require("./models/User");
 const socket = require("./socket");
 
 const app = express();
-app.use(cors({ origin: process.env.CLIENT_URL || "*", credentials: true }));
+const corsOptions = {
+  origin: process.env.CLIENT_URL ? process.env.CLIENT_URL.split(",") : true,
+  credentials: true,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 // ! Large limit because profile / cover / task images are stored as base64
 app.use(express.json({ limit: "15mb" }));
 
@@ -50,9 +55,12 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 socket.init(server);
 
+const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
 if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-  console.warn("[startup:mail] SMTP is not configured. Password reset and OTP emails will use a dev preview or fail in production.");
+  console.warn("[startup:mail] SMTP is not configured. Password reset and OTP emails will fail in production unless SMTP vars are set.");
 }
+console.log(`[startup] client URL: ${clientUrl}`);
+console.log(`[startup] api URL: http://localhost:${PORT}`);
 
 connectDB()
   .then(seedAdmin)
