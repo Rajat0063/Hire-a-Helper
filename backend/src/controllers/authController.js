@@ -20,6 +20,9 @@ exports.signup = async (req, res) => {
     }
     const existing = await User.findOne({ email });
     if (existing) {
+      try {
+        console.warn(`[signup] email conflict - received=${String(email).slice(0,200)} existingId=${existing._id} createdAt=${existing.createdAt}`);
+      } catch (logErr) { /* ignore logging failures */ }
       if (existing.isBlocked)
         return res.status(403).json({ code: "USER_BLOCKED",
           message: "This email is blocked by an administrator and cannot be used." });
