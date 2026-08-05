@@ -40,8 +40,9 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
-// Verifies SMTP transporter connectivity. This is informational only so
-// deployments do not fail when SMTP credentials are misconfigured or absent.
+// SMTP connectivity is verified lazily only when mail is actually sent.
+// Keeping startup silent avoids noisy Render deployment logs when the
+// outbound SMTP provider is slow or not available in the runtime environment.
 async function verifyTransporter() {
   const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
   if (!smtpConfigured) return false;

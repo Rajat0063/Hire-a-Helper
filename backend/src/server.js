@@ -50,11 +50,7 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 socket.init(server);
 
-// Verify SMTP connectivity (non-fatal) so missing / broken SMTP is visible in logs
-const { verifyTransporter } = require("./utils/mailer");
-
 connectDB()
   .then(seedAdmin)
-  .then(() => verifyTransporter().catch(() => {}))
   .then(() => server.listen(PORT, () => console.log(`[api] http://localhost:${PORT}`)))
   .catch((e) => { console.error("Startup failed:", e); process.exit(1); });
