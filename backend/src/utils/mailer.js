@@ -6,17 +6,24 @@ const nodemailer = require("nodemailer");
 let transporter;
 function getTransporter() {
   if (transporter) return transporter;
+  const port = Number(process.env.SMTP_PORT || 587);
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: false,
+    port,
+    secure: process.env.SMTP_SECURE === "true" || port === 465,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    tls: {
+      rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== "false",
+    },
+    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 10000),
   });
   return transporter;
 }
 
 async function sendMail({ to, subject, html }) {
-  if (!process.env.SMTP_USER) {
+  const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+  if (!smtpConfigured) {
+    console.warn(`[mailer:WARN] SMTP is not fully configured; email to ${to} will be logged instead.`);
     console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
     return;
   }
