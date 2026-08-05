@@ -50,6 +50,10 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 socket.init(server);
 
+if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  console.warn("[startup:mail] SMTP is not configured. Password reset and OTP emails will use a dev preview or fail in production.");
+}
+
 connectDB()
   .then(seedAdmin)
   .then(() => server.listen(PORT, () => console.log(`[api] http://localhost:${PORT}`)))

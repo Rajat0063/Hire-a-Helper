@@ -1,11 +1,32 @@
 // === Nodemailer transport ===
-// Reads SMTP_* env vars. If SMTP_USER is not set we fall back to logging the
-// code in the terminal so the OTP / reset flow still works in local dev.
+// Reads SMTP_* env vars. In development it falls back to Ethereal preview mail if
+// SMTP is not configured, so OTP and password reset flows still work.
 const nodemailer = require("nodemailer");
 
 let transporter;
-function getTransporter() {
+let usingEthereal = false;
+
+async function getTransporter() {
   if (transporter) return transporter;
+
+  const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+  if (!smtpConfigured) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SMTP is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS to send emails.");
+    }
+
+    const testAccount = await nodemailer.createTestAccount();
+    transporter = nodemailer.createTransport({
+      host: testAccount.smtp.host,
+      port: testAccount.smtp.port,
+      secure: testAccount.smtp.secure,
+      auth: { user: testAccount.user, pass: testAccount.pass },
+    });
+    usingEthereal = true;
+    console.warn("[mailer:DEV] SMTP is not configured; using Ethereal preview mail account.");
+    return transporter;
+  }
+
   const port = Number(process.env.SMTP_PORT || 587);
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -21,18 +42,22 @@ function getTransporter() {
 }
 
 async function sendMail({ to, subject, html }) {
-  const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
-  if (!smtpConfigured) {
-    console.warn(`[mailer:WARN] SMTP is not fully configured; email to ${to} will be logged instead.`);
-    console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
-    return;
+  try {
+    const info = await (await getTransporter()).sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject,
+      html,
+    });
+
+    if (usingEthereal) {
+      console.log(`[mailer:DEV] Email preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+      console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
+    }
+  } catch (err) {
+    console.error("[mailer:error]", err && (err.stack || err.message || err));
+    throw err;
   }
-  await getTransporter().sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to,
-    subject,
-    html,
-  });
 }
 
 async function sendOtpEmail(to, code) {
