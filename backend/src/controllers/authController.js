@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Otp = require("../models/Otp");
+const PendingUser = require("../models/PendingUser");
 const Settings = require("../models/Settings");
 const { sendOtpEmail, sendResetEmail } = require("../utils/mailer");
 const sms = require("../utils/sms");
@@ -31,16 +32,30 @@ exports.signup = async (req, res) => {
     }
 
     const requireEmailVerification = settings?.requireEmailVerification !== false;
-    const user = await User.create({ firstName, lastName, email, phone, password, isVerified: !requireEmailVerification });
     if (!requireEmailVerification) {
+      const user = await User.create({ firstName, lastName, email, phone, password, isVerified: true });
       return res.status(201).json({ token: sign(user._id), user: stripUser(user), message: "Signup successful." });
     }
 
+    // When email verification is required, do NOT create the real User yet.
+    // Store the signup data in PendingUser (auto-expires) and send an OTP.
+    const existingPending = await PendingUser.findOne({ email });
+    if (existingPending) {
+      existingPending.firstName = firstName;
+      existingPending.lastName = lastName;
+      existingPending.phone = phone;
+      existingPending.password = password;
+      await existingPending.save();
+    } else {
+      await PendingUser.create({ firstName, lastName, email, phone, password });
+    }
+
     const code = genOtp();
-    await Otp.create({ email: user.email, code });
+    await Otp.deleteMany({ email });
+    await Otp.create({ email, code });
     // Fire-and-forget email send so SMTP connectivity doesn't block the request
-    sendOtpEmail(user.email, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
-    return res.status(201).json({ message: "Signup successful. OTP sent to email.", email: user.email });
+    sendOtpEmail(email, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
+    return res.status(201).json({ message: "Signup received. OTP sent to email.", email });
   } catch (err) {
     console.error("[signup:error]", err && (err.stack || err.message || err));
     return res.status(500).json({ message: err?.message || "Server error" });
@@ -81,7 +96,22 @@ exports.verifyOtp = async (req, res) => {
   const found = await Otp.findOne({ email, code: otp });
   if (!found) return res.status(400).json({ message: "Invalid or expired OTP" });
   await Otp.deleteMany({ email });
-  const user = await User.findOneAndUpdate({ email }, { isVerified: true }, { new: true });
+  // If a pending signup exists, create the real user now.
+  const pending = await PendingUser.findOne({ email });
+  let user;
+  if (pending) {
+    user = await User.create({
+      firstName: pending.firstName,
+      lastName: pending.lastName,
+      email: pending.email,
+      phone: pending.phone,
+      password: pending.password,
+      isVerified: true,
+    });
+    await PendingUser.deleteMany({ email });
+  } else {
+    user = await User.findOneAndUpdate({ email }, { isVerified: true }, { new: true });
+  }
   res.json({ token: sign(user._id), user: stripUser(user) });
 };
 
@@ -89,7 +119,8 @@ exports.verifyOtp = async (req, res) => {
 exports.resendOtp = async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
+  const pending = await PendingUser.findOne({ email });
+  if (!user && !pending) return res.status(404).json({ message: "User not found" });
   const code = genOtp();
   await Otp.deleteMany({ email });
   await Otp.create({ email, code });

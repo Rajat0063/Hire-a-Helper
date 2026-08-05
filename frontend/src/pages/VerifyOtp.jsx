@@ -12,6 +12,7 @@ export default function VerifyOtp() {
   const nav = useNavigate();
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendBusy, setResendBusy] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault(); setLoading(true);
@@ -21,8 +22,16 @@ export default function VerifyOtp() {
   };
 
   const resend = async () => {
-    try { await api.post("/auth/resend-otp", { email }); toast.success("OTP resent"); }
-    catch { toast.error("Failed to resend"); }
+    if (!email) return toast.error("No email to resend to");
+    try {
+      setResendBusy(true);
+      await api.post("/auth/resend-otp", { email });
+      toast.success("OTP resent");
+    } catch {
+      toast.error("Failed to resend");
+    } finally {
+      setResendBusy(false);
+    }
   };
 
   return <AuthShell title="Verify your email" subtitle={`We sent a 6-digit code to ${email || "your inbox"}`}>
@@ -31,6 +40,7 @@ export default function VerifyOtp() {
         value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,""))}/>
       <button className="btn-primary w-full" disabled={loading || otp.length<6}>{loading?"Verifying…":"Verify"}</button>
     </form>
-    <button onClick={resend} className="block mx-auto mt-4 text-sm text-brand-700 font-semibold">Resend code</button>
+    <button onClick={resend} disabled={resendBusy || !email}
+      className="block mx-auto mt-4 text-sm text-brand-700 font-semibold">{resendBusy?"Resending…":"Resend code"}</button>
   </AuthShell>;
 }
