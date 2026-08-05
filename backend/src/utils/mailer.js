@@ -40,18 +40,19 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
-// Verifies SMTP transporter connectivity; returns a promise that resolves
-// when verification succeeds or rejects with the underlying error.
+// Verifies SMTP transporter connectivity. This is informational only so
+// deployments do not fail when SMTP credentials are misconfigured or absent.
 async function verifyTransporter() {
   const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
-  if (!smtpConfigured) return Promise.resolve(false);
+  if (!smtpConfigured) return false;
+
   try {
     await getTransporter().verify();
     console.log("[mailer] SMTP transporter verified");
     return true;
   } catch (err) {
-    console.error("[mailer] SMTP transporter verification failed:", err && (err.stack || err.message || err));
-    throw err;
+    console.warn("[mailer] SMTP transporter verification failed:", err && (err.stack || err.message || err));
+    return false;
   }
 }
 
