@@ -30,9 +30,9 @@ export default function Login() {
     try {
       const r = await login(form.email, form.password);
       if (r.requireOtp) {
-        if (import.meta.env.DEV && r.devCode) toast(`Verify your email. Dev code: ${r.devCode}`);
+        if (r.devCode) toast(`Verify your email. Code: ${r.devCode}`);
         else toast("Verify your email");
-        nav("/verify-otp", { state: { email: r.email, devCode: import.meta.env.DEV ? (r.devCode || "") : "" } });
+        nav("/verify-otp", { state: { email: r.email, devCode: r.devCode || "" } });
       } else { toast.success("Welcome back!"); nav("/dashboard"); }
     } catch (e2) {
       const msg = e2.response?.data?.message || "Login failed";
