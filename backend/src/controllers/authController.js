@@ -105,12 +105,7 @@ exports.forgotPassword = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    try {
-      await sendResetEmail(email, code);
-    } catch (e) {
-      console.error("[forgotPassword:mail]", e && (e.stack || e.message || e));
-      return res.status(500).json({ message: "Unable to send the reset email right now. Please try again later." });
-    }
+    sendResetEmail(email, code).catch((e) => console.error("[forgotPassword:mail]", e && (e.stack || e.message || e)));
   }
   res.json({ message: "If an account exists for that email, a reset code has been sent." });
 };

@@ -51,7 +51,7 @@ async function sendMail({ to, subject, html }) {
     return info;
   } catch (err) {
     console.error("[mailer:error]", err && (err.stack || err.message || err));
-    throw err;
+    return null;
   }
 }
 
