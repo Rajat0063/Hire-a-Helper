@@ -17,8 +17,12 @@ export default function Signup() {
     try {
       const data = await signup(f);
       if (data.token) { toast.success("Account created"); nav("/dashboard"); return; }
-      toast.success("OTP sent to your email");
-      nav("/verify-otp", { state: { email: f.email } });
+      if (data.devCode) {
+        toast.success(`OTP sent to your email (dev code: ${data.devCode})`);
+      } else {
+        toast.success("OTP sent to your email");
+      }
+      nav("/verify-otp", { state: { email: f.email, devCode: data.devCode || "" } });
     } catch (e2) {
       const code = e2.response?.data?.code;
       const message = e2.response?.data?.message || "Signup failed";

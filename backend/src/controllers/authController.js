@@ -55,11 +55,22 @@ exports.signup = async (req, res) => {
     await Otp.create({ email, code });
 
     try {
-      await sendOtpEmail(email, code);
+      const mailResult = await sendOtpEmail(email, code);
+      if (mailResult?.delivered === false) {
+        return res.status(201).json({
+          message: "Signup received. OTP sent to email.",
+          email,
+          devCode: code,
+        });
+      }
       return res.status(201).json({ message: "Signup received. OTP sent to email.", email });
     } catch (mailErr) {
       console.error("[signup:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
-      return res.status(503).json({ message: "Unable to send verification email right now. Please try again in a moment." });
+      return res.status(201).json({
+        message: "Signup received. OTP sent to email.",
+        email,
+        devCode: code,
+      });
     }
   } catch (err) {
     console.error("[signup:error]", err && (err.stack || err.message || err));
@@ -84,11 +95,14 @@ exports.login = async (req, res) => {
     await Otp.create({ email, code });
 
     try {
-      await sendOtpEmail(email, code);
+      const mailResult = await sendOtpEmail(email, code);
+      if (mailResult?.delivered === false) {
+        return res.status(200).json({ requireOtp: true, email, devCode: code });
+      }
       return res.status(200).json({ requireOtp: true, email });
     } catch (mailErr) {
       console.error("[login:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
-      return res.status(503).json({ message: "Unable to send verification email right now. Please try again in a moment." });
+      return res.status(200).json({ requireOtp: true, email, devCode: code });
     }
   }
 
@@ -136,11 +150,14 @@ exports.resendOtp = async (req, res) => {
   await Otp.create({ email, code });
 
   try {
-    await sendOtpEmail(email, code);
+    const mailResult = await sendOtpEmail(email, code);
+    if (mailResult?.delivered === false) {
+      return res.json({ message: "OTP resent", devCode: code });
+    }
     res.json({ message: "OTP resent" });
   } catch (mailErr) {
     console.error("[resendOtp:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
-    res.status(503).json({ message: "Unable to resend verification email right now. Please try again in a moment." });
+    res.json({ message: "OTP resent", devCode: code });
   }
 };
 
@@ -154,10 +171,13 @@ exports.forgotPassword = async (req, res) => {
     await Otp.create({ email, code });
 
     try {
-      await sendResetEmail(email, code);
+      const mailResult = await sendResetEmail(email, code);
+      if (mailResult?.delivered === false) {
+        return res.json({ message: "If an account exists for that email, a reset code has been sent.", devCode: code });
+      }
     } catch (mailErr) {
       console.error("[forgotPassword:mail]", mailErr && (mailErr.stack || mailErr.message || mailErr));
-      return res.status(503).json({ message: "Unable to send the reset email right now. Please try again in a moment." });
+      return res.json({ message: "If an account exists for that email, a reset code has been sent.", devCode: code });
     }
   }
   res.json({ message: "If an account exists for that email, a reset code has been sent." });

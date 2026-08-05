@@ -67,7 +67,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const { data } = await api.post("/auth/login", { email, password });
-      if (data.requireOtp) return { requireOtp: true, email: data.email };
+      if (data.requireOtp) return { requireOtp: true, email: data.email, devCode: data.devCode || "" };
       setToken(data.token); setUser(data.user);
       return { user: data.user };
     } finally { setLoading(false); }

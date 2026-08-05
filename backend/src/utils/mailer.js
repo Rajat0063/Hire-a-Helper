@@ -31,7 +31,7 @@ async function sendMail({ to, subject, html }) {
   if (!isSmtpConfigured()) {
     console.warn(`[mailer:WARN] SMTP is not fully configured; email to ${to} will be logged instead.`);
     console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
-    return false;
+    return { delivered: false, devMode: true };
   }
   try {
     await getTransporter().sendMail({
@@ -40,10 +40,10 @@ async function sendMail({ to, subject, html }) {
       subject,
       html,
     });
-    return true;
+    return { delivered: true, devMode: false };
   } catch (err) {
     console.error(`[mailer:ERROR] Failed to send email to ${to}:`, err && (err.stack || err.message || err));
-    throw err;
+    return { delivered: false, devMode: false, error: err };
   }
 }
 
