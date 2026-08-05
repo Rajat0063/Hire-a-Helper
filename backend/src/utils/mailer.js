@@ -27,12 +27,32 @@ async function sendMail({ to, subject, html }) {
     console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
     return;
   }
-  await getTransporter().sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to,
-    subject,
-    html,
-  });
+  try {
+    await getTransporter().sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error(`[mailer:ERROR] Failed to send email to ${to}:`, err && (err.stack || err.message || err));
+    throw err;
+  }
+}
+
+// Verifies SMTP transporter connectivity; returns a promise that resolves
+// when verification succeeds or rejects with the underlying error.
+async function verifyTransporter() {
+  const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+  if (!smtpConfigured) return Promise.resolve(false);
+  try {
+    await getTransporter().verify();
+    console.log("[mailer] SMTP transporter verified");
+    return true;
+  } catch (err) {
+    console.error("[mailer] SMTP transporter verification failed:", err && (err.stack || err.message || err));
+    throw err;
+  }
 }
 
 async function sendOtpEmail(to, code) {
@@ -65,4 +85,4 @@ async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
   });
 }
 
-module.exports = { sendOtpEmail, sendResetEmail, sendFeedbackEmail };
+module.exports = { sendOtpEmail, sendResetEmail, sendFeedbackEmail, verifyTransporter };
