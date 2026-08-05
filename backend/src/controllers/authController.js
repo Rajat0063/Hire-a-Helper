@@ -93,7 +93,7 @@ exports.resendOtp = async (req, res) => {
   const code = genOtp();
   await Otp.deleteMany({ email });
   await Otp.create({ email, code });
-  await sendOtpEmail(email, code);
+  sendOtpEmail(email, code).catch((e) => console.error("[resendOtp:mail]", e && (e.stack || e.message || e)));
   res.json({ message: "OTP resent" });
 };
 
@@ -105,7 +105,7 @@ exports.forgotPassword = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    await sendResetEmail(email, code);
+    sendResetEmail(email, code).catch((e) => console.error("[forgotPassword:mail]", e && (e.stack || e.message || e)));
   }
   res.json({ message: "If an account exists for that email, a reset code has been sent." });
 };
