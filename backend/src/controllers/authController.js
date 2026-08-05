@@ -38,8 +38,8 @@ exports.signup = async (req, res) => {
 
     const code = genOtp();
     await Otp.create({ email: user.email, code });
-    // Attempt to send OTP email; if it fails we catch below and return a 500
-    await sendOtpEmail(user.email, code);
+    // Fire-and-forget email send so SMTP connectivity doesn't block the request
+    sendOtpEmail(user.email, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
     return res.status(201).json({ message: "Signup successful. OTP sent to email.", email: user.email });
   } catch (err) {
     console.error("[signup:error]", err && (err.stack || err.message || err));
@@ -62,7 +62,8 @@ exports.login = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    await sendOtpEmail(email, code);
+    // Do not await email send during login flow to avoid timeouts
+    sendOtpEmail(email, code).catch((e) => console.error("[login:mail]", e && (e.stack || e.message || e)));
     return res.status(200).json({ requireOtp: true, email });
   }
 
