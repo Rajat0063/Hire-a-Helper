@@ -11,6 +11,9 @@ async function getTransporter() {
 
   const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
   if (!smtpConfigured) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("SMTP is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS to send emails in production.");
+    }
     const testAccount = await nodemailer.createTestAccount();
     transporter = nodemailer.createTransport({
       host: testAccount.smtp.host,
@@ -20,9 +23,6 @@ async function getTransporter() {
     });
     usingEthereal = true;
     console.warn("[mailer:DEV] SMTP is not configured; using Ethereal preview mail account.");
-    if (process.env.NODE_ENV === "production") {
-      console.warn("[mailer:PROD] Missing SMTP configuration in production, email deliveries will be preview-only.");
-    }
     return transporter;
   }
 
@@ -51,25 +51,6 @@ async function sendMail({ to, subject, html }) {
     return info;
   } catch (err) {
     console.error("[mailer:error]", err && (err.stack || err.message || err));
-    if (!usingEthereal) {
-      try {
-        const testAccount = await nodemailer.createTestAccount();
-        transporter = nodemailer.createTransport({
-          host: testAccount.smtp.host,
-          port: testAccount.smtp.port,
-          secure: testAccount.smtp.secure,
-          auth: { user: testAccount.user, pass: testAccount.pass },
-        });
-        usingEthereal = true;
-        console.warn("[mailer:PROD] SMTP send failed, falling back to Ethereal preview mail.");
-        const info = await transporter.sendMail(message);
-        console.log(`[mailer:DEV] Email preview URL: ${nodemailer.getTestMessageUrl(info)}`);
-        console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
-        return info;
-      } catch (fallbackErr) {
-        console.error("[mailer:fallback-error]", fallbackErr && (fallbackErr.stack || fallbackErr.message || fallbackErr));
-      }
-    }
     throw err;
   }
 }
