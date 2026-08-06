@@ -15,71 +15,48 @@ function getTransporter() {
     tls: {
       rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== "false",
     },
-    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 30000),
-    greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 30000),
-    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT || 30000),
-    pool: process.env.SMTP_POOL === "true",
+    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 10000),
   });
   return transporter;
 }
 
-function isSmtpConfigured() {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
-}
-
-function buildFromAddress() {
-  const smtpUser = String(process.env.SMTP_USER || "").trim().toLowerCase();
-  const smtpFrom = String(process.env.SMTP_FROM || "").trim();
-  const smtpFromEmail = smtpFrom.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]?.toLowerCase() || "";
-
-  if (!smtpUser) return "";
-  if (!smtpFrom) return smtpUser;
-  if (smtpFromEmail && smtpFromEmail !== smtpUser) {
-    console.warn(`[mailer:WARN] SMTP_FROM (${smtpFromEmail}) does not match SMTP_USER (${smtpUser}). Gmail delivery is usually tied to the authenticated sender. Falling back to SMTP_USER.`);
-    return smtpUser;
-  }
-  return smtpFrom;
-}
-
 async function sendMail({ to, subject, html }) {
-  if (!isSmtpConfigured()) {
+  const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
+  if (!smtpConfigured) {
     console.warn(`[mailer:WARN] SMTP is not fully configured; email to ${to} will be logged instead.`);
     console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
-    return { delivered: false, devMode: true };
+    return;
   }
   try {
     await getTransporter().sendMail({
-      from: buildFromAddress(),
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
       to,
       subject,
       html,
     });
-    return { delivered: true, devMode: false };
   } catch (err) {
     console.error(`[mailer:ERROR] Failed to send email to ${to}:`, err && (err.stack || err.message || err));
-    return { delivered: false, devMode: false, error: err };
+    throw err;
   }
 }
 
-// SMTP connectivity is verified lazily only when mail is actually sent.
-// Keeping startup silent avoids noisy Render deployment logs when the
-// outbound SMTP provider is slow or not available in the runtime environment.
+// Verifies SMTP transporter connectivity; returns a promise that resolves
+// when verification succeeds or rejects with the underlying error.
 async function verifyTransporter() {
   const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
-  if (!smtpConfigured) return false;
-
+  if (!smtpConfigured) return Promise.resolve(false);
   try {
     await getTransporter().verify();
     console.log("[mailer] SMTP transporter verified");
     return true;
   } catch (err) {
-    console.warn("[mailer] SMTP transporter verification failed:", err && (err.stack || err.message || err));
-    return false;
+    console.error("[mailer] SMTP transporter verification failed:", err && (err.stack || err.message || err));
+    throw err;
   }
 }
 
 async function sendOtpEmail(to, code) {
-  return await sendMail({
+  await sendMail({
     to,
     subject: "Your HireHelper verification code",
     html: `<p>Your verification code is <b style="font-size:22px">${code}</b>. It expires in 10 minutes.</p>`,
@@ -87,7 +64,7 @@ async function sendOtpEmail(to, code) {
 }
 
 async function sendResetEmail(to, code) {
-  return await sendMail({
+  await sendMail({
     to,
     subject: "HireHelper password reset code",
     html: `<p>Use the code below to reset your HireHelper password. It expires in 10 minutes.</p>
@@ -97,7 +74,7 @@ async function sendResetEmail(to, code) {
 }
 
 async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
-  return await sendMail({
+  await sendMail({
     to,
     subject: `[HireHelper feedback · ${type}] ${subject}`,
     html: `<h2 style="margin:0 0 8px">New ${type} from ${from}</h2>

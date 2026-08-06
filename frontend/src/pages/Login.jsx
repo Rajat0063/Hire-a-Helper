@@ -29,11 +29,8 @@ export default function Login() {
     setErr(""); setBlockedBanner(false);
     try {
       const r = await login(form.email, form.password);
-      if (r.requireOtp) {
-        if (r.devCode) toast(`Verify your email. Code: ${r.devCode}`);
-        else toast("Verify your email");
-        nav("/verify-otp", { state: { email: r.email, devCode: r.devCode || "" } });
-      } else { toast.success("Welcome back!"); nav("/dashboard"); }
+      if (r.requireOtp) { toast("Verify your email"); nav("/verify-otp", { state: { email: r.email } }); }
+      else { toast.success("Welcome back!"); nav("/dashboard"); }
     } catch (e2) {
       const msg = e2.response?.data?.message || "Login failed";
       setErr(msg);
