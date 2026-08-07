@@ -1,7 +1,7 @@
-// === Nodemailer transport ===
-// Reads SMTP_* env vars or RESEND_API_KEY.
+// === Nodemailer & Transactional Email API transport ===
+// Reads BREVO_API_KEY, RESEND_API_KEY, or SMTP_* env vars.
 // Note: Hosting platforms like Render block outbound SMTP ports (587, 465, 25).
-// For reliable email delivery on Render, set RESEND_API_KEY (from resend.com - free API).
+// For reliable email delivery on Render, use BREVO_API_KEY or RESEND_API_KEY.
 const nodemailer = require("nodemailer");
 
 let transporter;
@@ -35,9 +35,45 @@ function getTransporter() {
   return transporter;
 }
 
+function getBrevoApiKey() {
+  for (const [key, val] of Object.entries(process.env)) {
+    if (!val || typeof val !== "string") continue;
+    const v = val.trim();
+    if (!v) continue;
+    const k = key.toUpperCase();
+    if (
+      k === "BREVO_API_KEY" ||
+      k === "BREVO_KEY" ||
+      k === "BREVO_API" ||
+      k === "BREVO_TOKEN" ||
+      k === "SIB_API_KEY" ||
+      k === "SENDINBLUE_API_KEY" ||
+      k.includes("BREVO") ||
+      k.includes("SENDINBLUE")
+    ) {
+      return v;
+    }
+  }
+  return "";
+}
+
+function getResendApiKey() {
+  for (const [key, val] of Object.entries(process.env)) {
+    if (!val || typeof val !== "string") continue;
+    const v = val.trim();
+    if (!v) continue;
+    const k = key.toUpperCase();
+    if (k === "RESEND_API_KEY" || k === "RESEND_KEY" || (k.includes("RESEND") && k.includes("KEY"))) {
+      return v;
+    }
+  }
+  return "";
+}
+
 function isSmtpConfigured() {
   return Boolean(
-    process.env.RESEND_API_KEY ||
+    getBrevoApiKey() ||
+      getResendApiKey() ||
       (process.env.SMTP_USER && process.env.SMTP_PASS)
   );
 }
@@ -46,29 +82,64 @@ async function sendMail({ to, subject, html }) {
   if (!isSmtpConfigured()) {
     console.warn(`[mailer:WARN] Email service not configured; email to ${to} will be logged to console.`);
     console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
-    return { sent: false, smtpConfigured: false };
+    return { sent: false, smtpConfigured: false, loggedToConsole: true };
   }
 
   const fromName = process.env.SMTP_FROM_NAME || "HireHelper";
-  const fromUser = process.env.SMTP_USER || "onboarding@resend.dev";
-  const fromAddress = process.env.SMTP_FROM || `"${fromName}" <${fromUser}>`;
+  const rawDefaultSender = process.env.SMTP_USER || process.env.BREVO_SENDER_EMAIL || "rajatyadav5641@gmail.com";
+  const cleanDefaultSender = (rawDefaultSender.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/) || ["rajatyadav5641@gmail.com"])[0];
+  const fromAddress = process.env.SMTP_FROM || `"${fromName}" <${cleanDefaultSender}>`;
 
-  // 1. Try Resend API first if key is provided (bypasses Render SMTP port blocking via HTTPS port 443)
-  if (process.env.RESEND_API_KEY) {
+  // 1. Try Brevo API first if key is provided (bypasses Render SMTP port blocking via HTTPS port 443)
+  const brevoApiKey = getBrevoApiKey();
+  if (brevoApiKey) {
+    const rawSenderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_USER || process.env.SMTP_FROM || cleanDefaultSender;
+    const cleanSenderEmail = (rawSenderEmail.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/) || [cleanDefaultSender])[0];
+
+    try {
+      const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "api-key": brevoApiKey,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: { name: fromName, email: cleanSenderEmail },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        console.log(`[mailer:brevo] Email sent successfully to ${to} (messageId: ${data.messageId || data.id})`);
+        return { sent: true, provider: "brevo" };
+      }
+      console.error("[mailer:brevo:ERROR]", data);
+    } catch (bErr) {
+      console.error("[mailer:brevo:FETCH_ERROR]", bErr?.message || bErr);
+    }
+  }
+
+  // 2. Try Resend API if key is provided
+  const resendApiKey = getResendApiKey();
+  if (resendApiKey) {
     const cleanName = (process.env.SMTP_FROM_NAME || "HireHelper").replace(/[^a-zA-Z0-9 ]/g, "").trim() || "HireHelper";
     let resendFrom = process.env.RESEND_FROM
       ? process.env.RESEND_FROM.replace(/^["']|["']$/g, "").trim()
       : `${cleanName} <onboarding@resend.dev>`;
 
-    async function sendViaResend(fromAddress) {
+    async function sendViaResend(fromAddr) {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.RESEND_API_KEY.trim()}`,
+          "Authorization": `Bearer ${resendApiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: fromAddress,
+          from: fromAddr,
           to: [to],
           subject,
           html,
@@ -80,9 +151,6 @@ async function sendMail({ to, subject, html }) {
 
     try {
       let attempt = await sendViaResend(resendFrom);
-
-      // If initial attempt failed (e.g. invalid 'from' address or custom domain not verified),
-      // retry with default onboarding@resend.dev format
       const defaultResendFrom = `${cleanName} <onboarding@resend.dev>`;
       if (!attempt.ok && resendFrom !== defaultResendFrom) {
         console.warn(`[mailer:resend:WARN] Custom 'from' (${resendFrom}) failed (${attempt.status}). Retrying with default: ${defaultResendFrom}`);
@@ -93,13 +161,23 @@ async function sendMail({ to, subject, html }) {
         console.log(`[mailer:resend] Email sent successfully to ${to} (id: ${attempt.data.id})`);
         return { sent: true, provider: "resend" };
       }
-      console.error("[mailer:resend:ERROR]", attempt.data);
+      if (attempt.status === 401) {
+        console.error("[mailer:resend:ERROR] 401 Unauthorized - RESEND_API_KEY is invalid or expired. Delete RESEND_API_KEY from Render Environment Variables or replace it with a valid key.");
+      } else {
+        console.error("[mailer:resend:ERROR]", attempt.data);
+      }
     } catch (rErr) {
       console.error("[mailer:resend:FETCH_ERROR]", rErr?.message || rErr);
     }
   }
 
-  // 2. Fall back to Nodemailer SMTP
+  // 3. Fall back to Nodemailer SMTP
+  const isRender = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.IS_RENDER);
+  if (isRender) {
+    console.log(`[mailer:RENDER] Render cloud host detected without BREVO_API_KEY or RESEND_API_KEY. Render blocks outbound SMTP ports 587/465. The code/message was logged above in server logs. To send emails to inbox, add BREVO_API_KEY to Render Environment Variables.`);
+    return { sent: false, error: "SMTP blocked on Render. Use BREVO_API_KEY for inbox delivery.", loggedToConsole: true };
+  }
+
   try {
     await getTransporter().sendMail({
       from: fromAddress,
@@ -111,18 +189,26 @@ async function sendMail({ to, subject, html }) {
     return { sent: true, provider: "smtp" };
   } catch (err) {
     console.error(`[mailer:ERROR] Failed to send email to ${to} via SMTP:`, err?.message || err);
-    console.warn(`[mailer:NOTICE] Note: Cloud hosts like Render block outbound SMTP ports (587/465). Consider adding RESEND_API_KEY to Render environment variables.`);
     return { sent: false, error: err?.message || String(err) };
   }
 }
 
 async function verifyTransporter() {
-  if (process.env.RESEND_API_KEY) {
+  if (getBrevoApiKey()) {
+    console.log("[mailer] Using Brevo HTTP API for emails");
+    return true;
+  }
+  if (getResendApiKey()) {
     console.log("[mailer] Using Resend HTTP API for emails");
     return true;
   }
   if (!isSmtpConfigured()) {
-    console.log("[mailer] No SMTP or Resend credentials provided; running in console logging mode");
+    console.log("[mailer] No SMTP, Brevo, or Resend credentials provided; running in console logging mode");
+    return false;
+  }
+  const isRender = Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.IS_RENDER);
+  if (isRender) {
+    console.log("[mailer] Render cloud host detected. Outbound SMTP ports (587/465) are blocked by Render infrastructure. Add BREVO_API_KEY in Render Environment Variables for inbox email delivery. OTP codes are logged to server logs.");
     return false;
   }
   try {
@@ -130,7 +216,7 @@ async function verifyTransporter() {
     console.log("[mailer] SMTP transporter verified");
     return true;
   } catch (err) {
-    console.warn("[mailer] SMTP verification failed (Render blocks SMTP ports 587/465). Will attempt sending on demand or use fallback log:", err?.message || err);
+    console.warn("[mailer] SMTP verification failed. Will attempt sending on demand or log to console:", err?.message || err);
     return false;
   }
 }
