@@ -58,8 +58,23 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!token) { setBooting(false); return; }
     api.get("/users/me")
-      .then(({ data }) => setUser(data.user))
-      .catch(() => { setToken(null); setUser(null); })
+      .then(({ data }) => {
+        if (data?.user) {
+          setUser(data.user);
+          try { localStorage.setItem("hh_user", JSON.stringify(data.user)); } catch {}
+        }
+      })
+      .catch((err) => {
+        // Only wipe credentials if the server explicitly rejects the token with 401 or 403
+        if (err?.response?.status === 401 || err?.response?.status === 403) {
+          setToken(null);
+          setUser(null);
+          try {
+            localStorage.removeItem("hh_token");
+            localStorage.removeItem("hh_user");
+          } catch {}
+        }
+      })
       .finally(() => setBooting(false));
   }, []); // eslint-disable-line
 

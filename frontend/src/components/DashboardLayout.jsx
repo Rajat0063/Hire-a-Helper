@@ -32,15 +32,8 @@ export default function DashboardLayout({ children }) {
   const nav = useNavigate();
   const [pendingRequests, setPendingRequests] = useState(0);
 
-  // Disable browser back from dashboard pages.
-  useEffect(() => {
-    const trap = () => window.history.pushState(null, "", window.location.href);
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", trap);
-    return () => window.removeEventListener("popstate", trap);
-  }, []);
+  // Pending request count
 
-  // ~ Live pending-request count for the sidebar badge ~
   const loadPending = () => {
     api.get("/requests/received").then(({ data }) => {
       setPendingRequests((data.requests || []).filter((r) => r.status === "pending").length);

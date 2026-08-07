@@ -1,8 +1,14 @@
 {
+  "version": 2,
   "rewrites": [
+    {
+      "source": "/((?!assets/|favicon\\.svg|.*\\..*).*)",
+      "destination": "/index.html"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
 }
+
