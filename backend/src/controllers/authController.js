@@ -15,14 +15,17 @@ const genOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 exports.signup = async (req, res) => {
   try {
     const { firstName, lastName, email, phone, password } = req.body;
+    const cleanEmail = String(email || "").toLowerCase().trim();
+    if (!cleanEmail) return res.status(400).json({ message: "Email is required" });
+
     const settings = await Settings.findOne({ key: "platform" });
     if (settings && settings.enableRegistrations === false) {
       return res.status(403).json({ code: "REGISTRATION_DISABLED", message: "New registrations are currently disabled." });
     }
-    const existing = await User.findOne({ email });
+    const existing = await User.findOne({ email: cleanEmail });
     if (existing) {
       try {
-        console.warn(`[signup] email conflict - received=${String(email).slice(0,200)} existingId=${existing._id} createdAt=${existing.createdAt}`);
+        console.warn(`[signup] email conflict - received=${cleanEmail} existingId=${existing._id} createdAt=${existing.createdAt}`);
       } catch (logErr) { /* ignore logging failures */ }
       if (existing.isBlocked)
         return res.status(403).json({ code: "USER_BLOCKED",
@@ -33,13 +36,12 @@ exports.signup = async (req, res) => {
 
     const requireEmailVerification = settings?.requireEmailVerification !== false;
     if (!requireEmailVerification) {
-      const user = await User.create({ firstName, lastName, email, phone, password, isVerified: true });
+      const user = await User.create({ firstName, lastName, email: cleanEmail, phone, password, isVerified: true });
       return res.status(201).json({ token: sign(user._id), user: stripUser(user), message: "Signup successful." });
     }
 
-    // When email verification is required, do NOT create the real User yet.
-    // Store the signup data in PendingUser (auto-expires) and send an OTP.
-    const existingPending = await PendingUser.findOne({ email });
+    // When email verification is required, store the signup data in PendingUser (auto-expires) and send an OTP.
+    const existingPending = await PendingUser.findOne({ email: cleanEmail });
     if (existingPending) {
       existingPending.firstName = firstName;
       existingPending.lastName = lastName;
@@ -47,21 +49,22 @@ exports.signup = async (req, res) => {
       existingPending.password = password;
       await existingPending.save();
     } else {
-      await PendingUser.create({ firstName, lastName, email, phone, password });
+      await PendingUser.create({ firstName, lastName, email: cleanEmail, phone, password });
     }
 
     const code = genOtp();
-    await Otp.deleteMany({ email });
-    await Otp.create({ email, code });
+    await Otp.deleteMany({ email: cleanEmail });
+    await Otp.create({ email: cleanEmail, code });
+    console.log(`[signup] Created OTP document in database for ${cleanEmail}: ${code}`);
     
     // Send email to user's address
     if (mailer && typeof mailer.sendOtpEmail === "function") {
-      mailer.sendOtpEmail(email, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
+      mailer.sendOtpEmail(cleanEmail, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
     }
 
     return res.status(201).json({
       message: "Signup received. Verification code sent to your email.",
-      email,
+      email: cleanEmail,
     });
   } catch (err) {
     console.error("[signup:error]", err && (err.stack || err.message || err));
@@ -71,8 +74,9 @@ exports.signup = async (req, res) => {
 
 // === POST /api/auth/login ===
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const cleanEmail = String(req.body.email || "").toLowerCase().trim();
+  const { password } = req.body;
+  const user = await User.findOne({ email: cleanEmail });
   if (!user || !(await user.compare(password)))
     return res.status(401).json({ message: "Invalid email or password" });
 
@@ -82,14 +86,15 @@ exports.login = async (req, res) => {
 
   if (!user.isVerified) {
     const code = genOtp();
-    await Otp.deleteMany({ email });
-    await Otp.create({ email, code });
+    await Otp.deleteMany({ email: cleanEmail });
+    await Otp.create({ email: cleanEmail, code });
+    console.log(`[login] Created OTP document in database for ${cleanEmail}: ${code}`);
     if (mailer && typeof mailer.sendOtpEmail === "function") {
-      mailer.sendOtpEmail(email, code).catch((e) => console.error("[login:mail]", e && (e.stack || e.message || e)));
+      mailer.sendOtpEmail(cleanEmail, code).catch((e) => console.error("[login:mail]", e && (e.stack || e.message || e)));
     }
     return res.status(200).json({
       requireOtp: true,
-      email,
+      email: cleanEmail,
     });
   }
 
@@ -103,12 +108,15 @@ exports.login = async (req, res) => {
 
 // === POST /api/auth/verify-otp ===
 exports.verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
-  const found = await Otp.findOne({ email, code: otp });
+  const cleanEmail = String(req.body.email || "").toLowerCase().trim();
+  const cleanCode = String(req.body.otp || "").trim();
+
+  const found = await Otp.findOne({ email: cleanEmail, code: cleanCode });
   if (!found) return res.status(400).json({ message: "Invalid or expired OTP" });
-  await Otp.deleteMany({ email });
+  await Otp.deleteMany({ email: cleanEmail });
+
   // If a pending signup exists, create the real user now.
-  const pending = await PendingUser.findOne({ email });
+  const pending = await PendingUser.findOne({ email: cleanEmail });
   let user;
   if (pending) {
     user = await User.create({
@@ -119,58 +127,88 @@ exports.verifyOtp = async (req, res) => {
       password: pending.password,
       isVerified: true,
     });
-    await PendingUser.deleteMany({ email });
+    await PendingUser.deleteMany({ email: cleanEmail });
   } else {
-    user = await User.findOneAndUpdate({ email }, { isVerified: true }, { new: true });
+    user = await User.findOneAndUpdate({ email: cleanEmail }, { isVerified: true }, { new: true });
   }
   res.json({ token: sign(user._id), user: stripUser(user) });
 };
 
 // === POST /api/auth/resend-otp ===
 exports.resendOtp = async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-  const pending = await PendingUser.findOne({ email });
+  const cleanEmail = String(req.body.email || "").toLowerCase().trim();
+  const user = await User.findOne({ email: cleanEmail });
+  const pending = await PendingUser.findOne({ email: cleanEmail });
   if (!user && !pending) return res.status(404).json({ message: "User not found" });
+
   const code = genOtp();
-  await Otp.deleteMany({ email });
-  await Otp.create({ email, code });
+  await Otp.deleteMany({ email: cleanEmail });
+  await Otp.create({ email: cleanEmail, code });
+  console.log(`[resendOtp] Created OTP document in database for ${cleanEmail}: ${code}`);
+
   if (mailer && typeof mailer.sendOtpEmail === "function") {
-    mailer.sendOtpEmail(email, code).catch((e) => console.error("[resendOtp:mail]", e && (e.stack || e.message || e)));
+    mailer.sendOtpEmail(cleanEmail, code).catch((e) => console.error("[resendOtp:mail]", e && (e.stack || e.message || e)));
   }
   res.json({ message: "Verification code sent to your email." });
 };
 
 // === POST /api/auth/forgot-password ===
 exports.forgotPassword = async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ email });
-  if (user) {
-    const code = genOtp();
-    await Otp.deleteMany({ email });
-    await Otp.create({ email, code });
+  const cleanEmail = String(req.body.email || "").toLowerCase().trim();
+  if (!cleanEmail) return res.status(400).json({ message: "Email is required" });
+
+  const user = await User.findOne({ email: cleanEmail });
+  const pending = await PendingUser.findOne({ email: cleanEmail });
+
+  // Create and save OTP in MongoDB otps collection
+  const code = genOtp();
+  await Otp.deleteMany({ email: cleanEmail });
+  await Otp.create({ email: cleanEmail, code });
+  console.log(`[forgotPassword] Created OTP document in database for ${cleanEmail}: ${code}`);
+
+  if (user || pending) {
     if (mailer && typeof mailer.sendResetEmail === "function") {
-      mailer.sendResetEmail(email, code).catch((e) => console.error("[forgotPassword:mail]", e && (e.stack || e.message || e)));
+      mailer.sendResetEmail(cleanEmail, code).catch((e) => console.error("[forgotPassword:mail]", e && (e.stack || e.message || e)));
     }
   }
+
   res.json({ message: "If an account exists for that email, a reset code has been sent." });
 };
 
 // === POST /api/auth/reset-password ===
 exports.resetPassword = async (req, res) => {
-  const { email, otp, newPassword } = req.body;
-  if (!email || !otp || !newPassword || newPassword.length < 6)
-    return res.status(400).json({ message: "Invalid request" });
+  const cleanEmail = String(req.body.email || "").toLowerCase().trim();
+  const cleanCode = String(req.body.otp || "").trim();
+  const { newPassword } = req.body;
 
-  const found = await Otp.findOne({ email, code: otp });
+  if (!cleanEmail || !cleanCode || !newPassword || newPassword.length < 6)
+    return res.status(400).json({ message: "Invalid request parameters" });
+
+  const found = await Otp.findOne({ email: cleanEmail, code: cleanCode });
   if (!found) return res.status(400).json({ message: "Invalid or expired code" });
 
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "User not found" });
+  let user = await User.findOne({ email: cleanEmail });
+  if (!user) {
+    const pending = await PendingUser.findOne({ email: cleanEmail });
+    if (pending) {
+      user = await User.create({
+        firstName: pending.firstName,
+        lastName: pending.lastName,
+        email: pending.email,
+        phone: pending.phone,
+        password: newPassword,
+        isVerified: true,
+      });
+      await PendingUser.deleteMany({ email: cleanEmail });
+    } else {
+      return res.status(404).json({ message: "User not found" });
+    }
+  } else {
+    user.password = newPassword;
+    await user.save();
+  }
 
-  user.password = newPassword;
-  await user.save();
-  await Otp.deleteMany({ email });
+  await Otp.deleteMany({ email: cleanEmail });
 
   res.json({ message: "Password reset successfully. You can now sign in." });
 };
