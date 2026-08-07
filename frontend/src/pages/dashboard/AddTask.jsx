@@ -54,12 +54,12 @@ export default function AddTask() {
       const lat = pos.coords.latitude, lng = pos.coords.longitude;
       set("lat", lat); set("lng", lng);
       try {
-        // reverse-geocode -> "City, Town" string
-        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
-          { headers: { Accept: "application/json" } });
+        // reverse-geocode -> "City, Town" string with English locale
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`,
+          { headers: { Accept: "application/json", "Accept-Language": "en" } });
         const d = await r.json();
         const a = d?.address || {};
-        const parts = [a.city || a.town || a.village || a.county, a.suburb || a.neighbourhood, a.state]
+        const parts = [a.city || a.town || a.village || a.county || a.municipality, a.suburb || a.neighbourhood || a.district, a.state, a.country]
           .filter(Boolean);
         const label = parts.slice(0, 2).join(", ") || d?.display_name?.split(",").slice(0, 2).join(", ") || "";
         if (label) set("location", label);
@@ -159,7 +159,7 @@ export default function AddTask() {
           </Field>
         </div>
 
-        <Field label="Category">
+        <Field label="Category" optional>
           <select className="input text-xs sm:text-sm" value={f.category} onChange={(e) => set("category", e.target.value)}>
             <option value="">Select a category</option>
             {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -167,11 +167,11 @@ export default function AddTask() {
         </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Payment Amount">
+          <Field label="Payment Amount" optional>
             <input type="number" min="0" step="0.01" className="input text-xs sm:text-sm" value={f.paymentAmount}
               onChange={(e) => set("paymentAmount", e.target.value)} />
           </Field>
-          <Field label="Currency">
+          <Field label="Currency" optional>
             <select className="input text-xs sm:text-sm" value={f.currency} onChange={(e) => set("currency", e.target.value)}>
               {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
             </select>
@@ -179,7 +179,7 @@ export default function AddTask() {
         </div>
 
         <div>
-          <label className="label text-xs sm:text-sm">Task Image <span className="text-rose-500">*</span></label>
+          <label className="label text-xs sm:text-sm">Task Image <span className="text-rose-500 font-bold">*</span></label>
           {f.image ? (
             <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
               <img src={f.image} alt="preview" className="w-full max-h-72 object-cover" />
@@ -220,8 +220,8 @@ export default function AddTask() {
 function Field({ label, optional, children }) {
   return (
     <div>
-      <label className="label">
-        {label} {optional && <span className="text-slate-400">(Optional)</span>}
+      <label className="label text-xs sm:text-sm">
+        {label} {optional ? <span className="text-slate-400 font-normal text-xs">(Optional)</span> : <span className="text-rose-500 font-bold">*</span>}
       </label>
       <div className="mt-1">{children}</div>
     </div>

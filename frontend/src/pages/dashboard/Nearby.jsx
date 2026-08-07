@@ -61,8 +61,8 @@ export default function Nearby() {
 
   useEffect(() => {
     if (!coords) return;
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`,
-      { headers: { Accept: "application/json" } })
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}&accept-language=en`,
+      { headers: { Accept: "application/json", "Accept-Language": "en" } })
       .then((r) => r.json())
       .then((d) => setCity(d?.address?.city || d?.address?.town || d?.address?.village || d?.address?.state || ""))
       .catch(() => {});
@@ -75,8 +75,8 @@ export default function Nearby() {
     if (!q) return;
     setSearching(true);
     try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,
-        { headers: { Accept: "application/json" } });
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}&accept-language=en`,
+        { headers: { Accept: "application/json", "Accept-Language": "en" } });
       const arr = await r.json();
       if (!arr?.[0]) { toast.error("Location not found"); return; }
       setCoords({ lat: parseFloat(arr[0].lat), lng: parseFloat(arr[0].lon) });

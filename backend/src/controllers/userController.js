@@ -3,6 +3,8 @@ const Notification = require("../models/Notification");
 const Task = require("../models/Task");
 const Request = require("../models/Request");
 const Review = require("../models/Review");
+const Conversation = require("../models/Conversation");
+const Message = require("../models/Message");
 const { stripUser } = require("./authController");
 
 // === GET /api/users/:id/public ===
@@ -16,7 +18,7 @@ exports.publicProfile = async (req, res) => {
   );
   if (!u) return res.status(404).json({ message: "Not found" });
 
-  const viewerId = req.user._id;
+  const viewerId = req.user._id;a
   const targetId = u._id;
 
   // ~ Find any accepted/completed connection between viewer and target ~
@@ -38,7 +40,7 @@ exports.publicProfile = async (req, res) => {
       .populate("fromUser", "firstName lastName profilePicture")
       .populate("task", "title")
       .sort("-createdAt").limit(50),
-    Request.countDocuments({ requester: u._id, status: { $in: ["accepted", "completed"] } }),
+    Request.countDocuments({ requester: u._id, status: { $in: ["accepted", "in_progress", "completed"] } }),
     Task.countDocuments({ user: u._id }),
   ]);
   const avg = reviews.length
@@ -106,14 +108,23 @@ exports.markRead = async (req, res) => {
 exports.overview = async (req, res) => {
   const uid = req.user._id;
 
-  const [myTasks, completedTasks, sentRequests, helped, receivedRequests] = await Promise.all([
+  const userConvos = await Conversation.find({ participants: uid }).select("_id");
+  const convoIds = userConvos.map((c) => c._id);
+
+  const [myTasks, completedTasks, sentRequests, helped, receivedRequests, messageCount] = await Promise.all([
     Task.countDocuments({ user: uid }),
     Task.countDocuments({ user: uid, status: "completed" }),
     Request.countDocuments({ requester: uid }),
-    Request.countDocuments({ requester: uid, status: "accepted" }),
+    Request.countDocuments({ requester: uid, status: { $in: ["accepted", "in_progress", "completed"] } }),
     Task.find({ user: uid }).select("_id").then((rows) =>
       Request.countDocuments({ task: { $in: rows.map((r) => r._id) } })
     ),
+    Message.countDocuments({
+      $or: [
+        { sender: uid },
+        { conversation: { $in: convoIds } },
+      ],
+    }),
   ]);
 
   const recent = await Notification.find({ user: uid }).sort("-createdAt").limit(8);
@@ -135,7 +146,7 @@ exports.overview = async (req, res) => {
       completionPct: myTasks ? Math.round((completedTasks / myTasks) * 100) : 0,
       totalActions: req.user.stats?.totalActions || 0,
       searches: req.user.stats?.searches || 0,
-      messages: 0,
+      messages: messageCount,
       logins: req.user.stats?.logins || 0,
       rating: ratingAvg,
       reviewCount: myReviews.length,
