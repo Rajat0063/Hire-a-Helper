@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import { getSocket } from "../../services/socket";
-import { Avatar } from "../../components/DashboardLayout";
+import { Avatar } from "../../components/Avatar";
 
 // === Messages ===
 // Two-pane chat. Conversations are keyed on the OTHER participant so multiple
