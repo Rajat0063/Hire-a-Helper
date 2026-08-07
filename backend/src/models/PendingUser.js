@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// Pending users are temporary and auto-expire after 10 minutes
 const pendingUserSchema = new mongoose.Schema(
   {
     firstName: { type: String, required: true, trim: true },
@@ -9,7 +8,7 @@ const pendingUserSchema = new mongoose.Schema(
     email: { type: String, required: true, lowercase: true, trim: true },
     phone: { type: String, default: "" },
     password: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now, expires: 600 },
+    createdAt: { type: Date, default: Date.now, expires: 3600 },
   },
   { timestamps: true }
 );

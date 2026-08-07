@@ -1,33 +1,22 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// === User schema ===
-// Profile/cover images stored as base64 data URLs (no external object storage).
 const userSchema = new mongoose.Schema(
   {
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone: { type: String, default: "" },
-    // ~ phone verification — handled via OTP (see authController.sendPhoneOtp / verifyPhoneOtp) ~
     phoneVerified: { type: Boolean, default: false },
     password: { type: String, required: true },
-
+    role: { type: String, enum: ["user", "helper", "admin"], default: "user" },
     profilePicture: { type: String, default: "" },
     coverImage: { type: String, default: "" },
-
-    bio: { type: String, default: "", maxlength: 500 },
+    bio: { type: String, default: "" },
     address: { type: String, default: "" },
     dateOfBirth: { type: Date },
-
-    role: { type: String, enum: ["user", "admin"], default: "user" },
     isVerified: { type: Boolean, default: false },
-
-    // ! Admin can block users -> blocked users get a 403 USER_BLOCKED on
-    //   every authenticated call (forces frontend logout) and the login
-    //   endpoint refuses with a friendly message.
     isBlocked: { type: Boolean, default: false },
-
     stats: {
       totalActions: { type: Number, default: 0 },
       searches: { type: Number, default: 0 },

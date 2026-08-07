@@ -1,22 +1,35 @@
 // === Nodemailer transport ===
-// Reads SMTP_* env vars. If SMTP_USER is not set we fall back to logging the
-// code in the terminal so the OTP / reset flow still works in local dev.
 const nodemailer = require("nodemailer");
 
 let transporter;
 function getTransporter() {
   if (transporter) return transporter;
-  const port = Number(process.env.SMTP_PORT || 587);
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port,
-    secure: process.env.SMTP_SECURE === "true" || port === 465,
+  const port = Number(process.env.SMTP_PORT || 465);
+  const host = process.env.SMTP_HOST || "";
+  const isGmail = host.includes("gmail") || process.env.SMTP_SERVICE === "gmail";
+
+  const config = {
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     tls: {
       rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== "false",
     },
-    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 10000),
-  });
+    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 15000),
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+  };
+
+  if (isGmail) {
+    config.service = "gmail";
+    config.host = "smtp.gmail.com";
+    config.port = 465;
+    config.secure = true;
+  } else {
+    config.host = host;
+    config.port = port;
+    config.secure = process.env.SMTP_SECURE === "true" || port === 465;
+  }
+
+  transporter = nodemailer.createTransport(config);
   return transporter;
 }
 
@@ -46,8 +59,6 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
-// Verifies SMTP transporter connectivity; returns a promise that resolves
-// when verification succeeds or fails gracefully.
 async function verifyTransporter() {
   if (!isSmtpConfigured()) return false;
   try {
@@ -120,9 +131,9 @@ async function sendResetEmail(to, code) {
   });
 }
 
-async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
+async function sendFeedbackNotification({ type, from, subject, message, rating }) {
   return await sendMail({
-    to,
+    to: process.env.ADMIN_EMAIL || process.env.SMTP_USER,
     subject: `[HireHelper feedback · ${type}] ${subject}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;padding:28px;border:1px solid #e2e8f0;border-radius:16px;background-color:#ffffff">
       <div style="margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #f1f5f9">
@@ -146,4 +157,10 @@ async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
   });
 }
 
-module.exports = { sendOtpEmail, sendResetEmail, sendFeedbackEmail, verifyTransporter, isSmtpConfigured };
+module.exports = {
+  sendMail,
+  sendOtpEmail,
+  sendResetEmail,
+  sendFeedbackNotification,
+  verifyTransporter,
+};

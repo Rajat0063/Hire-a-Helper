@@ -15,10 +15,18 @@ export default function VerifyOtp() {
   const [resendBusy, setResendBusy] = useState(false);
 
   const submit = async (e) => {
-    e.preventDefault(); setLoading(true);
-    try { await verifyOtp(email, otp); toast.success("Verified!"); nav("/dashboard"); }
-    catch (err) { toast.error(err.response?.data?.message || "Invalid OTP"); }
-    finally { setLoading(false); }
+    e.preventDefault();
+    if (otp.length < 6) return;
+    try {
+      setLoading(true);
+      await verifyOtp(email, otp);
+      toast.success("Account verified!");
+      nav("/dashboard");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Verification failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resend = async () => {
