@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, Inbox, Check, X, MapPin, Clock, MessageSquare, CreditCard, XCircle } from "lucide-react";
 import api from "../../services/api";
 import { getSocket } from "../../services/socket";
-import { Avatar } from "../../components/Avatar";
+import { Avatar } from "../../components/DashboardLayout";
 import { payWithRazorpay } from "../../services/razorpay";
 import { useAuth } from "../../context/AuthContext";
 

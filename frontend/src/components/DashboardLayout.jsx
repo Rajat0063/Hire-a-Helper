@@ -10,9 +10,6 @@ import { getSocket } from "../services/socket";
 import HeaderBar from "./HeaderBar";
 import AssistantWidget from "./AssistantWidget";
 import FeedbackWidget from "./FeedbackWidget";
-import { Avatar } from "./Avatar";
-
-export { Avatar };
 
 // === Sidebar links ===
 // `badge` is computed at render time using live state. The Requests row
@@ -35,8 +32,15 @@ export default function DashboardLayout({ children }) {
   const nav = useNavigate();
   const [pendingRequests, setPendingRequests] = useState(0);
 
-  // Pending request count
+  // Disable browser back from dashboard pages.
+  useEffect(() => {
+    const trap = () => window.history.pushState(null, "", window.location.href);
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", trap);
+    return () => window.removeEventListener("popstate", trap);
+  }, []);
 
+  // ~ Live pending-request count for the sidebar badge ~
   const loadPending = () => {
     api.get("/requests/received").then(({ data }) => {
       setPendingRequests((data.requests || []).filter((r) => r.status === "pending").length);
@@ -131,6 +135,22 @@ export default function DashboardLayout({ children }) {
       {/* Floating helpers — visible on every dashboard page */}
       <AssistantWidget />
       <FeedbackWidget />
+    </div>
+  );
+}
+
+export function Avatar({ src, initials, size = 36 }) {
+  const dim = { width: size, height: size };
+  if (src) {
+    return (
+      <img src={src} alt="avatar" style={dim}
+        className="rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+    );
+  }
+  return (
+    <div style={dim}
+      className="rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-200 grid place-items-center font-bold text-sm">
+      {initials}
     </div>
   );
 }

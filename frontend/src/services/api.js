@@ -1,17 +1,13 @@
-// !! Axios instance — base URL comes from VITE_API_URL or defaults to same-origin /api
+// !! Axios instance — base URL comes from VITE_API_URL
 import axios from "axios";
 
 function normalizeApiUrl(url) {
-  if (!url) return "/api";
+  if (!url) return "http://localhost:5000/api";
   let value = String(url).trim();
   if (value.startsWith("VITE_API_URL=")) {
     value = value.split("=").slice(1).join("=");
   }
   value = value.replace(/^"|"$/g, "").replace(/^'|'$/g, "").trim();
-  if (!value || value === "/" || value === "/api") return "/api";
-  if (value.startsWith("/")) {
-    return value.endsWith("/api") ? value : `${value}/api`;
-  }
   value = value.replace(/^(https?:\/\/)+/, (match) => {
     const firstProto = match.split("://").filter(Boolean)[0];
     return `${firstProto}://`;
@@ -24,7 +20,7 @@ function normalizeApiUrl(url) {
 }
 
 const api = axios.create({
-  baseURL: normalizeApiUrl(import.meta.env.VITE_API_URL || ""),
+  baseURL: normalizeApiUrl(import.meta.env.VITE_API_URL || "http://localhost:5000/api"),
 });
 
 api.interceptors.request.use((cfg) => {

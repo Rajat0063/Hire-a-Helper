@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Mail, Phone, MapPin, Star, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../services/api";
-import { Avatar } from "../../components/Avatar";
+import { Avatar } from "../../components/DashboardLayout";
 
 // === Public Profile ===
 // Backend gates contact info + `canReview` on whether the two users have an

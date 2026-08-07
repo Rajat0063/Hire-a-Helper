@@ -8,7 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import api from "../services/api";
 import { getSocket } from "../services/socket";
-import { Avatar } from "./Avatar";
+import { Avatar } from "./DashboardLayout";
 
 // === HeaderBar ===
 // Sticky/fixed dashboard header — global search (redirects to Feed),
