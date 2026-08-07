@@ -129,75 +129,140 @@ export default function Nearby() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">Nearby Tasks</h1>
-          <p className="text-slate-500 dark:text-slate-400">Discover tasks near your location</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Nearby Tasks</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Discover tasks near your location in real time</p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="input h-10 w-auto">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="input h-10 w-auto text-sm">
             {[5, 10, 25, 50, 100].map((n) => <option key={n} value={n}>{n} km</option>)}
           </select>
-          <button onClick={locate} className="btn-ghost text-sm py-2"><Locate size={14} /> Re-locate</button>
-          <button onClick={load} className="btn-primary text-sm py-2"><RefreshCw size={14} /> Refresh</button>
+          <button onClick={locate} className="btn-ghost text-sm py-2 px-3 whitespace-nowrap"><Locate size={14} /> Re-locate</button>
+          <button onClick={load} className="btn-primary text-sm py-2 px-3 whitespace-nowrap"><RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh</button>
         </div>
       </div>
 
-      {/* === Address search bar (moved here from Feed) === */}
-      <form onSubmit={searchAddress} className="card p-3 flex items-center gap-2">
+      {/* === Address search bar (geocodes with Nominatim) === */}
+      <form onSubmit={searchAddress} className="card p-2 sm:p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input value={addr} onChange={(e) => setAddr(e.target.value)}
-            placeholder="Search by address (e.g., Dehradun, Downtown Seattle)"
-            className="input pl-9 h-10" />
+            placeholder="Search by address or city (e.g., Seattle, Downtown, Dehradun)"
+            className="input pl-10 h-10 text-sm w-full" />
         </div>
-        <button disabled={searching} className="btn-primary text-sm py-2 whitespace-nowrap">
+        <button disabled={searching} className="btn-primary text-sm py-2 px-4 whitespace-nowrap w-full sm:w-auto">
           {searching ? "Searching…" : "Search"}
         </button>
       </form>
 
-      <div className="card p-3 text-sm flex items-center gap-2 text-slate-600 dark:text-slate-300">
-        <MapPin size={14} /> {`${title} (${tasks.length} found · ${withCoords.length} on map)`}
+      <div className="card p-3 text-xs sm:text-sm flex items-center gap-2 text-slate-600 dark:text-slate-300 font-medium">
+        <MapPin size={15} className="text-brand-600 dark:text-brand-400 shrink-0" />
+        <span className="truncate">{title} ({tasks.length} found · {withCoords.length} on map)</span>
       </div>
 
       {/* ====== Map ====== */}
-      <div className="card overflow-hidden h-[460px] min-h-[460px] relative z-0">
-        <div ref={mapEl} className="h-full w-full min-h-[460px]" />
+      <div className="card overflow-hidden h-[360px] sm:h-[460px] min-h-[360px] sm:min-h-[460px] relative z-0">
+        <div ref={mapEl} className="h-full w-full min-h-[360px] sm:min-h-[460px]" />
       </div>
 
       {/* ====== List below ====== */}
-      <h2 className="font-bold text-slate-800 dark:text-white">Tasks Near You</h2>
-      {loading ? (
-        <p className="text-slate-500">Loading…</p>
-      ) : tasks.length === 0 ? (
-        <p className="text-slate-500">No tasks nearby. Try widening the radius or searching another location.</p>
-      ) : (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          {tasks.map((t) => (
-            <button key={t._id} onClick={() => nav(`/dashboard/feed?taskId=${t._id}`)}
-              className="card overflow-hidden flex flex-col text-left hover:shadow-soft transition group">
-              {(t.image || t.picture) && (
-                <div className="aspect-[16/9] bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                  <img src={t.image || t.picture} alt={t.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
-                </div>
-              )}
-              <div className="p-4 flex-1 flex flex-col">
-                <div className="flex items-center justify-between">
-                  <span className="chip bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{t.category || "Other"}</span>
-                  {t.distanceKm != null && (
-                    <span className="text-xs text-brand-700 dark:text-brand-300 font-bold">{t.distanceKm} km</span>
-                  )}
-                </div>
-                <h3 className="mt-2 font-bold text-slate-900 dark:text-white">{t.title}</h3>
-                <div className="text-xs text-slate-500 mt-2 flex items-center gap-1"><MapPin size={12} /> {t.location}</div>
-                <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-sm font-extrabold text-slate-900 dark:text-white">
-                  {Number(t.paymentAmount || 0).toFixed(2)}
-                </div>
-              </div>
-            </button>
-          ))}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg sm:text-xl text-slate-800 dark:text-white">Tasks Near You</h2>
+          {!loading && <span className="text-xs text-slate-500">{tasks.length} available</span>}
         </div>
-      )}
+
+        {loading ? (
+          <NearbySkeleton />
+        ) : tasks.length === 0 ? (
+          <div className="card p-10 text-center space-y-3">
+            <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 grid place-items-center mx-auto">
+              <MapPin size={22} />
+            </div>
+            <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white">No tasks nearby</h3>
+            <p className="text-sm text-slate-500 max-w-sm mx-auto">
+              Try widening your search radius or entering a different address above to find more open opportunities.
+            </p>
+            <button onClick={() => setRadius(50)} className="btn-primary text-sm py-2 px-4 inline-flex mt-2">
+              Expand radius to 50 km
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            {tasks.map((t) => (
+              <button key={t._id} onClick={() => nav(`/dashboard/feed?taskId=${t._id}`)}
+                className="card overflow-hidden flex flex-col text-left hover:shadow-soft transition group">
+                {(t.image || t.picture) && (
+                  <div className="aspect-[16/9] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <img src={t.image || t.picture} alt={t.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                  </div>
+                )}
+                <div className="p-4 sm:p-5 flex-1 flex flex-col">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="chip bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 text-[11px]">
+                      {t.category || "Other"}
+                    </span>
+                    {t.distanceKm != null && (
+                      <span className="chip bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 text-[11px] font-bold">
+                        📍 ~{t.distanceKm} km
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="mt-2.5 font-bold text-base sm:text-lg text-slate-900 dark:text-white line-clamp-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition">
+                    {t.title}
+                  </h3>
+                  {t.description && (
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mt-1">
+                      {t.description}
+                    </p>
+                  )}
+                  <div className="text-xs text-slate-500 mt-2.5 flex items-center gap-1.5 truncate">
+                    <MapPin size={13} className="shrink-0 text-slate-400" /> <span className="truncate">{t.location}</span>
+                  </div>
+                  <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+                      ₹{Number(t.paymentAmount || 0).toFixed(2)}
+                    </div>
+                    <span className="text-xs font-semibold text-brand-600 dark:text-brand-400 group-hover:underline">
+                      View details →
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// === Skeleton Loading Component for Nearby Tasks ===
+function NearbySkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 animate-pulse" aria-label="Loading nearby tasks">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={`nearby-skel-${i}`} className="card overflow-hidden flex flex-col border border-slate-200/80 dark:border-slate-800">
+          <div className="aspect-[16/9] bg-slate-200 dark:bg-slate-800" />
+          <div className="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+              <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
+            </div>
+            <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="space-y-1.5">
+              <div className="h-3.5 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+              <div className="h-3.5 w-2/3 bg-slate-200 dark:bg-slate-800 rounded" />
+            </div>
+            <div className="h-3.5 w-1/2 bg-slate-200 dark:bg-slate-800 rounded mt-1" />
+            <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between mt-auto">
+              <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-md" />
+              <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

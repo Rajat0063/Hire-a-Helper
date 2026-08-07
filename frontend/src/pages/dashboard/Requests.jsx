@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Eye, Inbox, Check, X, MapPin, Clock, MessageSquare, CreditCard, XCircle } from "lucide-react";
 import api from "../../services/api";
 import { getSocket } from "../../services/socket";
-import { Avatar } from "../../components/DashboardLayout";
+import { Avatar } from "../../components/Avatar";
 import { payWithRazorpay } from "../../services/razorpay";
 import { useAuth } from "../../context/AuthContext";
 
@@ -14,10 +14,18 @@ import { useAuth } from "../../context/AuthContext";
 // accepted.
 export default function Requests() {
   const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
   const nav = useNavigate();
   const { user } = useAuth();
-  const load = () => api.get("/requests/received").then(({ data }) => setList(data.requests || []));
+
+  const load = () => {
+    setLoading(true);
+    api.get("/requests/received")
+      .then(({ data }) => setList(data.requests || []))
+      .catch(() => toast.error("Failed to load requests"))
+      .finally(() => setLoading(false));
+  };
   useEffect(() => { load(); }, []);
   useEffect(() => {
     const s = getSocket(); if (!s) return;
@@ -53,59 +61,65 @@ export default function Requests() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">Requests</h1>
-          <p className="text-slate-500 dark:text-slate-400">People who want to help with your tasks.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Requests</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">People who want to help with your posted tasks.</p>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="chip bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
-            <Inbox size={12} /> {list.length} total
-          </span>
-        </div>
+        {!loading && (
+          <div className="flex items-center gap-2 text-sm self-start">
+            <span className="chip bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-bold text-xs">
+              <Inbox size={13} /> {list.length} total request{list.length !== 1 && "s"}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Status tabs */}
-      <div className="flex flex-wrap gap-2">
+      {/* Status tabs - horizontally scrollable on mobile */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 -mx-1 px-1 scrollbar-thin">
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`chip border transition ${
+            className={`chip border transition text-xs whitespace-nowrap py-1.5 px-3 ${
               tab === t.key
-                ? "bg-brand-600 border-brand-600 text-white"
-                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-400"
+                ? "bg-brand-600 border-brand-600 text-white font-bold"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-400 font-medium"
             }`}>
-            {t.label} <span className="ml-1 opacity-70">({counts[t.key] || 0})</span>
+            {t.label} <span className={`ml-1 ${tab === t.key ? "text-white/80" : "opacity-70"}`}>({counts[t.key] || 0})</span>
           </button>
         ))}
       </div>
 
-      {filtered.length === 0 ? (
-        <div className="card p-10 text-center">
-          <div className="mx-auto h-14 w-14 grid place-items-center rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300 mb-3">
-            <Inbox size={22} />
+      {loading ? (
+        <RequestsSkeleton />
+      ) : filtered.length === 0 ? (
+        <div className="card p-10 sm:p-14 text-center space-y-3">
+          <div className="mx-auto h-14 w-14 grid place-items-center rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300">
+            <Inbox size={24} />
           </div>
-          <div className="font-semibold text-slate-700 dark:text-slate-200">No requests here</div>
-          <div className="text-sm text-slate-500">When helpers request your tasks, they'll show up here.</div>
+          <h3 className="font-bold text-base sm:text-lg text-slate-700 dark:text-slate-200">No requests found</h3>
+          <p className="text-sm text-slate-500 max-w-sm mx-auto">
+            {tab === "all" ? "When helpers request to work on your tasks, they'll show up here." : `No requests currently marked as "${tab.replace("_", " ")}".`}
+          </p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filtered.map((r) => {
             const accepted = r.status === "accepted" || r.status === "completed";
             const img = r.task?.image || r.task?.picture;
             const initials = `${r.requester?.firstName?.[0] || ""}${r.requester?.lastName?.[0] || ""}`.toUpperCase();
             return (
-              <article key={r._id} className="card overflow-hidden flex flex-col">
+              <article key={r._id} className="card overflow-hidden flex flex-col hover:shadow-soft transition">
                 {img && (
                   <div className="aspect-[16/9] bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <img src={img} alt={r.task?.title} className="w-full h-full object-cover" />
                   </div>
                 )}
-                <div className="p-5 flex-1 flex flex-col">
+                <div className="p-4 sm:p-5 flex-1 flex flex-col">
                   <div className="flex items-center justify-between gap-2">
                     <span className="chip bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200 text-[11px]">
                       {r.task?.category || "Task"}
                     </span>
-                    <span className={`chip text-[11px] ${
+                    <span className={`chip text-[11px] font-semibold ${
                       r.status === "pending" ? "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
                       : r.status === "accepted" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
                       : r.status === "in_progress" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
@@ -115,12 +129,12 @@ export default function Requests() {
                     }`}>{r.status.replace("_"," ")}</span>
                   </div>
 
-                  <h3 className="mt-3 font-bold text-slate-900 dark:text-white line-clamp-1">
+                  <h3 className="mt-2.5 font-bold text-base sm:text-lg text-slate-900 dark:text-white line-clamp-1">
                     {r.task?.title}
                   </h3>
                   {r.task?.location && (
                     <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
-                      <MapPin size={12} /> {r.task.location}
+                      <MapPin size={12} className="shrink-0" /> <span className="truncate">{r.task.location}</span>
                     </div>
                   )}
 
@@ -129,28 +143,28 @@ export default function Requests() {
                     onClick={() => nav(`/dashboard/profile/${r.requester?._id}`)}
                     className="mt-4 flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-brand-50 dark:hover:bg-brand-900/20 transition text-left"
                     title="View public profile">
-                    <Avatar src={r.requester?.profilePicture} initials={initials} size={44} />
+                    <Avatar src={r.requester?.profilePicture} initials={initials} size={42} />
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-slate-900 dark:text-white truncate flex items-center gap-1">
-                        {r.requester?.firstName} {r.requester?.lastName}
-                        <Eye size={12} className="opacity-60" />
+                      <div className="font-semibold text-sm text-slate-900 dark:text-white truncate flex items-center gap-1">
+                        <span className="truncate">{r.requester?.firstName} {r.requester?.lastName}</span>
+                        <Eye size={13} className="opacity-60 shrink-0" />
                       </div>
                       {accepted && r.requester?.email ? (
                         <div className="text-xs text-slate-500 truncate">{r.requester.email}</div>
                       ) : (
-                        <div className="text-xs text-slate-500">Contact revealed after accepting</div>
+                        <div className="text-xs text-slate-400 truncate">Contact revealed after accepting</div>
                       )}
                     </div>
                   </button>
 
                   {r.message && (
-                    <div className="mt-3 text-sm text-slate-600 dark:text-slate-300 italic border-l-2 border-brand-300 pl-3">
+                    <div className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 italic border-l-2 border-brand-400 pl-3 py-0.5">
                       "{r.message}"
                     </div>
                   )}
 
                   <div className="mt-3 text-[11px] text-slate-400 flex items-center gap-1">
-                    <Clock size={11} /> {new Date(r.createdAt).toLocaleString([], {
+                    <Clock size={11} className="shrink-0" /> {new Date(r.createdAt).toLocaleString([], {
                       month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
                     })}
                   </div>
@@ -166,32 +180,32 @@ export default function Requests() {
                     </div>
                   )}
 
-                  <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2">
+                  <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2">
                     {r.status === "pending" ? (
                       <>
                         <button onClick={() => decide(r._id, "accepted")}
-                          className="btn-primary text-sm py-2 flex-1"><Check size={14} /> Accept</button>
+                          className="btn-primary text-xs sm:text-sm py-2 px-3 flex-1 justify-center"><Check size={14} /> Accept</button>
                         <button onClick={() => decide(r._id, "rejected")}
-                          className="btn-ghost text-sm py-2 flex-1"><X size={14} /> Reject</button>
+                          className="btn-ghost text-xs sm:text-sm py-2 px-3 flex-1 justify-center"><X size={14} /> Reject</button>
                       </>
                     ) : r.status === "completed" && r.paymentStatus !== "paid" ? (
                       <>
-                        <button onClick={() => pay(r)} className="btn-primary text-sm py-2 flex-1">
+                        <button onClick={() => pay(r)} className="btn-primary text-xs sm:text-sm py-2 px-3 flex-1 justify-center">
                           <CreditCard size={14} /> Pay {r.task?.currency || "INR"} {r.task?.paymentAmount || 0}
                         </button>
-                        <button onClick={() => nav("/dashboard/messages")} className="btn-ghost text-sm py-2">
+                        <button onClick={() => nav("/dashboard/messages")} className="btn-ghost text-xs sm:text-sm py-2 px-3">
                           <MessageSquare size={14} />
                         </button>
                       </>
                     ) : ["accepted", "in_progress"].includes(r.status) ? (
                       <>
                         <button onClick={() => nav("/dashboard/messages")}
-                          className="btn-primary text-sm py-2 flex-1"><MessageSquare size={14} /> Open chat</button>
+                          className="btn-primary text-xs sm:text-sm py-2 px-3 flex-1 justify-center"><MessageSquare size={14} /> Open chat</button>
                         <button onClick={() => cancel(r)}
-                          className="btn-ghost text-sm py-2 text-rose-600"><XCircle size={14} /> Cancel</button>
+                          className="btn-ghost text-xs sm:text-sm py-2 px-3 text-rose-600 justify-center"><XCircle size={14} /> Cancel</button>
                       </>
                     ) : (
-                      <div className="text-xs text-slate-500 py-2">This request was {r.status.replace("_"," ")}.</div>
+                      <div className="text-xs text-slate-500 py-1.5 w-full text-center sm:text-left">This request was {r.status.replace("_"," ")}.</div>
                     )}
                   </div>
                 </div>
@@ -200,6 +214,40 @@ export default function Requests() {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// === Skeleton Loading Component for Requests ===
+function RequestsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 animate-pulse" aria-label="Loading requests">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={`req-skel-${i}`} className="card overflow-hidden flex flex-col border border-slate-200/80 dark:border-slate-800">
+          <div className="aspect-[16/9] bg-slate-200 dark:bg-slate-800" />
+          <div className="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
+              <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+            </div>
+            <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="h-3.5 w-1/2 bg-slate-200 dark:bg-slate-800 rounded" />
+            {/* Requester card skeleton */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-800/60">
+              <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="h-4 w-28 bg-slate-200 dark:bg-slate-700 rounded" />
+                <div className="h-3 w-36 bg-slate-200 dark:bg-slate-700 rounded" />
+              </div>
+            </div>
+            <div className="h-3.5 w-1/3 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800 flex gap-2 mt-auto">
+              <div className="h-9 bg-slate-200 dark:bg-slate-800 rounded-xl flex-1" />
+              <div className="h-9 bg-slate-200 dark:bg-slate-800 rounded-xl flex-1" />
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

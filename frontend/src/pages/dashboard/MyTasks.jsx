@@ -9,10 +9,18 @@ import { getSocket } from "../../services/socket";
 // and click "Edit" opens a dialog to update endTime, image, description, payment.
 export default function MyTasks() {
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [edit, setEdit] = useState(null);
   const [canEdit, setCanEdit] = useState(true);
 
-  const load = () => api.get("/tasks/mine").then(({ data }) => setTasks(data.tasks || []));
+  const load = () => {
+    setLoading(true);
+    api.get("/tasks/mine")
+      .then(({ data }) => setTasks(data.tasks || []))
+      .catch(() => toast.error("Failed to load tasks"))
+      .finally(() => setLoading(false));
+  };
+
   useEffect(() => {
     load();
     // ~ respect the admin platform toggle: hide edit/delete on all cards when off ~
@@ -35,17 +43,34 @@ export default function MyTasks() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">My Tasks</h1>
-        <p className="text-slate-500 dark:text-slate-400">
-          {canEdit ? "Tasks you posted — hover any card to edit or delete." : "Tasks you posted — editing has been disabled by the platform administrator."}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">My Tasks</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            {canEdit ? "Tasks you posted — edit details or delete completed posts." : "Tasks you posted — editing has been disabled by the platform administrator."}
+          </p>
+        </div>
+        {!loading && tasks.length > 0 && (
+          <span className="chip bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 self-start text-xs font-bold">
+            {tasks.length} task{tasks.length !== 1 && "s"} posted
+          </span>
+        )}
       </div>
 
-      {tasks.length === 0 ? (
-        <p className="text-slate-500">You haven't posted any tasks yet.</p>
+      {loading ? (
+        <MyTasksSkeleton />
+      ) : tasks.length === 0 ? (
+        <div className="card p-10 sm:p-14 text-center space-y-3">
+          <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 grid place-items-center mx-auto">
+            <Clock size={22} />
+          </div>
+          <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-white">You haven't posted any tasks yet</h3>
+          <p className="text-sm text-slate-500 max-w-sm mx-auto">
+            Post a task to find local helpers in your community ready to assist you.
+          </p>
+        </div>
       ) : (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {tasks.map((t) => (
             <Card key={t._id} t={t} canEdit={canEdit}
               onEdit={() => setEdit(t)} onDelete={() => remove(t._id)} />
@@ -64,12 +89,12 @@ export default function MyTasks() {
 function Card({ t, canEdit, onEdit, onDelete }) {
   const img = t.image || t.picture;
   return (
-    <article className="card overflow-hidden flex flex-col relative group">
-      {/* delete (top-right, on hover) — hidden when platform locks editing */}
+    <article className="card overflow-hidden flex flex-col relative group hover:shadow-soft transition">
+      {/* delete (top-right) — prominent on mobile, hover on desktop */}
       {canEdit && (
         <button onClick={onDelete}
           className="absolute top-3 right-3 z-10 h-8 w-8 grid place-items-center rounded-lg
-                     bg-rose-500/90 text-white opacity-0 group-hover:opacity-100 transition shadow-soft"
+                     bg-rose-500 text-white sm:opacity-0 sm:group-hover:opacity-100 transition shadow-soft hover:bg-rose-600 active:scale-95"
           title="Delete task">
           <Trash2 size={14} />
         </button>
@@ -77,41 +102,73 @@ function Card({ t, canEdit, onEdit, onDelete }) {
 
       {img && (
         <div className="aspect-[16/9] bg-slate-100 dark:bg-slate-800 overflow-hidden">
-          <img src={img} alt={t.title} className="w-full h-full object-cover" />
+          <img src={img} alt={t.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
         </div>
       )}
-      <div className="p-5 flex-1 flex flex-col">
+      <div className="p-4 sm:p-5 flex-1 flex flex-col">
         <div className="flex items-center justify-between gap-2">
-          <span className="chip bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+          <span className="chip bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 text-[11px]">
             {t.category || "Other"}
           </span>
-          <span className={`chip ${
+          <span className={`chip text-[11px] ${
             t.status === "open" ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
             : t.status === "completed" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
             : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
           }`}>{t.status}</span>
         </div>
-        <h3 className="mt-3 font-bold text-lg text-slate-900 dark:text-white">{t.title}</h3>
-        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3 mt-1">{t.description}</p>
+        <h3 className="mt-2.5 font-bold text-base sm:text-lg text-slate-900 dark:text-white line-clamp-1">{t.title}</h3>
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 line-clamp-3 mt-1">{t.description}</p>
 
-        <div className="mt-3 text-xs text-slate-500 flex items-center gap-1">
-          <MapPin size={12} /> {t.location}
+        <div className="mt-3 text-xs text-slate-500 flex items-center gap-1.5 truncate">
+          <MapPin size={13} className="shrink-0 text-slate-400" /> <span className="truncate">{t.location}</span>
         </div>
-        <div className="mt-1 text-xs text-slate-500 flex items-center gap-1">
-          <Clock size={12} /> {new Date(t.startTime).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-          {t.endTime && <> · Ends {new Date(t.endTime).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</>}
+        <div className="mt-1 text-xs text-slate-500 flex items-center gap-1.5">
+          <Clock size={13} className="shrink-0 text-slate-400" />
+          <span className="truncate">
+            {new Date(t.startTime).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+            {t.endTime && <> · Ends {new Date(t.endTime).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</>}
+          </span>
         </div>
 
-        <div className="mt-4 flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-          <div className="text-lg font-extrabold text-slate-900 dark:text-white">
+        <div className="mt-4 flex items-center justify-between pt-3.5 border-t border-slate-100 dark:border-slate-800">
+          <div className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
             ₹{Number(t.paymentAmount || 0).toFixed(2)}
           </div>
           {canEdit
-            ? <button onClick={onEdit} className="btn-ghost text-sm py-2"><Pencil size={14} /> Edit</button>
+            ? <button onClick={onEdit} className="btn-ghost text-xs sm:text-sm py-1.5 px-3"><Pencil size={13} /> Edit</button>
             : <span className="text-xs text-slate-400 italic">Editing disabled</span>}
         </div>
       </div>
     </article>
+  );
+}
+
+// === Skeleton Loading Component for My Tasks ===
+function MyTasksSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 animate-pulse" aria-label="Loading my tasks">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={`mytask-skel-${i}`} className="card overflow-hidden flex flex-col border border-slate-200/80 dark:border-slate-800">
+          <div className="aspect-[16/9] bg-slate-200 dark:bg-slate-800" />
+          <div className="p-4 sm:p-5 flex-1 flex flex-col space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+              <div className="h-5 w-14 bg-slate-200 dark:bg-slate-800 rounded-full" />
+            </div>
+            <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            <div className="space-y-1.5">
+              <div className="h-3.5 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+              <div className="h-3.5 w-4/5 bg-slate-200 dark:bg-slate-800 rounded" />
+            </div>
+            <div className="h-3.5 w-1/2 bg-slate-200 dark:bg-slate-800 rounded mt-1" />
+            <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between mt-auto">
+              <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-md" />
+              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
