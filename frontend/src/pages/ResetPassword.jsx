@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { AuthShell } from "./Login";
 
+// === ResetPassword ===
+// Step 2 — user pastes the OTP and picks a new password.
 export default function ResetPassword() {
   const { resetPassword } = useAuth();
   const nav = useNavigate();
@@ -18,16 +20,21 @@ export default function ResetPassword() {
   const submit = async (e) => {
     e.preventDefault();
     if (f.newPassword !== f.confirm) return toast.error("Passwords do not match");
+    if (f.newPassword.length < 6) return toast.error("Use at least 6 characters");
     setLoading(true);
     try {
-      await resetPassword(f.email, f.otp, f.newPassword);
-      toast.success("Password reset! Please log in.");
+      await resetPassword({
+        email: f.email,
+        otp: f.otp,
+        code: f.otp,
+        newPassword: f.newPassword,
+        password: f.newPassword,
+      });
+      toast.success("Password updated — sign in with your new password");
       nav("/login");
-    } catch (e2) {
-      toast.error(e2.response?.data?.message || "Reset failed");
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Reset failed");
+    } finally { setLoading(false); }
   };
 
   return (
@@ -35,7 +42,8 @@ export default function ResetPassword() {
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="label">Email</label>
-          <input className="input mt-1" type="email" required value={f.email} onChange={(e) => set("email", e.target.value)} />
+          <input className="input mt-1" type="email" required value={f.email}
+            onChange={(e) => set("email", e.target.value)} />
         </div>
         <div>
           <label className="label">Verification code</label>
@@ -44,16 +52,20 @@ export default function ResetPassword() {
         </div>
         <div>
           <label className="label">New password</label>
-          <input className="input mt-1" type="password" required value={f.newPassword} onChange={(e) => set("newPassword", e.target.value)} />
+          <input className="input mt-1" type="password" required minLength={6}
+            value={f.newPassword} onChange={(e) => set("newPassword", e.target.value)} />
         </div>
         <div>
-          <label className="label">Confirm new password</label>
-          <input className="input mt-1" type="password" required value={f.confirm} onChange={(e) => set("confirm", e.target.value)} />
+          <label className="label">Confirm password</label>
+          <input className="input mt-1" type="password" required minLength={6}
+            value={f.confirm} onChange={(e) => set("confirm", e.target.value)} />
         </div>
-        <button className="btn-primary w-full" disabled={loading}>{loading ? "Resetting…" : "Set new password"}</button>
+        <button className="btn-primary w-full" disabled={loading}>
+          {loading ? "Updating…" : "Update password"}
+        </button>
       </form>
-      <p className="mt-4 text-center text-xs text-slate-500">
-        Remembered password? <Link to="/login" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">Back to sign in</Link>
+      <p className="text-sm text-slate-600 dark:text-slate-400 text-center mt-6">
+        Back to <Link to="/login" className="text-brand-700 dark:text-brand-300 font-semibold">Sign in</Link>
       </p>
     </AuthShell>
   );

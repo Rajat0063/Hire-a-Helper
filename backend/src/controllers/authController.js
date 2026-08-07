@@ -178,11 +178,13 @@ exports.forgotPassword = async (req, res) => {
 // === POST /api/auth/reset-password ===
 exports.resetPassword = async (req, res) => {
   const cleanEmail = String(req.body.email || "").toLowerCase().trim();
-  const cleanCode = String(req.body.otp || "").trim();
-  const { newPassword } = req.body;
+  const cleanCode = String(req.body.otp || req.body.code || "").trim();
+  const newPassword = req.body.newPassword || req.body.password;
 
-  if (!cleanEmail || !cleanCode || !newPassword || newPassword.length < 6)
-    return res.status(400).json({ message: "Invalid request parameters" });
+  if (!cleanEmail) return res.status(400).json({ message: "Email is required" });
+  if (!cleanCode) return res.status(400).json({ message: "Verification code (OTP) is required" });
+  if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6)
+    return res.status(400).json({ message: "Password must be at least 6 characters long" });
 
   const found = await Otp.findOne({ email: cleanEmail, code: cleanCode });
   if (!found) return res.status(400).json({ message: "Invalid or expired code" });
