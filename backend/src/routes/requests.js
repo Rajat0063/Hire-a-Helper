@@ -1,12 +1,14 @@
 const router = require("express").Router();
-const { auth } = require("../middleware/auth");
+const authModule = require("../middleware/auth");
+const auth = typeof authModule === "function" ? authModule : (authModule.auth || authModule);
 const c = require("../controllers/requestController");
 
-router.get("/received", auth, c.received);
-router.get("/sent", auth, c.sent);
-router.patch("/:id", auth, c.update);
-router.post("/:id/progress", auth, c.checkin);
-router.post("/:id/complete", auth, c.complete);
-router.post("/:id/cancel", auth, c.cancel);
+if (c.received) router.get("/received", auth, c.received);
+if (c.sent) router.get("/sent", auth, c.sent);
+if (c.update) router.patch("/:id", auth, c.update);
+if (c.checkin) router.post("/:id/progress", auth, c.checkin);
+if (c.complete) router.post("/:id/complete", auth, c.complete);
+if (c.cancel) router.post("/:id/cancel", auth, c.cancel);
 
 module.exports = router;
+

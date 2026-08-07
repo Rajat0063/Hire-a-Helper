@@ -1,8 +1,10 @@
 const router = require("express").Router();
-const { auth } = require("../middleware/auth");
+const authModule = require("../middleware/auth");
+const auth = typeof authModule === "function" ? authModule : (authModule.auth || authModule);
 const c = require("../controllers/paymentController");
 
-router.post("/order", auth, c.createOrder);
-router.post("/verify", auth, c.verifyPayment);
-router.post("/simulate", auth, c.simulatePaid); // dev fallback
+if (c.createOrder) router.post("/order", auth, c.createOrder);
+if (c.verifyPayment) router.post("/verify", auth, c.verifyPayment);
+if (c.simulatePaid) router.post("/simulate", auth, c.simulatePaid); // dev fallback
 module.exports = router;
+
