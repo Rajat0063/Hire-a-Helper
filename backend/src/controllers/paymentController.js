@@ -96,7 +96,13 @@ exports.verifyPayment = async (req, res) => {
   // Notify the worker
   const note = await Notification.create({
     user: r.requester,
+    type: "payment",
+    title: "Payment received",
     body: `💰 You've been paid for "${r.task.title}".`,
+    link: `/dashboard/my-requests`,
+    actor: req.user._id,
+    category: "payments",
+    data: { requestId: r._id, taskId: r.task._id, paymentStatus: "paid" },
   });
   emitToUser(r.requester, "notification:new", note);
   emitToUser(r.requester, "request:status", { requestId: r._id, status: "completed", paymentStatus: "paid" });

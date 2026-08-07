@@ -111,18 +111,18 @@ export default function SettingsPage() {
       async (pos) => {
         const lat = pos.coords.latitude, lng = pos.coords.longitude;
         try {
+          // reverse-geocode in English strictly (accept-language=en)
           const r = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`,
-            { headers: { Accept: "application/json", "Accept-Language": "en" } }
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=en,en-US;q=0.9,en-GB;q=0.8&addressdetails=1`,
+            { headers: { Accept: "application/json", "Accept-Language": "en,en-US;q=0.9,en-GB;q=0.8" } }
           );
           const d = await r.json();
           const a = d?.address || {};
-          const parts = [
-            a.city || a.town || a.village || a.county || a.municipality,
-            a.suburb || a.neighbourhood || a.district,
-            a.state,
-            a.country,
-          ].filter(Boolean);
+          const cityOrTown = a["city:en"] || a.city || a["town:en"] || a.town || a["village:en"] || a.village || a.county || a.municipality || "";
+          const sub = a["suburb:en"] || a.suburb || a["neighbourhood:en"] || a.neighbourhood || a.district || "";
+          const state = a["state:en"] || a.state || a.region || "";
+          const country = a["country:en"] || a.country || "";
+          const parts = [cityOrTown, sub, state, country].filter(Boolean);
           const label = parts.slice(0, 3).join(", ") || d?.display_name?.split(",").slice(0, 3).join(", ") || "";
           if (label) set("address", label);
           toast.success(label ? `Address detected: ${label}` : "Coordinates captured");

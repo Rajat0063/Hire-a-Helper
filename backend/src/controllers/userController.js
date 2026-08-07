@@ -18,7 +18,7 @@ exports.publicProfile = async (req, res) => {
   );
   if (!u) return res.status(404).json({ message: "Not found" });
 
-  const viewerId = req.user._id;a
+  const viewerId = req.user._id;
   const targetId = u._id;
 
   // ~ Find any accepted/completed connection between viewer and target ~
@@ -94,65 +94,185 @@ exports.updateMe = async (req, res) => {
 
 // === GET /api/users/notifications ===
 exports.notifications = async (req, res) => {
-  const list = await Notification.find({ user: req.user._id }).sort("-createdAt").limit(50);
-  res.json({ notifications: list });
+  try {
+    const { type, unreadOnly, limit = 50 } = req.query;
+    const filter = { user: req.user._id };
+    if (type && type !== "all") {
+      filter.type = type;
+    }
+    if (unreadOnly === "true" || unreadOnly === true) {
+      filter.read = false;
+    }
+    const [list, unreadCount, totalCount] = await Promise.all([
+      Notification.find(filter)
+        .populate("actor", "firstName lastName profilePicture")
+        .sort("-createdAt")
+        .limit(Math.min(100, Math.max(1, Number(limit) || 50))),
+      Notification.countDocuments({ user: req.user._id, read: false }),
+      Notification.countDocuments({ user: req.user._id }),
+    ]);
+    res.json({ notifications: list, unreadCount, totalCount });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // === PATCH /api/users/notifications/read ===
 exports.markRead = async (req, res) => {
-  await Notification.updateMany({ user: req.user._id, read: false }, { read: true });
-  res.json({ ok: true });
+  try {
+    const { ids } = req.body || {};
+    const filter = { user: req.user._id };
+    if (Array.isArray(ids) && ids.length) {
+      filter._id = { $in: ids };
+    }
+    await Notification.updateMany(filter, { $set: { read: true } });
+    const unreadCount = await Notification.countDocuments({ user: req.user._id, read: false });
+    res.json({ ok: true, unreadCount });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// === PATCH /api/users/notifications/:id/read ===
+exports.toggleNotificationRead = async (req, res) => {
+  try {
+    const notif = await Notification.findOne({ _id: req.params.id, user: req.user._id });
+    if (!notif) return res.status(404).json({ message: "Notification not found" });
+    notif.read = req.body.read !== undefined ? Boolean(req.body.read) : !notif.read;
+    await notif.save();
+    const unreadCount = await Notification.countDocuments({ user: req.user._id, read: false });
+    res.json({ ok: true, notification: notif, unreadCount });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// === DELETE /api/users/notifications/:id ===
+exports.deleteNotification = async (req, res) => {
+  try {
+    const notif = await Notification.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    if (!notif) return res.status(404).json({ message: "Notification not found" });
+    const unreadCount = await Notification.countDocuments({ user: req.user._id, read: false });
+    res.json({ ok: true, unreadCount });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// === DELETE /api/users/notifications/clear-all ===
+exports.clearAllNotifications = async (req, res) => {
+  try {
+    await Notification.deleteMany({ user: req.user._id });
+    res.json({ ok: true, unreadCount: 0 });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // === GET /api/users/overview ===
 exports.overview = async (req, res) => {
-  const uid = req.user._id;
+  try {
+    const uid = req.user._id;
 
-  const userConvos = await Conversation.find({ participants: uid }).select("_id");
-  const convoIds = userConvos.map((c) => c._id);
+    // ~ Fetch user conversations and participant details ~
+    const rawConvos = await Conversation.find({ participants: uid })
+      .populate("participants", "firstName lastName email profilePicture")
+      .populate("task", "title image location paymentAmount")
+      .sort("-lastAt")
+      .limit(8);
 
-  const [myTasks, completedTasks, sentRequests, helped, receivedRequests, messageCount] = await Promise.all([
-    Task.countDocuments({ user: uid }),
-    Task.countDocuments({ user: uid, status: "completed" }),
-    Request.countDocuments({ requester: uid }),
-    Request.countDocuments({ requester: uid, status: { $in: ["accepted", "in_progress", "completed"] } }),
-    Task.find({ user: uid }).select("_id").then((rows) =>
-      Request.countDocuments({ task: { $in: rows.map((r) => r._id) } })
-    ),
-    Message.countDocuments({
-      $or: [
-        { sender: uid },
-        { conversation: { $in: convoIds } },
-      ],
-    }),
-  ]);
+    const convoIds = rawConvos.map((c) => c._id);
 
-  const recent = await Notification.find({ user: uid }).sort("-createdAt").limit(8);
+    const myTaskDocs = await Task.find({ user: uid }).select("_id title");
+    const myTaskIds = myTaskDocs.map((t) => t._id);
 
-  // ~ ratings for me as a worker ~
-  const myReviews = await Review.find({ toUser: uid }).select("rating");
-  const ratingAvg = myReviews.length
-    ? Math.round((myReviews.reduce((a, r) => a + r.rating, 0) / myReviews.length) * 10) / 10
-    : 0;
-
-  res.json({
-    user: stripUser(req.user),
-    counts: {
+    const [
       myTasks,
       completedTasks,
       sentRequests,
-      receivedRequests,
       helped,
-      completionPct: myTasks ? Math.round((completedTasks / myTasks) * 100) : 0,
-      totalActions: req.user.stats?.totalActions || 0,
-      searches: req.user.stats?.searches || 0,
-      messages: messageCount,
-      logins: req.user.stats?.logins || 0,
-      rating: ratingAvg,
-      reviewCount: myReviews.length,
-    },
-    recent,
-  });
+      receivedRequests,
+      messageCount,
+      helpersReceived,
+      tasksHelped,
+    ] = await Promise.all([
+      Task.countDocuments({ user: uid }),
+      Task.countDocuments({ user: uid, status: "completed" }),
+      Request.countDocuments({ requester: uid }),
+      Request.countDocuments({ requester: uid, status: { $in: ["accepted", "in_progress", "completed"] } }),
+      Request.countDocuments({ task: { $in: myTaskIds } }),
+      Message.countDocuments({
+        $or: [
+          { sender: uid },
+          { conversation: { $in: convoIds } },
+        ],
+      }),
+      Request.find({ task: { $in: myTaskIds }, status: { $in: ["accepted", "in_progress", "completed"] } })
+        .populate("requester", "firstName lastName profilePicture email phone")
+        .populate("task", "title paymentAmount")
+        .sort("-updatedAt")
+        .limit(10),
+      Request.find({ requester: uid, status: { $in: ["accepted", "in_progress", "completed"] } })
+        .populate({
+          path: "task",
+          select: "title user paymentAmount location",
+          populate: { path: "user", select: "firstName lastName profilePicture" },
+        })
+        .sort("-updatedAt")
+        .limit(10),
+    ]);
+
+    const recent = await Notification.find({ user: uid }).sort("-createdAt").limit(8);
+
+    // Format conversations for the overview view
+    const conversations = rawConvos.map((c) => {
+      const other = c.participants.find((p) => String(p._id) !== String(uid));
+      return {
+        _id: c._id,
+        otherUser: other ? {
+          _id: other._id,
+          firstName: other.firstName,
+          lastName: other.lastName,
+          email: other.email,
+          profilePicture: other.profilePicture,
+        } : null,
+        task: c.task,
+        lastMessage: c.lastMessage,
+        lastAt: c.lastAt || c.updatedAt,
+      };
+    });
+
+    // ~ ratings for me as a worker ~
+    const myReviews = await Review.find({ toUser: uid }).select("rating");
+    const ratingAvg = myReviews.length
+      ? Math.round((myReviews.reduce((a, r) => a + r.rating, 0) / myReviews.length) * 10) / 10
+      : 0;
+
+    res.json({
+      user: stripUser(req.user),
+      counts: {
+        myTasks,
+        completedTasks,
+        sentRequests,
+        receivedRequests,
+        helped,
+        helpersCount: helpersReceived.length,
+        completionPct: myTasks ? Math.round((completedTasks / myTasks) * 100) : 0,
+        totalActions: req.user.stats?.totalActions || 0,
+        searches: req.user.stats?.searches || 0,
+        messages: messageCount,
+        logins: req.user.stats?.logins || 0,
+        rating: ratingAvg,
+        reviewCount: myReviews.length,
+      },
+      conversations,
+      helpers: helpersReceived,
+      tasksHelped,
+      recent,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // === POST /api/users/bump ===

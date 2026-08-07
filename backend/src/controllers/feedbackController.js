@@ -19,21 +19,43 @@ exports.submit = async (req, res) => {
       rating: Number(rating) || 0,
     });
 
-    // Notify admins
-    const admins = await User.find({ role: "admin" }).select("_id email");
+    const submitterId = String(req.user._id);
+    const submitterEmail = (req.user.email || "").toLowerCase().trim();
+    const ownerEmail = (process.env.ADMIN_EMAIL || process.env.OWNER_EMAIL || "rajatyadav5641@gmail.com").toLowerCase().trim();
+
+    // 1. Notify other platform administrators in-app (excluding the submitter)
+    const admins = await User.find({ role: "admin", _id: { $ne: req.user._id } }).select("_id email firstName");
     for (const a of admins) {
       const n = await Notification.create({
         user: a._id,
-        type: "system",
+        type: "feedback",
         title: `New feedback (${fb.type})`,
-        body: `New feedback (${fb.type}) from ${req.user.firstName}: ${fb.subject}`,
+        body: `New ${fb.type} from ${req.user.firstName || "User"}: "${fb.subject}"`,
+        link: "/admin",
+        actor: req.user._id,
+        category: "system",
+        data: { feedbackId: fb._id, type: fb.type, rating: fb.rating },
       });
       emitToUser(a._id, "notification:new", n);
-      if (a.email && mailer && typeof mailer.sendFeedbackEmail === "function") {
+
+      // Email other admin if email is different from submitter
+      const adminEmail = (a.email || "").toLowerCase().trim();
+      if (adminEmail && adminEmail !== submitterEmail && mailer && typeof mailer.sendFeedbackEmail === "function") {
         mailer.sendFeedbackEmail(a.email, {
-          from: `${req.user.firstName} ${req.user.lastName} <${req.user.email}>`,
+          from: `${req.user.firstName || "User"} ${req.user.lastName || ""} <${req.user.email}>`,
           type: fb.type, subject: fb.subject, message: fb.message, rating: fb.rating,
-        }).catch((e) => console.error("[feedback mail]", e.message));
+        }).catch((e) => console.error("[feedback mail to admin]", e.message));
+      }
+    }
+
+    // 2. Deliver email to the application owner (if configured and not the submitter)
+    if (ownerEmail && ownerEmail !== submitterEmail && mailer && typeof mailer.sendFeedbackEmail === "function") {
+      const alreadySent = admins.some((a) => (a.email || "").toLowerCase().trim() === ownerEmail);
+      if (!alreadySent) {
+        mailer.sendFeedbackEmail(ownerEmail, {
+          from: `${req.user.firstName || "User"} ${req.user.lastName || ""} <${req.user.email}>`,
+          type: fb.type, subject: fb.subject, message: fb.message, rating: fb.rating,
+        }).catch((e) => console.error("[feedback mail to owner]", e.message));
       }
     }
 

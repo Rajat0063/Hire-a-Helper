@@ -57,7 +57,13 @@ exports.update = async (req, res) => {
 
   const note = await Notification.create({
     user: r.requester,
+    type: "request",
+    title: `Request ${status}`,
     body: `Your request for "${r.task.title}" was ${status}`,
+    link: `/dashboard/my-requests`,
+    actor: req.user._id,
+    category: "requests",
+    data: { requestId: r._id, taskId: r.task._id, status },
   });
   emitToUser(r.requester, "notification:new", note);
   emitToUser(r.requester, "request:status", { requestId: r._id, status, conversationId: r.conversation });
@@ -110,7 +116,16 @@ exports.checkin = async (req, res) => {
   const body = offSite
     ? `⚠️ ${req.user.firstName} started "${r.task.title}" but appears to be off-site${dist != null ? ` (~${r.distanceKm} km away)` : " (no location shared)"}.`
     : `✅ ${req.user.firstName} has arrived and started "${r.task.title}".`;
-  const note = await Notification.create({ user: r.task.user, body });
+  const note = await Notification.create({
+    user: r.task.user,
+    type: "task",
+    title: offSite ? "Helper off-site check-in" : "Helper started task",
+    body,
+    link: `/dashboard/requests`,
+    actor: req.user._id,
+    category: "tasks",
+    data: { requestId: r._id, taskId: r.task._id, status: "in_progress", offSite },
+  });
   emitToUser(r.task.user, "notification:new", note);
   emitToUser(r.task.user, "request:status", { requestId: r._id, status: "in_progress", offSite, distanceKm: r.distanceKm });
   res.json({ request: r });
@@ -131,7 +146,13 @@ exports.complete = async (req, res) => {
 
   const note = await Notification.create({
     user: r.task.user,
+    type: "payment",
+    title: "Task completed — payment pending",
     body: `🎉 ${req.user.firstName} marked "${r.task.title}" complete. Please pay ${r.task.currency || "INR"} ${r.task.paymentAmount || 0}.`,
+    link: `/dashboard/requests`,
+    actor: req.user._id,
+    category: "payments",
+    data: { requestId: r._id, taskId: r.task._id, status: "completed" },
   });
   emitToUser(r.task.user, "notification:new", note);
   emitToUser(r.task.user, "request:status", { requestId: r._id, status: "completed" });
@@ -155,7 +176,13 @@ exports.cancel = async (req, res) => {
   const other = isOwner ? r.requester : r.task.user;
   const note = await Notification.create({
     user: other,
+    type: "request",
+    title: "Request cancelled",
     body: `Request for "${r.task.title}" was cancelled by the ${isOwner ? "task owner" : "helper"}.`,
+    link: isOwner ? `/dashboard/my-requests` : `/dashboard/requests`,
+    actor: req.user._id,
+    category: "requests",
+    data: { requestId: r._id, taskId: r.task._id, status: "cancelled" },
   });
   emitToUser(other, "notification:new", note);
   emitToUser(other, "request:status", { requestId: r._id, status: "cancelled" });

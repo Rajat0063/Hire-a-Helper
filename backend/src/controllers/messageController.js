@@ -82,7 +82,13 @@ exports.send = async (req, res) => {
     emitToUser(p, "message:new", { conversationId: c._id, message: m });
     const note = await Notification.create({
       user: p,
+      type: "message",
+      title: `New message from ${sender?.firstName || "Helper"}`,
       body: `💬 ${sender?.firstName || "Someone"}: ${preview}`,
+      link: `/dashboard/messages?c=${c._id}`,
+      actor: req.user._id,
+      category: "messages",
+      data: { conversationId: c._id, messageId: m._id },
     });
     emitToUser(p, "notification:new", note);
   }

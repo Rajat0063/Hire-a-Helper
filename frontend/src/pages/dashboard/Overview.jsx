@@ -3,21 +3,20 @@ import { Link } from "react-router-dom";
 import {
   ClipboardList, Send, Inbox, TrendingUp, Search, MessageSquare, LogIn, Eye,
   Mail, Phone, MapPin, Check, Shield, Star, Award, Calendar, CheckCircle2,
+  Users, ArrowRight, MessageCircle, Clock,
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 
 // === Overview ===
-// Pulls /api/users/overview for counts + /api/reviews/user/<me> for the
-// review section so every signed-in user sees their own unique data. The
-// profile card has been redesigned: cover banner, large avatar, rating
-// badge, contact strip, "Edit profile" CTA. Achievements are computed
-// client-side from the counts (no extra endpoint).
+// Pulls /api/users/overview for counts + conversations + helpers + reviews
+// so every signed-in user sees their own unique data and real conversations.
 export default function Overview() {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [reviews, setReviews] = useState({ list: [], average: 0, count: 0 });
   const [loading, setLoading] = useState(true);
+  const [helperTab, setHelperTab] = useState("helpers"); // 'helpers' | 'helped'
 
   useEffect(() => {
     setLoading(true);
@@ -37,6 +36,9 @@ export default function Overview() {
 
   const c = data?.counts || {};
   const u = data?.user || user || {};
+  const conversations = data?.conversations || [];
+  const helpers = data?.helpers || [];
+  const tasksHelped = data?.tasksHelped || [];
   const initials = `${u?.firstName?.[0] || ""}${u?.lastName?.[0] || ""}`.toUpperCase() || "U";
   const joined = u?.createdAt ? new Date(u.createdAt).toLocaleDateString([], { month: "long", year: "numeric" }) : "—";
 
@@ -90,12 +92,15 @@ export default function Overview() {
                           <CheckCircle2 size={13} /> Verified
                         </span>
                       )}
-                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 sm:px-3 sm:py-1 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200 text-xs font-semibold">
+                      <Link to="/dashboard/my-requests" className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 sm:px-3 sm:py-1 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition">
                         <Award size={13} className="text-emerald-600 dark:text-emerald-400" /> Helped {c.helped ?? 0}
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 sm:px-3 sm:py-1 text-brand-700 dark:border-brand-800 dark:bg-brand-900/30 dark:text-brand-200 text-xs font-semibold">
+                      </Link>
+                      <Link to="/dashboard/requests" className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 sm:px-3 sm:py-1 text-teal-700 dark:border-teal-800 dark:bg-teal-900/30 dark:text-teal-200 text-xs font-semibold hover:bg-teal-100 dark:hover:bg-teal-900/50 transition">
+                        <Users size={13} className="text-teal-600 dark:text-teal-400" /> Helpers {c.helpersCount ?? helpers.length}
+                      </Link>
+                      <Link to="/dashboard/my-tasks" className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 sm:px-3 sm:py-1 text-brand-700 dark:border-brand-800 dark:bg-brand-900/30 dark:text-brand-200 text-xs font-semibold hover:bg-brand-100 dark:hover:bg-brand-900/50 transition">
                         <ClipboardList size={13} className="text-brand-600 dark:text-brand-400" /> Posted {c.myTasks ?? 0}
-                      </span>
+                      </Link>
                       {reviews.count > 0 && (
                         <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 sm:px-3 sm:py-1 text-amber-700 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200 text-xs font-semibold">
                           <Star size={13} className="fill-current" /> {reviews.average} · {reviews.count} review{reviews.count !== 1 && "s"}
@@ -151,6 +156,196 @@ export default function Overview() {
         <MiniStat icon={MessageSquare} value={c.messages ?? 0} label="Messages" to="/dashboard/messages" />
         <MiniStat icon={LogIn} value={c.logins ?? 0} label="Logins" />
       </div>
+
+      {/* ====== Direct Messages / Active Conversations Feature ====== */}
+      <section className="card p-4 sm:p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300 grid place-items-center">
+              <MessageSquare size={16} />
+            </div>
+            <div>
+              <h2 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg">Recent Messages & Chats</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Direct conversations with task owners and helpers</p>
+            </div>
+          </div>
+          <Link to="/dashboard/messages" className="btn-ghost text-xs sm:text-sm py-1.5 px-3 inline-flex items-center gap-1 font-semibold">
+            Open All Chats <ArrowRight size={13} />
+          </Link>
+        </div>
+
+        {conversations.length === 0 ? (
+          <div className="p-6 sm:p-8 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 text-center space-y-2.5">
+            <div className="h-10 w-10 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 grid place-items-center mx-auto">
+              <MessageCircle size={20} />
+            </div>
+            <h3 className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">No active messages yet</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Conversations are opened when a request is accepted on a task. Browse tasks or post one to start chatting with community members!
+            </p>
+            <div className="pt-1 flex justify-center gap-2">
+              <Link to="/dashboard/feed" className="btn-primary text-xs py-1.5 px-3.5">Browse Feed</Link>
+              <Link to="/dashboard/add-task" className="btn-ghost text-xs py-1.5 px-3.5">Post Task</Link>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {conversations.map((conv) => {
+              const other = conv.otherUser;
+              const name = other ? `${other.firstName} ${other.lastName}` : "Community Member";
+              const initials = other ? `${other.firstName?.[0] || ""}${other.lastName?.[0] || ""}`.toUpperCase() : "U";
+              return (
+                <Link
+                  key={conv._id}
+                  to={`/dashboard/messages?c=${conv._id}`}
+                  className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900/70 hover:border-brand-300 dark:hover:border-brand-700 hover:shadow-soft transition flex items-start gap-3 group"
+                >
+                  {other?.profilePicture ? (
+                    <img src={other.profilePicture} alt="" className="h-10 w-10 rounded-full object-cover shrink-0 border border-slate-200 dark:border-slate-700" />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 grid place-items-center font-bold text-sm shrink-0">
+                      {initials}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition">
+                        {name}
+                      </span>
+                      {conv.lastAt && (
+                        <span className="text-[11px] text-slate-400 shrink-0">
+                          {new Date(conv.lastAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                        </span>
+                      )}
+                    </div>
+                    {conv.task?.title && (
+                      <div className="text-[11px] text-brand-600 dark:text-brand-400 truncate mt-0.5">
+                        Task: {conv.task.title}
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">
+                      {conv.lastMessage || "Click to open conversation and chat..."}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* ====== Who Helped & Your Helpers Section ====== */}
+      <section className="card p-4 sm:p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-300 grid place-items-center">
+              <Users size={16} />
+            </div>
+            <div>
+              <h2 className="font-bold text-slate-900 dark:text-white text-base sm:text-lg">Community Helpers & Tasks</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">People who helped you and tasks you've worked on</p>
+            </div>
+          </div>
+          <div className="flex rounded-lg bg-slate-100 dark:bg-slate-800/80 p-0.5 text-xs font-semibold self-start sm:self-auto">
+            <button
+              onClick={() => setHelperTab("helpers")}
+              className={`px-3 py-1.5 rounded-md transition ${
+                helperTab === "helpers"
+                  ? "bg-white dark:bg-slate-900 text-brand-700 dark:text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              Helpers on Your Tasks ({helpers.length})
+            </button>
+            <button
+              onClick={() => setHelperTab("helped")}
+              className={`px-3 py-1.5 rounded-md transition ${
+                helperTab === "helped"
+                  ? "bg-white dark:bg-slate-900 text-brand-700 dark:text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              }`}
+            >
+              Tasks You Helped ({tasksHelped.length})
+            </button>
+          </div>
+        </div>
+
+        {helperTab === "helpers" ? (
+          helpers.length === 0 ? (
+            <div className="p-6 text-center text-xs sm:text-sm text-slate-500 bg-slate-50 dark:bg-slate-900/40 rounded-xl">
+              No helper requests accepted on your tasks yet. When you accept requests from community helpers, they will appear here!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {helpers.map((h) => {
+                const helper = h.requester;
+                const hName = helper ? `${helper.firstName} ${helper.lastName}` : "Helper";
+                const hInitials = helper ? `${helper.firstName?.[0] || ""}${helper.lastName?.[0] || ""}`.toUpperCase() : "H";
+                return (
+                  <div key={h._id} className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex items-start gap-3">
+                    {helper?.profilePicture ? (
+                      <img src={helper.profilePicture} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 grid place-items-center font-bold text-sm shrink-0">
+                        {hInitials}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between">
+                        <div className="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">{hName}</div>
+                        <span className="text-[11px] capitalize px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 font-medium">
+                          {h.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 truncate mt-0.5">
+                        Task: <b>{h.task?.title || "Task"}</b>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500">
+                        <span>{new Date(h.updatedAt || h.createdAt).toLocaleDateString()}</span>
+                        <Link to="/dashboard/messages" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                          Message
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        ) : (
+          tasksHelped.length === 0 ? (
+            <div className="p-6 text-center text-xs sm:text-sm text-slate-500 bg-slate-50 dark:bg-slate-900/40 rounded-xl">
+              You haven't helped on any tasks yet. Send requests on community tasks to become a verified helper!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {tasksHelped.map((req) => (
+                <div key={req._id} className="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 grid place-items-center font-bold text-sm shrink-0">
+                    <Award size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">
+                      {req.task?.title || "Community Task"}
+                    </div>
+                    <div className="text-xs text-slate-500 truncate mt-0.5">
+                      Owner: {req.task?.user?.firstName ? `${req.task.user.firstName} ${req.task.user.lastName}` : "Task Owner"}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[11px]">
+                      <span className="capitalize px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 font-medium">
+                        {req.status}
+                      </span>
+                      <Link to="/dashboard/my-requests" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                        View Details
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        )}
+      </section>
 
       {/* ====== Achievements ====== */}
       <section className="card p-4 sm:p-6">

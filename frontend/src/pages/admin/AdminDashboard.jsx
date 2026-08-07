@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   Users, ClipboardList, Activity, TrendingUp, Trash2, LogOut, Sun, Moon,
-  ShieldCheck, Ban, CheckCircle2, Menu, X, Plus, Check, AlertCircle,
+  ShieldCheck, Ban, CheckCircle2, Menu, X, Plus, Check, AlertCircle, ArrowLeft,
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -59,7 +59,7 @@ function AdminDashboardSkeleton() {
 }
 
 export default function AdminDashboard() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { resolved, toggle } = useTheme();
   const nav = useNavigate();
   const [tab, setTab] = useState("users");
@@ -73,13 +73,15 @@ export default function AdminDashboard() {
   const [settings, setSettings] = useState(null);
   const [newCat, setNewCat] = useState("");
 
-  // ! Disable browser back
-  useEffect(() => {
-    const trap = () => window.history.pushState(null, "", window.location.href);
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", trap);
-    return () => window.removeEventListener("popstate", trap);
-  }, []);
+  const isDirectAdmin = typeof window !== "undefined" && sessionStorage.getItem("hh_admin_direct") === "true";
+
+  const handleBackToApp = () => {
+    if (window.history.length > 1) {
+      nav(-1);
+    } else {
+      nav("/dashboard");
+    }
+  };
 
   const load = async () => {
     try {
@@ -150,6 +152,16 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
+            {/* Back button for users navigating to admin dashboard */}
+            <button
+              onClick={handleBackToApp}
+              className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold transition shadow-2xs"
+              title="Return to User Dashboard"
+            >
+              <ArrowLeft size={15} />
+              <span>Back to App</span>
+            </button>
+
             <button onClick={toggle} className="h-9 w-9 sm:h-10 sm:w-10 grid place-items-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300" title="Toggle theme">
               {resolved === "dark" ? <Moon size={17} /> : <Sun size={17} />}
             </button>
@@ -161,6 +173,12 @@ export default function AdminDashboard() {
         {/* mobile tab strip */}
         {mobileNav && (
           <div className="lg:hidden border-t border-slate-100 dark:border-slate-800 px-3 py-2 grid grid-cols-2 gap-1.5 bg-white dark:bg-slate-900 shadow-md">
+            <button
+              onClick={handleBackToApp}
+              className="col-span-2 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-200 mb-1"
+            >
+              <ArrowLeft size={14} /> Back to User Dashboard
+            </button>
             {TABS.map(({ k, label, icon: Icon }) => (
               <button key={k} onClick={() => { setTab(k); setMobileNav(false); }}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${

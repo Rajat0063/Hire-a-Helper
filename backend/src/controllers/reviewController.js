@@ -1,6 +1,8 @@
 const Review = require("../models/Review");
 const Request = require("../models/Request");
 const Task = require("../models/Task");
+const Notification = require("../models/Notification");
+const { emitToUser } = require("../realtime/socket");
 
 // === POST /api/reviews ===
 // body: { taskId, toUserId, rating, comment }
@@ -39,6 +41,19 @@ exports.create = async (req, res) => {
       rating: Math.max(1, Math.min(5, Number(rating) || 0)),
       comment: String(comment || "").slice(0, 1000),
     });
+
+    const note = await Notification.create({
+      user: toUserId,
+      type: "review",
+      title: "New review received",
+      body: `⭐ ${req.user.firstName || "Someone"} left you a ${r.rating}-star review for "${task.title}".`,
+      link: `/dashboard/profile/${toUserId}`,
+      actor: req.user._id,
+      category: "system",
+      data: { taskId: task._id, rating: r.rating },
+    });
+    emitToUser(toUserId, "notification:new", note);
+
     res.status(201).json({ review: r });
   } catch (e) {
     if (e.code === 11000) return res.status(409).json({ message: "Already reviewed" });

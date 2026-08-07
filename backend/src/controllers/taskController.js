@@ -98,7 +98,13 @@ exports.requestTask = async (req, res) => {
     if (!settings || settings.pushNotifications !== false) {
       const note = await Notification.create({
         user: task.user,
-        body: `${req.user.firstName} requested to help with "${task.title}"`,
+        type: "request",
+        title: "New task request",
+        body: `${req.user.firstName || "Helper"} requested to help with "${task.title}"`,
+        link: `/dashboard/requests`,
+        actor: req.user._id,
+        category: "requests",
+        data: { requestId: r._id, taskId: task._id },
       });
       emitToUser(task.user, "notification:new", note);
     }

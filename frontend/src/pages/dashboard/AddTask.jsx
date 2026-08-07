@@ -54,14 +54,19 @@ export default function AddTask() {
       const lat = pos.coords.latitude, lng = pos.coords.longitude;
       set("lat", lat); set("lng", lng);
       try {
-        // reverse-geocode -> "City, Town" string with English locale
-        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=en`,
-          { headers: { Accept: "application/json", "Accept-Language": "en" } });
+        // reverse-geocode in English strictly (accept-language=en)
+        const r = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=en,en-US;q=0.9,en-GB;q=0.8&addressdetails=1`,
+          { headers: { Accept: "application/json", "Accept-Language": "en,en-US;q=0.9,en-GB;q=0.8" } }
+        );
         const d = await r.json();
         const a = d?.address || {};
-        const parts = [a.city || a.town || a.village || a.county || a.municipality, a.suburb || a.neighbourhood || a.district, a.state, a.country]
-          .filter(Boolean);
-        const label = parts.slice(0, 2).join(", ") || d?.display_name?.split(",").slice(0, 2).join(", ") || "";
+        const cityOrTown = a["city:en"] || a.city || a["town:en"] || a.town || a["village:en"] || a.village || a.county || a.municipality || "";
+        const sub = a["suburb:en"] || a.suburb || a["neighbourhood:en"] || a.neighbourhood || a.district || "";
+        const state = a["state:en"] || a.state || a.region || "";
+        const country = a["country:en"] || a.country || "";
+        const parts = [cityOrTown, sub, state, country].filter(Boolean);
+        const label = parts.slice(0, 3).join(", ") || d?.display_name?.split(",").slice(0, 3).join(", ") || "";
         if (label) set("location", label);
         toast.success(label ? `Location set: ${label}` : "Coordinates captured");
       } catch {
@@ -121,7 +126,9 @@ export default function AddTask() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="label text-xs sm:text-sm">Description <span className="text-rose-500">*</span></label>
+            <label className="label text-xs sm:text-sm">
+              Description <span className="text-rose-500 font-bold" title="Required field">*</span>
+            </label>
             <button type="button" onClick={aiGenerate}
               className="text-xs font-semibold text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-900/50 bg-brand-50/50 dark:bg-brand-900/20 rounded-lg px-2.5 py-1 inline-flex items-center gap-1.5 hover:bg-brand-50 transition">
               <Sparkles size={13} className="text-brand-600 dark:text-brand-400" /> AI Draft
@@ -179,7 +186,12 @@ export default function AddTask() {
         </div>
 
         <div>
-          <label className="label text-xs sm:text-sm">Task Image <span className="text-rose-500 font-bold">*</span></label>
+          <label className="label text-xs sm:text-sm flex items-center justify-between mb-1.5">
+            <span className="flex items-center gap-1">
+              Task Image <span className="text-rose-500 font-bold" title="Required field">*</span>
+            </span>
+            <span className="text-[11px] text-slate-400 font-normal">PNG, JPG, GIF or WebP up to 10MB</span>
+          </label>
           {f.image ? (
             <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
               <img src={f.image} alt="preview" className="w-full max-h-72 object-cover" />
@@ -197,7 +209,7 @@ export default function AddTask() {
                 ${dragOver ? "border-brand-500 bg-brand-50/40 dark:bg-brand-900/20" : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
               <Upload className="mx-auto text-slate-400" size={28} />
               <div className="mt-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">Upload a task image or drag and drop</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">PNG, JPG, GIF or WebP up to 10MB</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Clear photos help workers understand what needs doing</div>
               <input ref={fileRef} hidden type="file" accept="image/*"
                 onChange={(e) => handleFile(e.target.files?.[0])} />
             </div>

@@ -8,6 +8,9 @@ if (a.me) router.get("/me", auth, a.me);
 if (c.updateMe) router.put("/me", auth, c.updateMe);
 if (c.notifications) router.get("/notifications", auth, c.notifications);
 if (c.markRead) router.patch("/notifications/read", auth, c.markRead);
+if (c.toggleNotificationRead) router.patch("/notifications/:id/read", auth, c.toggleNotificationRead);
+if (c.clearAllNotifications) router.delete("/notifications/clear-all", auth, c.clearAllNotifications);
+if (c.deleteNotification) router.delete("/notifications/:id", auth, c.deleteNotification);
 if (c.overview) router.get("/overview", auth, c.overview);
 if (c.bump) router.post("/bump", auth, c.bump);
 // PUBLIC profile (no PII) — used to preview a requester before accepting.
