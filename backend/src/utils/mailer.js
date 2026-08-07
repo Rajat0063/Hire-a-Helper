@@ -1,5 +1,7 @@
 const nodemailer = require("nodemailer");
 
+// Return true if SMTP / Resend is configured with environment variables.
+// If missing, authController will simulate codes locally in dev mode.
 let transporter;
 function getTransporter() {
   if (transporter) return transporter;
@@ -82,7 +84,7 @@ async function sendMail({ to, subject, html }) {
     return { sent: true, smtpConfigured: true };
   } catch (err) {
     console.error(`[mailer:ERROR] Failed to send email to ${to}:`, err && (err.stack || err.message || err));
-    return { sent: false, smtpConfigured: true, error: err?.message || String(err) };
+    return { sent: false, smtpConfigured: true, error: err && (err.message || err) };
   }
 }
 
@@ -96,7 +98,7 @@ async function verifyTransporter() {
   if (!isSmtpConfigured()) return false;
   try {
     await getTransporter().verify();
-    console.log("[mailer] SMTP transporter verified");
+    console.log("[mailer] SMTP transporter verified successfully");
     return true;
   } catch (err) {
     console.warn("[mailer] SMTP transporter verification failed (will attempt sending on demand):", err?.message || err);
@@ -104,7 +106,7 @@ async function verifyTransporter() {
   }
 }
 
-async function sendOtpEmail(to, code) {
+async function sendVerificationEmail(to, code) {
   return await sendMail({
     to,
     subject: "Your HireHelper verification code",
@@ -134,7 +136,7 @@ async function sendOtpEmail(to, code) {
   });
 }
 
-async function sendResetEmail(to, code) {
+async function sendPasswordResetEmail(to, code) {
   return await sendMail({
     to,
     subject: "HireHelper password reset code",
@@ -164,9 +166,11 @@ async function sendResetEmail(to, code) {
   });
 }
 
-async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
+async function sendFeedbackEmail({ from, subject, message, rating, type }) {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+  if (!adminEmail) return { sent: false };
   return await sendMail({
-    to,
+    to: adminEmail,
     subject: `[HireHelper feedback · ${type}] ${subject}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;padding:28px;border:1px solid #e2e8f0;border-radius:16px;background-color:#ffffff">
       <div style="margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #f1f5f9">
@@ -191,9 +195,10 @@ async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
 }
 
 module.exports = {
-  sendOtpEmail,
-  sendResetEmail,
+  isSmtpConfigured,
+  sendMail,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
   sendFeedbackEmail,
   verifyTransporter,
-  isSmtpConfigured,
 };

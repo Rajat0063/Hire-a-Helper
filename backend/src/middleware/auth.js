@@ -35,4 +35,6 @@ function adminOnly(req, res, next) {
   next();
 }
 
-module.exports = { auth, adminOnly };
+module.exports = auth;
+module.exports.auth = auth;
+module.exports.adminOnly = adminOnly;
