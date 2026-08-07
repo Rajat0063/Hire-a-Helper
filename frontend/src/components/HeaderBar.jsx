@@ -79,7 +79,7 @@ function getNotificationMeta(n) {
         icon: IndianRupee,
         bg: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300",
         label: "Payment",
-        defaultLink: n.link || "/dashboard/my-requests",
+        defaultLink: n.link || "/dashboard/payments",
       };
     case "task":
       return {
@@ -598,8 +598,8 @@ export default function HeaderBar({ onMenu }) {
                 </div>
                 <div className="px-2 py-2 text-sm">
                   <DropItem icon={User} onClick={() => { setProfileOpen(false); nav("/dashboard"); }}>Overview</DropItem>
+                  <DropItem icon={CreditCard} onClick={() => { setProfileOpen(false); nav("/dashboard/payments"); }}>Payments & Earnings</DropItem>
                   <DropItem icon={Settings} onClick={() => { setProfileOpen(false); nav("/dashboard/settings"); }}>Settings</DropItem>
-                  <DropItem icon={CreditCard} onClick={() => { setProfileOpen(false); nav("/dashboard/my-requests"); }}>Payments & Requests</DropItem>
                   {user?.role === "admin" && (
                     <DropItem icon={Activity} onClick={() => { setProfileOpen(false); nav("/admin"); }}>Admin Dashboard</DropItem>
                   )}

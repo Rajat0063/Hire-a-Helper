@@ -38,7 +38,22 @@ exports.createOrder = async (req, res) => {
     return res.status(400).json({ message: "Already paid." });
 
   const amount = Math.round(Number(r.task.paymentAmount || 0) * 100); // paise
-  if (!amount) return res.status(400).json({ message: "Task has no payment amount set." });
+
+  // If amount is 0 (volunteer/free task), mark settled directly
+  if (amount === 0) {
+    r.paymentStatus = "paid";
+    r.razorpayPaymentId = `free_pay_${Date.now()}`;
+    r.paidAt = new Date();
+    await r.save();
+    await Task.findByIdAndUpdate(r.task._id, { status: "completed" });
+    return res.json({
+      simulated: true,
+      settled: true,
+      keyId: null,
+      order: { id: "free_order", amount: 0, currency: r.task.currency || "INR" },
+      request: r,
+    });
+  }
 
   // Dev fallback — no Razorpay keys configured
   if (!LIVE) {
@@ -117,3 +132,80 @@ exports.simulatePaid = async (req, res) => {
   req.body.razorpay_payment_id = "dev_pay_" + Date.now();
   return exports.verifyPayment(req, res);
 };
+
+// === GET /api/payments/history ===
+exports.history = async (req, res) => {
+  try {
+    const uid = req.user._id;
+
+    // Tasks created by me (as task owner)
+    const myTasks = await Task.find({ user: uid }).select("_id");
+    const myTaskIds = myTasks.map((t) => t._id);
+
+    // Payments made (as task owner paying a helper)
+    const paymentsMade = await Request.find({
+      task: { $in: myTaskIds },
+      status: { $in: ["accepted", "in_progress", "completed"] },
+    })
+      .populate("task", "title paymentAmount currency image location status")
+      .populate("requester", "firstName lastName profilePicture email phone")
+      .sort("-updatedAt");
+
+    // Earnings / Payments received (as helper)
+    const earnings = await Request.find({
+      requester: uid,
+      status: { $in: ["accepted", "in_progress", "completed"] },
+    })
+      .populate({
+        path: "task",
+        select: "title paymentAmount currency image location status user",
+        populate: { path: "user", select: "firstName lastName profilePicture email phone" },
+      })
+      .sort("-updatedAt");
+
+    // Totals
+    let totalPaid = 0;
+    let pendingToPay = 0;
+    for (const r of paymentsMade) {
+      const amt = Number(r.task?.paymentAmount || 0);
+      if (r.paymentStatus === "paid") totalPaid += amt;
+      else if (r.status === "completed") pendingToPay += amt;
+    }
+
+    let totalEarned = 0;
+    let pendingToReceive = 0;
+    for (const r of earnings) {
+      const amt = Number(r.task?.paymentAmount || 0);
+      if (r.paymentStatus === "paid") totalEarned += amt;
+      else if (r.status === "completed") pendingToReceive += amt;
+    }
+
+    res.json({
+      paymentsMade,
+      earnings,
+      stats: {
+        totalPaid: Math.round(totalPaid * 100) / 100,
+        pendingToPay: Math.round(pendingToPay * 100) / 100,
+        totalEarned: Math.round(totalEarned * 100) / 100,
+        pendingToReceive: Math.round(pendingToReceive * 100) / 100,
+      },
+      config: {
+        isLive: LIVE,
+        keyId: KEY_ID || null,
+        currency: "INR",
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// === GET /api/payments/config ===
+exports.config = async (req, res) => {
+  res.json({
+    isLive: LIVE,
+    keyId: KEY_ID || null,
+    currency: "INR",
+  });
+};
+

@@ -16,6 +16,7 @@ export default function Requests() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
+  const [payingId, setPayingId] = useState(null);
   const nav = useNavigate();
   const { user } = useAuth();
 
@@ -43,7 +44,14 @@ export default function Requests() {
     try { await api.post(`/requests/${r._id}/cancel`); toast.success("Cancelled"); load(); }
     catch (e) { toast.error(e.response?.data?.message || "Failed"); }
   };
-  const pay = (r) => payWithRazorpay({ request: r, user, onSuccess: load });
+  const pay = async (r) => {
+    setPayingId(r._id);
+    try {
+      await payWithRazorpay({ request: r, user, onSuccess: load });
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   const tabs = [
     { key: "all", label: "All" },
@@ -190,8 +198,13 @@ export default function Requests() {
                       </>
                     ) : r.status === "completed" && r.paymentStatus !== "paid" ? (
                       <>
-                        <button onClick={() => pay(r)} className="btn-primary text-xs sm:text-sm py-2 px-3 flex-1 justify-center">
-                          <CreditCard size={14} /> Pay {r.task?.currency || "INR"} {r.task?.paymentAmount || 0}
+                        <button
+                          onClick={() => pay(r)}
+                          disabled={payingId === r._id}
+                          className="btn-primary text-xs sm:text-sm py-2 px-3 flex-1 justify-center inline-flex items-center gap-1.5"
+                        >
+                          <CreditCard size={14} />
+                          {payingId === r._id ? "Processing..." : `Pay ${r.task?.currency || "INR"} ${r.task?.paymentAmount || 0}`}
                         </button>
                         <button onClick={() => nav("/dashboard/messages")} className="btn-ghost text-xs sm:text-sm py-2 px-3">
                           <MessageSquare size={14} />

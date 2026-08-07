@@ -116,9 +116,17 @@ export default function MyRequests() {
                       <span>· checked in {new Date(r.checkinAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
                     </div>
                   )}
-                  {r.paymentStatus === "paid" && (
-                    <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-1.5 font-bold flex items-center gap-1">
-                      <span>💰 Paid</span> · {r.task?.currency || "INR"} {r.task?.paymentAmount}
+                  {r.status === "completed" && (
+                    <div className={`text-xs mt-1.5 font-bold flex items-center gap-1.5 ${
+                      r.paymentStatus === "paid"
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-amber-600 dark:text-amber-400"
+                    }`}>
+                      {r.paymentStatus === "paid" ? (
+                        <span>💰 Paid · {r.task?.currency || "INR"} {r.task?.paymentAmount}</span>
+                      ) : (
+                        <span>⏳ Completed · Payment pending from owner ({r.task?.currency || "INR"} {r.task?.paymentAmount || 0})</span>
+                      )}
                     </div>
                   )}
                 </div>

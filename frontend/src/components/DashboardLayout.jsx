@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Home, ListChecks, Inbox, Send, PlusCircle, Settings,
-  LogOut, X, Shield, ShieldCheck, MessageSquare, MapPin,
+  LogOut, X, Shield, ShieldCheck, MessageSquare, MapPin, CreditCard,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -10,6 +10,9 @@ import { getSocket } from "../services/socket";
 import HeaderBar from "./HeaderBar";
 import AssistantWidget from "./AssistantWidget";
 import FeedbackWidget from "./FeedbackWidget";
+import { Avatar } from "./Avatar";
+
+export { Avatar };
 
 // === Sidebar links ===
 // `badge` is computed at render time using live state. The Requests row
@@ -21,6 +24,7 @@ const baseLinks = [
   { to: "/dashboard/requests", label: "Requests", icon: Inbox, key: "requests" },
   { to: "/dashboard/my-requests", label: "My Requests", icon: Send },
   { to: "/dashboard/messages", label: "Messages", icon: MessageSquare },
+  { to: "/dashboard/payments", label: "Payments", icon: CreditCard },
   { to: "/dashboard/nearby", label: "Nearby Tasks", icon: MapPin },
   { to: "/dashboard/add-task", label: "Add Task", icon: PlusCircle },
   { to: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -32,15 +36,8 @@ export default function DashboardLayout({ children }) {
   const nav = useNavigate();
   const [pendingRequests, setPendingRequests] = useState(0);
 
-  // Disable browser back from dashboard pages.
-  useEffect(() => {
-    const trap = () => window.history.pushState(null, "", window.location.href);
-    window.history.pushState(null, "", window.location.href);
-    window.addEventListener("popstate", trap);
-    return () => window.removeEventListener("popstate", trap);
-  }, []);
+  // Pending request count
 
-  // ~ Live pending-request count for the sidebar badge ~
   const loadPending = () => {
     api.get("/requests/received").then(({ data }) => {
       setPendingRequests((data.requests || []).filter((r) => r.status === "pending").length);
@@ -135,22 +132,6 @@ export default function DashboardLayout({ children }) {
       {/* Floating helpers — visible on every dashboard page */}
       <AssistantWidget />
       <FeedbackWidget />
-    </div>
-  );
-}
-
-export function Avatar({ src, initials, size = 36 }) {
-  const dim = { width: size, height: size };
-  if (src) {
-    return (
-      <img src={src} alt="avatar" style={dim}
-        className="rounded-full object-cover border border-slate-200 dark:border-slate-700" />
-    );
-  }
-  return (
-    <div style={dim}
-      className="rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-200 grid place-items-center font-bold text-sm">
-      {initials}
     </div>
   );
 }

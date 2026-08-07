@@ -2,7 +2,7 @@ const Review = require("../models/Review");
 const Request = require("../models/Request");
 const Task = require("../models/Task");
 const Notification = require("../models/Notification");
-const { emitToUser } = require("../realtime/socket");
+const { emitToUser } = require("../socket");
 
 // === POST /api/reviews ===
 // body: { taskId, toUserId, rating, comment }
