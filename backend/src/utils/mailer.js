@@ -1,6 +1,7 @@
 // === Nodemailer transport ===
-// Reads SMTP_* env vars. If SMTP_USER is not set we fall back to logging the
-// code in the terminal so the OTP / reset flow still works in local dev.
+// Reads SMTP_* env vars or RESEND_API_KEY.
+// Note: Hosting platforms like Render block outbound SMTP ports (587, 465, 25).
+// For reliable email delivery on Render, set RESEND_API_KEY (from resend.com - free API).
 const nodemailer = require("nodemailer");
 
 let transporter;
@@ -9,35 +10,41 @@ function getTransporter() {
   const host = process.env.SMTP_HOST || "smtp.gmail.com";
   const port = Number(process.env.SMTP_PORT || 587);
   const isGmail = host.includes("gmail") || process.env.SMTP_SERVICE === "gmail";
+  const cleanPass = (process.env.SMTP_PASS || "").replace(/\s+/g, "");
 
-  const config = {
-    host: isGmail ? "smtp.gmail.com" : host,
-    port: isGmail ? 587 : port,
-    secure: isGmail ? false : (process.env.SMTP_SECURE === "true" || port === 465),
-    requireTLS: isGmail ? true : undefined,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    tls: {
-      rejectUnauthorized: false,
-      ciphers: "SSLv3",
-    },
-    pool: true,
-    maxConnections: 3,
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-  };
+  const config = isGmail
+    ? {
+        service: "gmail",
+        auth: { user: process.env.SMTP_USER, pass: cleanPass },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000,
+      }
+    : {
+        host,
+        port,
+        secure: process.env.SMTP_SECURE === "true" || port === 465,
+        auth: { user: process.env.SMTP_USER, pass: cleanPass },
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000,
+      };
 
   transporter = nodemailer.createTransport(config);
   return transporter;
 }
 
 function isSmtpConfigured() {
-  return Boolean(process.env.RESEND_API_KEY || (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS));
+  return Boolean(
+    process.env.RESEND_API_KEY ||
+      (process.env.SMTP_USER && process.env.SMTP_PASS)
+  );
 }
 
 async function sendMail({ to, subject, html }) {
   if (!isSmtpConfigured()) {
-    console.warn(`[mailer:WARN] Email service is not fully configured; email to ${to} will be logged instead.`);
+    console.warn(`[mailer:WARN] Email service not configured; email to ${to} will be logged to console.`);
     console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
     return { sent: false, smtpConfigured: false };
   }
@@ -46,30 +53,49 @@ async function sendMail({ to, subject, html }) {
   const fromUser = process.env.SMTP_USER || "onboarding@resend.dev";
   const fromAddress = process.env.SMTP_FROM || `"${fromName}" <${fromUser}>`;
 
-  // 1. Try Resend API if key is set (bypasses Render SMTP port blocking)
+  // 1. Try Resend API first if key is provided (bypasses Render SMTP port blocking via HTTPS port 443)
   if (process.env.RESEND_API_KEY) {
-    try {
+    const cleanName = (process.env.SMTP_FROM_NAME || "HireHelper").replace(/[^a-zA-Z0-9 ]/g, "").trim() || "HireHelper";
+    let resendFrom = process.env.RESEND_FROM
+      ? process.env.RESEND_FROM.replace(/^["']|["']$/g, "").trim()
+      : `${cleanName} <onboarding@resend.dev>`;
+
+    async function sendViaResend(fromAddress) {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+          "Authorization": `Bearer ${process.env.RESEND_API_KEY.trim()}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: process.env.SMTP_FROM || `${fromName} <onboarding@resend.dev>`,
+          from: fromAddress,
           to: [to],
           subject,
           html,
         }),
       });
       const data = await res.json();
-      if (res.ok) {
-        console.log(`[mailer:resend] Sent email successfully to ${to} (id: ${data.id})`);
-        return { sent: true, smtpConfigured: true };
+      return { ok: res.ok, status: res.status, data };
+    }
+
+    try {
+      let attempt = await sendViaResend(resendFrom);
+
+      // If initial attempt failed (e.g. invalid 'from' address or custom domain not verified),
+      // retry with default onboarding@resend.dev format
+      const defaultResendFrom = `${cleanName} <onboarding@resend.dev>`;
+      if (!attempt.ok && resendFrom !== defaultResendFrom) {
+        console.warn(`[mailer:resend:WARN] Custom 'from' (${resendFrom}) failed (${attempt.status}). Retrying with default: ${defaultResendFrom}`);
+        attempt = await sendViaResend(defaultResendFrom);
       }
-      console.error("[mailer:resend:ERROR]", data);
+
+      if (attempt.ok) {
+        console.log(`[mailer:resend] Email sent successfully to ${to} (id: ${attempt.data.id})`);
+        return { sent: true, provider: "resend" };
+      }
+      console.error("[mailer:resend:ERROR]", attempt.data);
     } catch (rErr) {
-      console.error("[mailer:resend:FETCH_ERROR]", rErr && (rErr.stack || rErr.message || rErr));
+      console.error("[mailer:resend:FETCH_ERROR]", rErr?.message || rErr);
     }
   }
 
@@ -81,33 +107,38 @@ async function sendMail({ to, subject, html }) {
       subject,
       html,
     });
-    console.log(`[mailer:smtp] Sent email successfully to ${to} from ${fromAddress}`);
-    return { sent: true, smtpConfigured: true };
+    console.log(`[mailer:smtp] Email sent successfully to ${to} from ${fromAddress}`);
+    return { sent: true, provider: "smtp" };
   } catch (err) {
-    console.error(`[mailer:ERROR] Failed to send email to ${to}:`, err && (err.stack || err.message || err));
-    return { sent: false, smtpConfigured: true, error: err?.message || String(err) };
+    console.error(`[mailer:ERROR] Failed to send email to ${to} via SMTP:`, err?.message || err);
+    console.warn(`[mailer:NOTICE] Note: Cloud hosts like Render block outbound SMTP ports (587/465). Consider adding RESEND_API_KEY to Render environment variables.`);
+    return { sent: false, error: err?.message || String(err) };
   }
 }
 
-// Verifies SMTP transporter connectivity; returns a promise that resolves
-// when verification succeeds or fails gracefully.
 async function verifyTransporter() {
   if (process.env.RESEND_API_KEY) {
     console.log("[mailer] Using Resend HTTP API for emails");
     return true;
   }
-  if (!isSmtpConfigured()) return false;
+  if (!isSmtpConfigured()) {
+    console.log("[mailer] No SMTP or Resend credentials provided; running in console logging mode");
+    return false;
+  }
   try {
     await getTransporter().verify();
     console.log("[mailer] SMTP transporter verified");
     return true;
   } catch (err) {
-    console.warn("[mailer] SMTP transporter verification failed (will attempt sending on demand):", err?.message || err);
+    console.warn("[mailer] SMTP verification failed (Render blocks SMTP ports 587/465). Will attempt sending on demand or use fallback log:", err?.message || err);
     return false;
   }
 }
 
 async function sendOtpEmail(to, code) {
+  console.log(`\n==================================================`);
+  console.log(` [OTP CODE FOR ${to}]: ${code}`);
+  console.log(`==================================================\n`);
   return await sendMail({
     to,
     subject: "Your HireHelper verification code",
@@ -138,6 +169,9 @@ async function sendOtpEmail(to, code) {
 }
 
 async function sendResetEmail(to, code) {
+  console.log(`\n==================================================`);
+  console.log(` [PASSWORD RESET CODE FOR ${to}]: ${code}`);
+  console.log(`==================================================\n`);
   return await sendMail({
     to,
     subject: "HireHelper password reset code",
@@ -194,3 +228,6 @@ async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
 }
 
 module.exports = { sendOtpEmail, sendResetEmail, sendFeedbackEmail, verifyTransporter, isSmtpConfigured };
+
+
+
