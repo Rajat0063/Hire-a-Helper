@@ -6,22 +6,26 @@ const mailer = require("../utils/mailer");
 
 // === POST /api/feedback ===
 exports.submit = async (req, res) => {
-  const { type, subject, message, rating } = req.body || {};
-  if (!subject || !message) return res.status(400).json({ message: "Subject and message required" });
-  const fb = await Feedback.create({
-    user: req.user._id,
-    type: type || "other",
-    subject: String(subject).slice(0, 140),
-    message: String(message).slice(0, 4000),
-    rating: rating ? Number(rating) : null,
-  });
+  try {
+    const { type, subject, message, rating } = req.body;
+    if (!type || !subject || !message) {
+      return res.status(400).json({ message: "Type, subject, and message are required" });
+    }
+    const fb = await Feedback.create({
+      user: req.user._id,
+      type,
+      subject,
+      message,
+      rating: Number(rating) || 0,
+    });
 
-  // ~ Fan-out to every admin so they see it in their notification bell + inbox ~
-  const admins = await User.find({ role: "admin" }).select("_id email");
-  await Promise.all(
-    admins.map(async (a) => {
+    // Notify admins
+    const admins = await User.find({ role: "admin" }).select("_id email");
+    for (const a of admins) {
       const n = await Notification.create({
         user: a._id,
+        type: "system",
+        title: `New feedback (${fb.type})`,
         body: `New feedback (${fb.type}) from ${req.user.firstName}: ${fb.subject}`,
       });
       emitToUser(a._id, "notification:new", n);
@@ -31,37 +35,31 @@ exports.submit = async (req, res) => {
           type: fb.type, subject: fb.subject, message: fb.message, rating: fb.rating,
         }).catch((e) => console.error("[feedback mail]", e.message));
       }
-    })
-  );
+    }
 
-  res.status(201).json({ feedback: fb });
+    res.status(201).json({ message: "Feedback submitted successfully. Thank you!", feedback: fb });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
-// === GET /api/feedback/mine ===
-exports.mine = async (req, res) => {
-  const list = await Feedback.find({ user: req.user._id }).sort("-createdAt");
-  res.json({ feedback: list });
-};
-
-// === GET /api/feedback  (admin) ===
+// === GET /api/feedback (admin only) ===
 exports.list = async (req, res) => {
-  if (req.user.role !== "admin") return res.status(403).json({ message: "Forbidden" });
-  const list = await Feedback.find()
-    .populate("user", "firstName lastName email profilePicture")
-    .sort("-createdAt")
-    .limit(500);
-  res.json({ feedback: list });
+  const { status, type } = req.query;
+  const query = {};
+  if (status) query.status = status;
+  if (type) query.type = type;
+  const items = await Feedback.find(query).populate("user", "firstName lastName email profilePicture").sort({ createdAt: -1 });
+  res.json({ feedback: items });
 };
 
-// === PATCH /api/feedback/:id  (admin) ===
+// === PATCH /api/feedback/:id (admin) ===
 exports.update = async (req, res) => {
-  if (req.user.role !== "admin") return res.status(403).json({ message: "Forbidden" });
-  const { status, adminNote } = req.body || {};
-  const fb = await Feedback.findByIdAndUpdate(
-    req.params.id,
-    { ...(status && { status }), ...(adminNote != null && { adminNote }) },
-    { new: true }
-  );
-  if (!fb) return res.status(404).json({ message: "Not found" });
+  const { status, adminNotes } = req.body;
+  const fb = await Feedback.findById(req.id || req.params.id);
+  if (!fb) return res.status(404).json({ message: "Feedback not found" });
+  if (status) fb.status = status;
+  if (adminNotes !== undefined) fb.adminNotes = adminNotes;
+  await fb.save();
   res.json({ feedback: fb });
 };

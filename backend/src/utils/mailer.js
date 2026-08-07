@@ -1,7 +1,8 @@
+// === Nodemailer transport ===
+// Reads SMTP_* env vars. If SMTP_USER is not set we fall back to logging the
+// code in the terminal so the OTP / reset flow still works in local dev.
 const nodemailer = require("nodemailer");
 
-// Return true if SMTP / Resend is configured with environment variables.
-// If missing, authController will simulate codes locally in dev mode.
 let transporter;
 function getTransporter() {
   if (transporter) return transporter;
@@ -84,7 +85,7 @@ async function sendMail({ to, subject, html }) {
     return { sent: true, smtpConfigured: true };
   } catch (err) {
     console.error(`[mailer:ERROR] Failed to send email to ${to}:`, err && (err.stack || err.message || err));
-    return { sent: false, smtpConfigured: true, error: err && (err.message || err) };
+    return { sent: false, smtpConfigured: true, error: err?.message || String(err) };
   }
 }
 
@@ -98,7 +99,7 @@ async function verifyTransporter() {
   if (!isSmtpConfigured()) return false;
   try {
     await getTransporter().verify();
-    console.log("[mailer] SMTP transporter verified successfully");
+    console.log("[mailer] SMTP transporter verified");
     return true;
   } catch (err) {
     console.warn("[mailer] SMTP transporter verification failed (will attempt sending on demand):", err?.message || err);
@@ -106,7 +107,7 @@ async function verifyTransporter() {
   }
 }
 
-async function sendVerificationEmail(to, code) {
+async function sendOtpEmail(to, code) {
   return await sendMail({
     to,
     subject: "Your HireHelper verification code",
@@ -136,7 +137,7 @@ async function sendVerificationEmail(to, code) {
   });
 }
 
-async function sendPasswordResetEmail(to, code) {
+async function sendResetEmail(to, code) {
   return await sendMail({
     to,
     subject: "HireHelper password reset code",
@@ -166,11 +167,9 @@ async function sendPasswordResetEmail(to, code) {
   });
 }
 
-async function sendFeedbackEmail({ from, subject, message, rating, type }) {
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
-  if (!adminEmail) return { sent: false };
+async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
   return await sendMail({
-    to: adminEmail,
+    to,
     subject: `[HireHelper feedback · ${type}] ${subject}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;padding:28px;border:1px solid #e2e8f0;border-radius:16px;background-color:#ffffff">
       <div style="margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #f1f5f9">
@@ -193,11 +192,5 @@ async function sendFeedbackEmail({ from, subject, message, rating, type }) {
     </div>`,
   });
 }
-
-exports.sendOtpEmail = sendOtpEmail;
-exports.sendResetEmail = sendResetEmail;
-exports.sendFeedbackEmail = sendFeedbackEmail;
-exports.verifyTransporter = verifyTransporter;
-exports.isSmtpConfigured = isSmtpConfigured;
 
 module.exports = { sendOtpEmail, sendResetEmail, sendFeedbackEmail, verifyTransporter, isSmtpConfigured };
