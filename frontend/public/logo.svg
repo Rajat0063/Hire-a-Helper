@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Blue squircle background -->
+  <rect width="512" height="512" rx="128" ry="128" fill="#2563eb" />
+  
+  <!-- White Shield outline -->
+  <path 
+    d="M 256 115 C 310 145, 365 148, 380 152 C 380 270, 328 355, 256 395 C 184 355, 132 270, 132 152 C 147 148, 202 145, 256 115 Z" 
+    fill="none" 
+    stroke="#ffffff" 
+    stroke-width="30" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+  
+  <!-- White Checkmark -->
+  <path 
+    d="M 205 252 L 242 292 L 310 215" 
+    fill="none" 
+    stroke="#ffffff" 
+    stroke-width="30" 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+  />
+</svg>
