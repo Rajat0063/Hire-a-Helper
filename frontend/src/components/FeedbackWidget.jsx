@@ -5,8 +5,8 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 // === FeedbackWidget ===
-// Draggable floating "Send feedback" bubble — users can move and place it
-// anywhere on the screen. Remembers custom position in localStorage.
+// Fully responsive, draggable floating "Send feedback" bubble — users can move
+// and place it anywhere on screen (touch & mouse). Remembers custom position in localStorage.
 export default function FeedbackWidget() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -17,7 +17,7 @@ export default function FeedbackWidget() {
   const [busy, setBusy] = useState(false);
 
   // Position state (clamped to screen viewport)
-  const [position, setPosition] = useState({ x: 24, y: 550 });
+  const [position, setPosition] = useState({ x: 20, y: 550 });
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const buttonRef = useRef(null);
@@ -26,14 +26,14 @@ export default function FeedbackWidget() {
     hasMoved: false,
     startX: 0,
     startY: 0,
-    origX: 24,
+    origX: 20,
     origY: 550,
   });
 
-  // Clamp position to viewport bounds
+  // Clamp position to viewport bounds with mobile safe zones
   const clampPosition = useCallback((x, y, btnW = 120, btnH = 44) => {
     if (typeof window === "undefined") return { x, y };
-    const pad = 12;
+    const pad = window.innerWidth < 640 ? 10 : 16;
     const maxX = Math.max(pad, window.innerWidth - btnW - pad);
     const maxY = Math.max(pad, window.innerHeight - btnH - pad);
     return {
@@ -45,7 +45,7 @@ export default function FeedbackWidget() {
   // Initialize position on mount from localStorage or default to bottom-left
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const defaultY = Math.max(20, window.innerHeight - 100);
+    const defaultY = Math.max(20, window.innerHeight - 90);
     const saved = localStorage.getItem("hirehelper_feedback_pos");
     if (saved) {
       try {
@@ -56,21 +56,30 @@ export default function FeedbackWidget() {
         }
       } catch {}
     }
-    setPosition(clampPosition(24, defaultY));
+    setPosition(clampPosition(16, defaultY));
   }, [clampPosition]);
 
-  // Keep button inside screen on window resize
+  // Keep button inside screen on window resize or mobile orientation change
   useEffect(() => {
     const handleResize = () => {
-      setPosition((prev) => clampPosition(prev.x, prev.y));
+      const rect = buttonRef.current?.getBoundingClientRect();
+      const btnW = rect?.width || 120;
+      const btnH = rect?.height || 44;
+      setPosition((prev) => clampPosition(prev.x, prev.y, btnW, btnH));
     };
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
   }, [clampPosition]);
 
-  // Handle pointer down (mouse or touch)
+  // Handle pointer down (seamless across mouse and mobile touch)
   const handlePointerDown = (e) => {
+    // Only primary button / primary touch
     if (e.button !== 0 && e.pointerType === "mouse") return;
+
     const rect = buttonRef.current?.getBoundingClientRect();
     const currentX = rect ? rect.left : position.x;
     const currentY = rect ? rect.top : position.y;
@@ -84,7 +93,13 @@ export default function FeedbackWidget() {
       origY: currentY,
     };
 
-    // Global listeners for smooth dragging outside button boundaries
+    // Capture pointer if available for rock-solid dragging
+    try {
+      if (e.target?.setPointerCapture && e.pointerId) {
+        e.target.setPointerCapture(e.pointerId);
+      }
+    } catch {}
+
     const handlePointerMove = (moveEvent) => {
       if (!dragRef.current.isDown) return;
       const dx = moveEvent.clientX - dragRef.current.startX;
@@ -110,12 +125,17 @@ export default function FeedbackWidget() {
       window.removeEventListener("pointerup", handlePointerUp);
       window.removeEventListener("pointercancel", handlePointerUp);
 
+      try {
+        if (upEvent.target?.releasePointerCapture && upEvent.pointerId) {
+          upEvent.target.releasePointerCapture(upEvent.pointerId);
+        }
+      } catch {}
+
       const hadMoved = dragRef.current.hasMoved;
       dragRef.current.isDown = false;
       setIsDragging(false);
 
       if (hadMoved) {
-        // Save repositioned coordinate
         const btnW = rect?.width || 120;
         const btnH = rect?.height || 44;
         const dx = upEvent.clientX - dragRef.current.startX;
@@ -126,12 +146,12 @@ export default function FeedbackWidget() {
           localStorage.setItem("hirehelper_feedback_pos", JSON.stringify(finalPos));
         } catch {}
       } else {
-        // Just a click -> open feedback dialog
+        // Just a tap / click -> open feedback modal
         setOpen(true);
       }
     };
 
-    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("pointercancel", handlePointerUp);
   };
@@ -139,8 +159,8 @@ export default function FeedbackWidget() {
   // Reset to default bottom-left position
   const resetPosition = (e) => {
     e.stopPropagation();
-    const defaultY = Math.max(20, window.innerHeight - 100);
-    const def = clampPosition(24, defaultY);
+    const defaultY = Math.max(20, window.innerHeight - 90);
+    const def = clampPosition(16, defaultY);
     setPosition(def);
     try {
       localStorage.setItem("hirehelper_feedback_pos", JSON.stringify(def));
@@ -183,65 +203,71 @@ export default function FeedbackWidget() {
           top: `${position.y}px`,
           touchAction: "none",
         }}
-        className={`z-40 h-11 pl-2.5 pr-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900
-                   flex items-center gap-2 select-none cursor-grab active:cursor-grabbing transition-shadow
+        className={`z-40 h-10 sm:h-11 pl-2 sm:pl-2.5 pr-3 sm:pr-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900
+                   flex items-center gap-1.5 sm:gap-2 select-none cursor-grab active:cursor-grabbing transition-shadow touch-none
                    ${isDragging ? "shadow-2xl scale-105 ring-2 ring-brand-500/80 !cursor-grabbing" : "shadow-xl hover:shadow-2xl hover:scale-[1.02]"}`}
-        title="Drag anywhere to reposition • Click to send feedback"
+        title="Drag anywhere to reposition • Tap to send feedback"
         role="button"
         tabIndex={0}
-        aria-label="Send feedback (draggable)"
+        aria-label="Send feedback (draggable button)"
       >
         <GripVertical size={14} className="opacity-50 -mr-0.5 shrink-0" />
-        <MessageCircle size={16} className="shrink-0 text-brand-400 dark:text-brand-600" />
-        <span className="text-sm font-semibold whitespace-nowrap">Feedback</span>
+        <MessageCircle size={15} className="shrink-0 text-brand-400 dark:text-brand-600" />
+        <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">Feedback</span>
 
-        {/* Small reset button shown on hover if user moved away from default */}
+        {/* Small reset button shown on hover/tap */}
         {isHovered && !isDragging && (
           <button
             type="button"
             onClick={resetPosition}
-            className="ml-1 p-1 rounded-full text-slate-400 hover:text-white dark:hover:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 transition"
+            className="ml-0.5 p-1 rounded-full text-slate-400 hover:text-white dark:hover:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 transition"
             title="Reset position to default"
           >
-            <RotateCcw size={12} />
+            <RotateCcw size={11} />
           </button>
         )}
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={() => setOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto"
+          onClick={() => setOpen(false)}
+        >
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={submit}
-            className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
               <div>
-                <div className="font-bold text-slate-900 dark:text-white">Send us feedback</div>
-                <div className="text-xs text-slate-500">Bugs, ideas, complaints — we read everything.</div>
+                <div className="font-bold text-base sm:text-lg text-slate-900 dark:text-white">Send us feedback</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Bugs, ideas, or questions — we read everything.</div>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                aria-label="Close"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-5 space-y-4">
+            {/* Scrollable Content */}
+            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase">Type</label>
-                <div className="mt-1 grid grid-cols-5 gap-1">
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Feedback Type</label>
+                <div className="mt-1.5 grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                   {["bug", "suggestion", "complaint", "praise", "other"].map((t) => (
                     <button
                       type="button"
                       key={t}
                       onClick={() => setType(t)}
-                      className={`text-xs py-2 rounded-lg capitalize border transition ${
+                      className={`text-xs py-2 px-2 rounded-xl capitalize font-medium border transition text-center truncate ${
                         type === t
-                          ? "bg-brand-600 text-white border-brand-600"
-                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-400"
+                          ? "bg-brand-600 text-white border-brand-600 shadow-xs"
+                          : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-400"
                       }`}
                     >
                       {t}
@@ -251,52 +277,63 @@ export default function FeedbackWidget() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase">Subject</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Subject</label>
                 <input
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   maxLength={140}
                   required
-                  className="input h-10 mt-1"
-                  placeholder="Short summary"
+                  className="input h-10 mt-1 w-full text-sm"
+                  placeholder="Short summary of what you're sharing"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase">Message</label>
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Message</label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   maxLength={4000}
                   required
-                  rows={5}
-                  className="input mt-1"
-                  placeholder="Tell us what happened, what you'd like, or what's broken…"
+                  rows={4}
+                  className="input mt-1 w-full text-sm min-h-[90px] sm:min-h-[110px]"
+                  placeholder="Tell us what happened, what you'd like to improve, or what feels broken…"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase">Rate your experience (optional)</label>
-                <div className="mt-1 flex gap-1">
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Rate your experience <span className="font-normal lowercase text-slate-400">(optional)</span>
+                </label>
+                <div className="mt-1.5 flex items-center gap-1.5">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
                       type="button"
                       onClick={() => setRating(n === rating ? 0 : n)}
-                      className={`p-1 ${n <= rating ? "text-amber-400" : "text-slate-300 dark:text-slate-600"} hover:scale-110 transition`}
+                      className={`p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition ${
+                        n <= rating ? "text-amber-400" : "text-slate-300 dark:text-slate-600"
+                      }`}
+                      aria-label={`Rate ${n} stars`}
                     >
-                      <Star size={22} fill={n <= rating ? "currentColor" : "none"} />
+                      <Star size={24} fill={n <= rating ? "currentColor" : "none"} />
                     </button>
                   ))}
+                  {rating > 0 && (
+                    <span className="text-xs text-slate-500 ml-2 font-medium">
+                      {rating === 5 ? "Loved it!" : rating >= 4 ? "Great" : rating === 3 ? "Okay" : "Needs work"}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="px-5 py-3 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-2">
-              <button type="button" onClick={() => setOpen(false)} className="btn-ghost">
+            {/* Footer */}
+            <div className="px-4 sm:px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+              <button type="button" onClick={() => setOpen(false)} className="btn-ghost text-sm py-2 px-3.5">
                 Cancel
               </button>
-              <button type="submit" disabled={busy} className="btn-primary">
+              <button type="submit" disabled={busy} className="btn-primary text-sm py-2 px-4 shadow-sm">
                 <Send size={14} /> {busy ? "Sending…" : "Send feedback"}
               </button>
             </div>

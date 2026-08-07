@@ -120,12 +120,17 @@ export default function Feed() {
             const available = categories.filter((c) => present.has(c));
             const chips = ["All", ...available];
             return chips.map((c) => (
-              <button key={c} onClick={() => setCat(c)}
-                className={`chip border ${
+              <button
+                key={c}
+                onClick={() => setCat(c)}
+                className={`chip border transition ${
                   cat === c
-                    ? "bg-brand-600 border-brand-600 text-white"
+                    ? "bg-brand-600 border-brand-600 text-white shadow-xs"
                     : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-400"
-                }`}>{c}</button>
+                }`}
+              >
+                {c}
+              </button>
             ));
           })()}
         </div>
@@ -136,38 +141,144 @@ export default function Feed() {
         )}
       </div>
 
-      {!focusId && showPicks && aiPicks.length > 0 && (
-        <section className="card p-5">
-          <h2 className="font-bold text-brand-700 dark:text-brand-300 flex items-center gap-2 mb-4">
-            <Sparkles size={18} /> AI Recommended for You
-          </h2>
+      {loading ? (
+        <FeedSkeleton showPicks={showPicks && !focusId} />
+      ) : (
+        <>
+          {!focusId && showPicks && aiPicks.length > 0 && (
+            <section className="card p-5">
+              <h2 className="font-bold text-brand-700 dark:text-brand-300 flex items-center gap-2 mb-4">
+                <Sparkles size={18} /> AI Recommended for You
+              </h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {aiPicks.slice(0, 2).map((t) => (
+                  <TaskCard key={`pick-${t._id}`} t={t} state={sent[t._id]} onRequest={() => openRequest(t)} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {filtered.length === 0 ? (
+            <div className="card p-12 text-center space-y-3">
+              <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 grid place-items-center mx-auto">
+                <Filter size={22} />
+              </div>
+              <h3 className="font-bold text-lg text-slate-900 dark:text-white">No tasks match your filters</h3>
+              <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                Try searching for a different term or clearing your category filters to find more available tasks.
+              </p>
+              {cat !== "All" && (
+                <button onClick={() => setCat("All")} className="btn-primary text-sm py-2 px-4 inline-flex mt-2">
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              {filtered.map((t) => (
+                <TaskCard key={t._id} t={t} state={sent[t._id]} onRequest={() => openRequest(t)} />
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {dlgTask && (
+        <RequestDialog
+          task={dlgTask}
+          text={dlgText}
+          setText={setDlgText}
+          onClose={() => setDlgTask(null)}
+          onSend={sendRequest}
+          busy={sent[dlgTask._id] === "sending"}
+        />
+      )}
+    </div>
+  );
+}
+
+// === Skeleton Loading Component for Feed ===
+function FeedSkeleton({ showPicks }) {
+  return (
+    <div className="space-y-6 animate-pulse" aria-label="Loading tasks feed">
+      {/* AI Picks Skeleton */}
+      {showPicks && (
+        <section className="card p-5 border border-slate-200/80 dark:border-slate-800">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-5 w-5 bg-brand-200 dark:bg-brand-900/40 rounded-full" />
+            <div className="h-5 w-44 bg-slate-200 dark:bg-slate-800 rounded-md" />
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
-            {aiPicks.slice(0, 2).map((t) => (
-              <TaskCard key={`pick-${t._id}`} t={t} state={sent[t._id]} onRequest={() => openRequest(t)} />
+            {[1, 2].map((i) => (
+              <div key={`pick-skel-${i}`} className="card border border-slate-200/70 dark:border-slate-800/80 p-4 flex gap-3.5">
+                <div className="h-20 w-20 rounded-xl bg-slate-200 dark:bg-slate-800 shrink-0" />
+                <div className="flex-1 min-w-0 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                    <div className="h-3 w-14 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                  <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                    <div className="h-7 w-20 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </section>
       )}
 
-      {loading ? (
-        <p className="text-slate-500">Loading…</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-slate-500">No tasks match your filters.</p>
-      ) : (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filtered.map((t) => (
-            <TaskCard key={t._id} t={t} state={sent[t._id]} onRequest={() => openRequest(t)} />
-          ))}
-        </div>
-      )}
+      {/* Main Task Grid Skeleton */}
+      <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        {[1, 2, 3, 4, 5, 6].map((idx) => {
+          const hasImage = idx % 2 === 1; // realistic variation of image/non-image cards
+          return (
+            <div
+              key={`feed-card-skel-${idx}`}
+              className="card overflow-hidden flex flex-col border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft"
+            >
+              {hasImage && (
+                <div className="aspect-[16/9] w-full bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                </div>
+              )}
+              <div className="p-5 flex-1 flex flex-col space-y-3.5">
+                {/* Header chip + date */}
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full" />
+                  <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                </div>
 
-      {dlgTask && (
-        <RequestDialog
-          task={dlgTask} text={dlgText} setText={setDlgText}
-          onClose={() => setDlgTask(null)} onSend={sendRequest}
-          busy={sent[dlgTask._id] === "sending"}
-        />
-      )}
+                {/* Title */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="h-5 w-5/6 bg-slate-200 dark:bg-slate-700/80 rounded-md" />
+                  <div className="h-3.5 w-full bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="h-3.5 w-4/6 bg-slate-200 dark:bg-slate-800 rounded" />
+                </div>
+
+                {/* Location & Time info */}
+                <div className="space-y-1.5 pt-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3.5 w-3.5 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+                    <div className="h-3 w-32 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-3.5 w-3.5 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+                    <div className="h-3 w-40 bg-slate-200 dark:bg-slate-800 rounded" />
+                  </div>
+                </div>
+
+                {/* Bottom row */}
+                <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-md" />
+                  <div className="h-9 w-24 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
