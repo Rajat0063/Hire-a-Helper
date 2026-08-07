@@ -1,40 +1,21 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const Settings = require("../models/Settings");
+const router = require("express").Router();
+const authModule = require("../middleware/auth");
+const auth = typeof authModule === "function" ? authModule : (authModule.auth || authModule);
+const c = require("../controllers/authController");
 
-// Verify JWT and attach req.user. Blocked users are bounced with a special
-// 403 USER_BLOCKED code that the frontend interceptor uses to force-logout.
-async function auth(req, res, next) {
-  try {
-    const header = req.headers.authorization || "";
-    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-    if (!token) return res.status(401).json({ message: "No token" });
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
-    if (!user) return res.status(401).json({ message: "Invalid token" });
-    if (user.isBlocked) {
-      return res
-        .status(403)
-        .json({ code: "USER_BLOCKED", message: "Your account has been blocked by an administrator." });
-    }
-    if (user.role !== "admin") {
-      const settings = await Settings.findOne({ key: "platform" }).select("maintenanceMode");
-      if (settings?.maintenanceMode) {
-        return res.status(503).json({ code: "MAINTENANCE_MODE", message: "The platform is currently in maintenance mode." });
-      }
-    }
-    req.user = user;
-    next();
-  } catch {
-    res.status(401).json({ message: "Invalid token" });
-  }
+router.post("/signup", c.signup);
+router.post("/login", c.login);
+router.post("/verify-otp", c.verifyOtp);
+router.post("/resend-otp", c.resendOtp);
+
+router.post("/forgot-password", c.forgotPassword);
+router.post("/reset-password", c.resetPassword);
+if (c.changePassword) {
+  router.patch("/change-password", auth, c.changePassword);
 }
 
-function adminOnly(req, res, next) {
-  if (req.user?.role !== "admin") return res.status(403).json({ message: "Admin only" });
-  next();
-}
+// ~ phone OTP (authenticated) ~
+if (c.sendPhoneOtp) router.post("/phone/send-otp", auth, c.sendPhoneOtp);
+if (c.verifyPhoneOtp) router.post("/phone/verify-otp", auth, c.verifyPhoneOtp);
 
-module.exports = auth;
-module.exports.auth = auth;
-module.exports.adminOnly = adminOnly;
+module.exports = router;
