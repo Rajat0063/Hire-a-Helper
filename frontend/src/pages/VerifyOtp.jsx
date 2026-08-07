@@ -20,7 +20,7 @@ export default function VerifyOtp() {
     try {
       setLoading(true);
       await verifyOtp(email, otp);
-      toast.success("Account verified!");
+      toast.success("Email verified!");
       nav("/dashboard");
     } catch (err) {
       toast.error(err.response?.data?.message || "Verification failed");
@@ -50,7 +50,9 @@ export default function VerifyOtp() {
         <button className="btn-primary w-full" disabled={loading || otp.length<6}>{loading?"Verifying…":"Verify"}</button>
       </form>
       <button onClick={resend} disabled={resendBusy || !email}
-        className="block mx-auto mt-4 text-sm text-brand-700 dark:text-brand-300 font-semibold">{resendBusy?"Resending…":"Resend code"}</button>
+        className="mt-4 text-xs text-brand-600 dark:text-brand-400 hover:underline w-full text-center block">
+        {resendBusy?"Sending…":"Resend code"}
+      </button>
     </AuthShell>
   );
 }

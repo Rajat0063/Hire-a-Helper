@@ -1,57 +1,84 @@
-// === Nodemailer transport ===
 const nodemailer = require("nodemailer");
 
 let transporter;
 function getTransporter() {
   if (transporter) return transporter;
-  const port = Number(process.env.SMTP_PORT || 465);
-  const host = process.env.SMTP_HOST || "";
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT || 587);
   const isGmail = host.includes("gmail") || process.env.SMTP_SERVICE === "gmail";
 
   const config = {
+    host: isGmail ? "smtp.gmail.com" : host,
+    port: isGmail ? 587 : port,
+    secure: isGmail ? false : (process.env.SMTP_SECURE === "true" || port === 465),
+    requireTLS: isGmail ? true : undefined,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     tls: {
-      rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== "false",
+      rejectUnauthorized: false,
+      ciphers: "SSLv3",
     },
-    connectionTimeout: Number(process.env.SMTP_TIMEOUT || 15000),
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
+    pool: true,
+    maxConnections: 3,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
   };
-
-  if (isGmail) {
-    config.service = "gmail";
-    config.host = "smtp.gmail.com";
-    config.port = 465;
-    config.secure = true;
-  } else {
-    config.host = host;
-    config.port = port;
-    config.secure = process.env.SMTP_SECURE === "true" || port === 465;
-  }
 
   transporter = nodemailer.createTransport(config);
   return transporter;
 }
 
 function isSmtpConfigured() {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+  return Boolean(process.env.RESEND_API_KEY || (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS));
 }
 
 async function sendMail({ to, subject, html }) {
   if (!isSmtpConfigured()) {
-    console.warn(`[mailer:WARN] SMTP is not fully configured; email to ${to} will be logged instead.`);
+    console.warn(`[mailer:WARN] Email service is not fully configured; email to ${to} will be logged instead.`);
     console.log(`[mailer:DEV] -> ${to} | ${subject}\n${html.replace(/<[^>]+>/g, "")}`);
     return { sent: false, smtpConfigured: false };
   }
+
+  const fromName = process.env.SMTP_FROM_NAME || "HireHelper";
+  const fromUser = process.env.SMTP_USER || "onboarding@resend.dev";
+  const fromAddress = process.env.SMTP_FROM || `"${fromName}" <${fromUser}>`;
+
+  // 1. Try Resend API if key is set (bypasses Render SMTP port blocking)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: process.env.SMTP_FROM || `${fromName} <onboarding@resend.dev>`,
+          to: [to],
+          subject,
+          html,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        console.log(`[mailer:resend] Sent email successfully to ${to} (id: ${data.id})`);
+        return { sent: true, smtpConfigured: true };
+      }
+      console.error("[mailer:resend:ERROR]", data);
+    } catch (rErr) {
+      console.error("[mailer:resend:FETCH_ERROR]", rErr && (rErr.stack || rErr.message || rErr));
+    }
+  }
+
+  // 2. Fall back to Nodemailer SMTP
   try {
-    const fromAddress = process.env.SMTP_FROM || `"HireHelper" <${process.env.SMTP_USER}>`;
     await getTransporter().sendMail({
       from: fromAddress,
       to,
       subject,
       html,
     });
-    console.log(`[mailer] Sent email successfully to ${to} from ${fromAddress}`);
+    console.log(`[mailer:smtp] Sent email successfully to ${to} from ${fromAddress}`);
     return { sent: true, smtpConfigured: true };
   } catch (err) {
     console.error(`[mailer:ERROR] Failed to send email to ${to}:`, err && (err.stack || err.message || err));
@@ -59,14 +86,20 @@ async function sendMail({ to, subject, html }) {
   }
 }
 
+// Verifies SMTP transporter connectivity; returns a promise that resolves
+// when verification succeeds or fails gracefully.
 async function verifyTransporter() {
+  if (process.env.RESEND_API_KEY) {
+    console.log("[mailer] Using Resend HTTP API for emails");
+    return true;
+  }
   if (!isSmtpConfigured()) return false;
   try {
     await getTransporter().verify();
     console.log("[mailer] SMTP transporter verified");
     return true;
   } catch (err) {
-    console.error("[mailer] SMTP transporter verification failed:", err && (err.stack || err.message || err));
+    console.warn("[mailer] SMTP transporter verification failed (will attempt sending on demand):", err?.message || err);
     return false;
   }
 }
@@ -131,9 +164,9 @@ async function sendResetEmail(to, code) {
   });
 }
 
-async function sendFeedbackNotification({ type, from, subject, message, rating }) {
+async function sendFeedbackEmail(to, { from, type, subject, message, rating }) {
   return await sendMail({
-    to: process.env.ADMIN_EMAIL || process.env.SMTP_USER,
+    to,
     subject: `[HireHelper feedback · ${type}] ${subject}`,
     html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:520px;margin:0 auto;padding:28px;border:1px solid #e2e8f0;border-radius:16px;background-color:#ffffff">
       <div style="margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid #f1f5f9">
@@ -158,9 +191,9 @@ async function sendFeedbackNotification({ type, from, subject, message, rating }
 }
 
 module.exports = {
-  sendMail,
   sendOtpEmail,
   sendResetEmail,
-  sendFeedbackNotification,
+  sendFeedbackEmail,
   verifyTransporter,
+  isSmtpConfigured,
 };
