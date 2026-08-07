@@ -11,7 +11,7 @@ function systemPrefersDark() {
 }
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem("hh_theme") || "system");
+  const [theme, setTheme] = useState(() => localStorage.getItem("hh_theme") || "light");
 
   const resolved = useMemo(
     () => (theme === "system" ? (systemPrefersDark() ? "dark" : "light") : theme),
