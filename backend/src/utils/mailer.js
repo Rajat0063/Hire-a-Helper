@@ -194,11 +194,10 @@ async function sendFeedbackEmail({ from, subject, message, rating, type }) {
   });
 }
 
-module.exports = {
-  isSmtpConfigured,
-  sendMail,
-  sendVerificationEmail,
-  sendPasswordResetEmail,
-  sendFeedbackEmail,
-  verifyTransporter,
-};
+exports.sendOtpEmail = sendOtpEmail;
+exports.sendResetEmail = sendResetEmail;
+exports.sendFeedbackEmail = sendFeedbackEmail;
+exports.verifyTransporter = verifyTransporter;
+exports.isSmtpConfigured = isSmtpConfigured;
+
+module.exports = { sendOtpEmail, sendResetEmail, sendFeedbackEmail, verifyTransporter, isSmtpConfigured };

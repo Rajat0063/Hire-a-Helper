@@ -4,7 +4,7 @@ const User = require("../models/User");
 const PendingUser = require("../models/PendingUser");
 const Otp = require("../models/Otp");
 const sms = require("../utils/sms");
-const { sendOtpEmail, sendResetEmail } = require("../utils/mailer");
+const mailer = require("../utils/mailer");
 
 function genOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -44,7 +44,9 @@ exports.signup = async (req, res) => {
     await Otp.create({ email, code });
     
     // Send email to user's address
-    sendOtpEmail(email, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
+     if (mailer && typeof mailer.sendOtpEmail === "function") {
+      mailer.sendOtpEmail(email, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
+    }
 
     return res.status(201).json({
       message: "Signup received. Verification code sent to your email.",
@@ -74,7 +76,9 @@ exports.login = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    sendOtpEmail(email, code).catch((e) => console.error("[login:mail]", e && (e.stack || e.message || e)));
+    if (mailer && typeof mailer.sendOtpEmail === "function") {
+    mailer.sendOtpEmail(email, code).catch((e) => console.error("[resendOtp:mail]", e && (e.stack || e.message || e)));
+  }
     return res.status(200).json({
       requireOtp: true,
       email,
@@ -127,7 +131,9 @@ exports.resendOtp = async (req, res) => {
   const code = genOtp();
   await Otp.deleteMany({ email });
   await Otp.create({ email, code });
-  sendOtpEmail(email, code).catch((e) => console.error("[resendOtp:mail]", e && (e.stack || e.message || e)));
+  if (mailer && typeof mailer.sendOtpEmail === "function") {
+      mailer.sendOtpEmail(email, code).catch((e) => console.error("[login:mail]", e && (e.stack || e.message || e)));
+    }
   res.json({ message: "Verification code sent to your email." });
 };
 
@@ -139,7 +145,9 @@ exports.forgotPassword = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    sendResetEmail(email, code).catch((e) => console.error("[forgotPassword:mail]", e && (e.stack || e.message || e)));
+    if (mailer && typeof mailer.sendOtpEmail === "function") {
+    mailer.sendOtpEmail(email, code).catch((e) => console.error("[resendOtp:mail]", e && (e.stack || e.message || e)));
+  }
   }
   res.json({ message: "If an account exists for that email, a reset code has been sent." });
 };

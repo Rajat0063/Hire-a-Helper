@@ -2,7 +2,7 @@ const Feedback = require("../models/Feedback");
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 const { emitToUser } = require("../socket");
-const { sendFeedbackEmail } = require("../utils/mailer");
+const mailer = require("../utils/mailer");
 
 // === POST /api/feedback ===
 exports.submit = async (req, res) => {
@@ -25,8 +25,8 @@ exports.submit = async (req, res) => {
         body: `New feedback (${fb.type}) from ${req.user.firstName}: ${fb.subject}`,
       });
       emitToUser(a._id, "notification:new", n);
-      if (a.email) {
-        sendFeedbackEmail(a.email, {
+      if (a.email && mailer && typeof mailer.sendFeedbackEmail === "function") {
+        mailer.sendFeedbackEmail(a.email, {
           from: `${req.user.firstName} ${req.user.lastName} <${req.user.email}>`,
           type: fb.type, subject: fb.subject, message: fb.message, rating: fb.rating,
         }).catch((e) => console.error("[feedback mail]", e.message));
