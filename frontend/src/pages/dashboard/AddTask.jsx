@@ -102,108 +102,115 @@ export default function AddTask() {
   };
 
   return (
-    <div>
-      <div className="mb-4">
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white">Add Task</h1>
-        <p className="text-slate-500">Create a task and find someone to help you</p>
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">Add Task</h1>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Create a task and connect with local community helpers</p>
       </div>
 
-      <form onSubmit={submit} className="card p-6 lg:p-8 space-y-5 max-w-3xl mx-auto">
+      <form onSubmit={submit} className="card p-5 sm:p-6 lg:p-8 space-y-5 border border-slate-200/80 dark:border-slate-800 shadow-soft">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Add New Task</h2>
-          <p className="text-slate-500 text-sm">Fill in the details and let AI help with the description</p>
+          <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">Task Details</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-0.5">Fill in the details below. You can also use AI to draft your task description.</p>
         </div>
 
         <Field label="Task Title">
-          <input className="input" required placeholder="e.g., Help moving furniture"
+          <input className="input text-xs sm:text-sm" required placeholder="e.g., Help moving heavy couch and desk"
             value={f.title} onChange={(e) => set("title", e.target.value)} />
         </Field>
 
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="label">Description</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="label text-xs sm:text-sm">Description <span className="text-rose-500">*</span></label>
             <button type="button" onClick={aiGenerate}
-              className="text-sm font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 inline-flex items-center gap-1 hover:bg-slate-50 dark:hover:bg-slate-800">
-              <Sparkles size={14} className="text-brand-600" /> AI Generate
+              className="text-xs font-semibold text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-900/50 bg-brand-50/50 dark:bg-brand-900/20 rounded-lg px-2.5 py-1 inline-flex items-center gap-1.5 hover:bg-brand-50 transition">
+              <Sparkles size={13} className="text-brand-600 dark:text-brand-400" /> AI Draft
             </button>
           </div>
-          <textarea className="input min-h-[120px]" required placeholder="Describe what help you need…"
+          <textarea className="input text-xs sm:text-sm min-h-[110px]" required placeholder="Describe what help you need, estimated time, and any materials provided…"
             value={f.description} onChange={(e) => set("description", e.target.value)} />
         </div>
 
         <Field label="Location">
-          <div className="flex gap-2">
-            <input className="input" required placeholder="e.g., Downtown Seattle, WA"
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input className="input text-xs sm:text-sm flex-1" required placeholder="e.g., Downtown Seattle, WA or Neighborhood"
               value={f.location} onChange={(e) => set("location", e.target.value)} />
             <button type="button" onClick={useMyLocation} disabled={locating}
-              className="btn-ghost text-sm py-2 whitespace-nowrap">
-              <Locate size={14} /> {locating ? "Locating…" : "Use mine"}
+              className="btn-ghost text-xs sm:text-sm py-2 px-3 whitespace-nowrap shrink-0 flex items-center justify-center gap-1.5">
+              <Locate size={14} className={locating ? "animate-spin text-brand-600" : ""} />
+              {locating ? "Locating…" : "Use My GPS"}
             </button>
           </div>
-          {f.lat != null && <p className="text-xs text-emerald-600 mt-1">Coords saved — task will appear in Nearby.</p>}
+          {f.lat != null && <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">✓ Coordinates captured — task will display on Nearby map.</p>}
         </Field>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Start Date">
-            <input type="date" className="input" required value={f.startDate} onChange={(e) => set("startDate", e.target.value)} />
+            <input type="date" className="input text-xs sm:text-sm" required value={f.startDate} onChange={(e) => set("startDate", e.target.value)} />
           </Field>
           <Field label="Start Time">
-            <input type="time" className="input" required value={f.startTime} onChange={(e) => set("startTime", e.target.value)} />
+            <input type="time" className="input text-xs sm:text-sm" required value={f.startTime} onChange={(e) => set("startTime", e.target.value)} />
           </Field>
           <Field label="End Date" optional>
-            <input type="date" className="input" value={f.endDate} onChange={(e) => set("endDate", e.target.value)} />
+            <input type="date" className="input text-xs sm:text-sm" value={f.endDate} onChange={(e) => set("endDate", e.target.value)} />
           </Field>
           <Field label="End Time" optional>
-            <input type="time" className="input" value={f.endTime} onChange={(e) => set("endTime", e.target.value)} />
+            <input type="time" className="input text-xs sm:text-sm" value={f.endTime} onChange={(e) => set("endTime", e.target.value)} />
           </Field>
         </div>
 
         <Field label="Category">
-          <select className="input" value={f.category} onChange={(e) => set("category", e.target.value)}>
+          <select className="input text-xs sm:text-sm" value={f.category} onChange={(e) => set("category", e.target.value)}>
             <option value="">Select a category</option>
             {categories.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Payment Amount">
-            <input type="number" min="0" step="0.01" className="input" value={f.paymentAmount}
+            <input type="number" min="0" step="0.01" className="input text-xs sm:text-sm" value={f.paymentAmount}
               onChange={(e) => set("paymentAmount", e.target.value)} />
           </Field>
           <Field label="Currency">
-            <select className="input" value={f.currency} onChange={(e) => set("currency", e.target.value)}>
+            <select className="input text-xs sm:text-sm" value={f.currency} onChange={(e) => set("currency", e.target.value)}>
               {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
             </select>
           </Field>
         </div>
 
         <div>
-          <label className="label">Task Image <span className="text-rose-500">*</span></label>
+          <label className="label text-xs sm:text-sm">Task Image <span className="text-rose-500">*</span></label>
           {f.image ? (
-            <div className="mt-2 relative">
-              <img src={f.image} alt="preview" className="rounded-xl w-full max-h-72 object-cover" />
+            <div className="mt-2 relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+              <img src={f.image} alt="preview" className="w-full max-h-72 object-cover" />
               <button type="button" onClick={() => set("image", "")}
-                className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1.5"><X size={14} /></button>
+                className="absolute top-2.5 right-2.5 bg-black/70 hover:bg-black/90 text-white rounded-full p-1.5 shadow-md transition">
+                <X size={15} />
+              </button>
             </div>
           ) : (
             <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]); }}
               onClick={() => fileRef.current?.click()}
-              className={`mt-2 border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition
-                ${dragOver ? "border-brand-500 bg-brand-50/40 dark:bg-brand-900/20" : "border-slate-200 dark:border-slate-700"}`}>
-              <Upload className="mx-auto text-slate-400" />
-              <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">Upload a file or drag and drop</div>
-              <div className="text-xs text-slate-400">PNG, JPG, GIF up to 10MB</div>
+              className={`mt-2 border-2 border-dashed rounded-xl p-6 sm:p-10 text-center cursor-pointer transition
+                ${dragOver ? "border-brand-500 bg-brand-50/40 dark:bg-brand-900/20" : "border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
+              <Upload className="mx-auto text-slate-400" size={28} />
+              <div className="mt-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">Upload a task image or drag and drop</div>
+              <div className="text-[11px] text-slate-400 mt-0.5">PNG, JPG, GIF or WebP up to 10MB</div>
               <input ref={fileRef} hidden type="file" accept="image/*"
                 onChange={(e) => handleFile(e.target.files?.[0])} />
             </div>
           )}
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <button className="btn-primary flex-1" disabled={loading}>{loading ? "Posting…" : "Post Task"}</button>
-          <button type="button" onClick={() => nav(-1)} className="btn-ghost flex-1">Cancel</button>
+        <div className="flex flex-col sm:flex-row gap-3 pt-3">
+          <button className="btn-primary flex-1 py-2.5 text-xs sm:text-sm font-bold shadow-soft" disabled={loading}>
+            {loading ? "Posting…" : "Post Task"}
+          </button>
+          <button type="button" onClick={() => nav(-1)} className="btn-ghost flex-1 py-2.5 text-xs sm:text-sm">
+            Cancel
+          </button>
         </div>
       </form>
     </div>
