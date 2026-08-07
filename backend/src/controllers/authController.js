@@ -21,9 +21,6 @@ exports.signup = async (req, res) => {
     }
     const existing = await User.findOne({ email });
     if (existing) {
-      try {
-        console.warn(`[signup] email conflict - received=${String(email).slice(0,200)} existingId=${existing._id} createdAt=${existing.createdAt}`);
-      } catch (logErr) { /* ignore logging failures */ }
       if (existing.isBlocked)
         return res.status(403).json({ code: "USER_BLOCKED",
           message: "This email is blocked by an administrator and cannot be used." });
@@ -37,8 +34,6 @@ exports.signup = async (req, res) => {
       return res.status(201).json({ token: sign(user._id), user: stripUser(user), message: "Signup successful." });
     }
 
-    // When email verification is required, do NOT create the real User yet.
-    // Store the signup data in PendingUser (auto-expires) and send an OTP.
     const existingPending = await PendingUser.findOne({ email });
     if (existingPending) {
       existingPending.firstName = firstName;
@@ -53,9 +48,14 @@ exports.signup = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    // Fire-and-forget email send so SMTP connectivity doesn't block the request
+    
+    // Send email to user's address
     sendOtpEmail(email, code).catch((e) => console.error("[signup:mail]", e && (e.stack || e.message || e)));
-    return res.status(201).json({ message: "Signup received. OTP sent to email.", email });
+
+    return res.status(201).json({
+      message: "Signup received. Verification code sent to your email.",
+      email,
+    });
   } catch (err) {
     console.error("[signup:error]", err && (err.stack || err.message || err));
     return res.status(500).json({ message: err?.message || "Server error" });
@@ -77,9 +77,11 @@ exports.login = async (req, res) => {
     const code = genOtp();
     await Otp.deleteMany({ email });
     await Otp.create({ email, code });
-    // Do not await email send during login flow to avoid timeouts
     sendOtpEmail(email, code).catch((e) => console.error("[login:mail]", e && (e.stack || e.message || e)));
-    return res.status(200).json({ requireOtp: true, email });
+    return res.status(200).json({
+      requireOtp: true,
+      email,
+    });
   }
 
   user.stats = user.stats || {};
@@ -96,7 +98,7 @@ exports.verifyOtp = async (req, res) => {
   const found = await Otp.findOne({ email, code: otp });
   if (!found) return res.status(400).json({ message: "Invalid or expired OTP" });
   await Otp.deleteMany({ email });
-  // If a pending signup exists, create the real user now.
+
   const pending = await PendingUser.findOne({ email });
   let user;
   if (pending) {
@@ -125,7 +127,7 @@ exports.resendOtp = async (req, res) => {
   await Otp.deleteMany({ email });
   await Otp.create({ email, code });
   sendOtpEmail(email, code).catch((e) => console.error("[resendOtp:mail]", e && (e.stack || e.message || e)));
-  res.json({ message: "OTP resent" });
+  res.json({ message: "Verification code sent to your email." });
 };
 
 // === POST /api/auth/forgot-password ===
@@ -176,9 +178,6 @@ exports.changePassword = async (req, res) => {
 };
 
 // === POST /api/auth/phone/send-otp  (authenticated) ===
-// Uses Twilio Verify when TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_VERIFY_SID
-// are set — a real SMS goes to the user's handset. Without those vars we
-// fall back to a dev OTP (returned + console-logged) for friction-free local dev.
 exports.sendPhoneOtp = async (req, res) => {
   const { phone } = req.body;
   if (!phone || phone.length < 7) return res.status(400).json({ message: "Enter a valid phone number" });
@@ -188,17 +187,13 @@ exports.sendPhoneOtp = async (req, res) => {
 
   const key = `phone:${phone}`;
   await Otp.deleteMany({ email: key });
-  // sentinel "twilio" means verification is checked remotely on /verify
   await Otp.create({ email: key, code: result.real ? "twilio" : devCode });
 
   await User.updateOne({ _id: req.user._id }, { phone, phoneVerified: false });
 
   res.json({
-    message: result.real
-      ? "Verification code sent to your phone."
-      : "OTP sent (dev mode — Twilio not configured).",
+    message: "Verification code sent to your phone.",
     real: result.real,
-    devCode: result.real || process.env.NODE_ENV === "production" ? undefined : devCode,
   });
 };
 

@@ -26,21 +26,23 @@ export default function VerifyOtp() {
     try {
       setResendBusy(true);
       await api.post("/auth/resend-otp", { email });
-      toast.success("OTP resent");
+      toast.success("Verification code sent to your email");
     } catch {
-      toast.error("Failed to resend");
+      toast.error("Failed to resend code");
     } finally {
       setResendBusy(false);
     }
   };
 
-  return <AuthShell title="Verify your email" subtitle={`We sent a 6-digit code to ${email || "your inbox"}`}>
-    <form onSubmit={submit} className="space-y-4">
-      <input className="input text-center tracking-[0.5em] text-2xl font-bold" maxLength={6} required
-        value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,""))}/>
-      <button className="btn-primary w-full" disabled={loading || otp.length<6}>{loading?"Verifying…":"Verify"}</button>
-    </form>
-    <button onClick={resend} disabled={resendBusy || !email}
-      className="block mx-auto mt-4 text-sm text-brand-700 font-semibold">{resendBusy?"Resending…":"Resend code"}</button>
-  </AuthShell>;
+  return (
+    <AuthShell title="Verify your email" subtitle={`We sent a 6-digit code to ${email || "your inbox"}`}>
+      <form onSubmit={submit} className="space-y-4">
+        <input className="input text-center tracking-[0.5em] text-2xl font-bold" maxLength={6} required
+          placeholder="000000" value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,""))}/>
+        <button className="btn-primary w-full" disabled={loading || otp.length<6}>{loading?"Verifying…":"Verify"}</button>
+      </form>
+      <button onClick={resend} disabled={resendBusy || !email}
+        className="block mx-auto mt-4 text-sm text-brand-700 dark:text-brand-300 font-semibold">{resendBusy?"Resending…":"Resend code"}</button>
+    </AuthShell>
+  );
 }

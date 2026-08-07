@@ -14,10 +14,9 @@ const pendingUserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-pendingUserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+pendingUserSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
-  next();
 });
 
 module.exports = mongoose.model("PendingUser", pendingUserSchema);
