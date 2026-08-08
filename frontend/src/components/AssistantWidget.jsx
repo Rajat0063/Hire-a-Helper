@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Sparkles, X, Send, Trash2, Bot, User as UserIcon, ChevronDown, Minimize2, HelpCircle } from "lucide-react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Sparkles, X, Send, Trash2, Bot, User as UserIcon, Minimize2, HelpCircle, GripVertical, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -16,28 +16,120 @@ const QUICK_SUGGESTIONS = [
 export default function AssistantWidget() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [minimized, setMinimized] = useState(false);
   const [msgs, setMsgs] = useState([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const listRef = useRef(null);
 
+  // Dragging & Corner-docking states
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDocked, setIsDocked] = useState(false);
+  const buttonRef = useRef(null);
+  const idleTimerRef = useRef(null);
+
+  const dragRef = useRef({
+    isDown: false,
+    hasMoved: false,
+    startX: 0,
+    startY: 0,
+    origX: 0,
+    origY: 0,
+  });
+
+  // Clamp position within screen viewport
+  const clampPosition = useCallback((x, y, btnW = 150, btnH = 48) => {
+    if (typeof window === "undefined") return { x, y };
+    const pad = 12;
+    const maxX = Math.max(pad, window.innerWidth - btnW - pad);
+    const maxY = Math.max(pad, window.innerHeight - btnH - pad);
+    return {
+      x: Math.min(Math.max(pad, x), maxX),
+      y: Math.min(Math.max(pad, y), maxY),
+    };
+  }, []);
+
+  // Initialize position on mount (Default: bottom-right corner)
   useEffect(() => {
-    if ((!open && !minimized) || !user) return;
+    if (typeof window === "undefined") return;
+    const defaultX = Math.max(12, window.innerWidth - 170);
+    const defaultY = Math.max(12, window.innerHeight - 110);
+
+    const saved = localStorage.getItem("hirehelper_assistant_pos");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+          setPosition(clampPosition(parsed.x, parsed.y));
+          return;
+        }
+      } catch {}
+    }
+    setPosition(clampPosition(defaultX, defaultY));
+  }, [clampPosition]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      const rect = buttonRef.current?.getBoundingClientRect();
+      const btnW = rect?.width || 150;
+      const btnH = rect?.height || 48;
+      setPosition((prev) => clampPosition(prev.x, prev.y, btnW, btnH));
+    };
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+    };
+  }, [clampPosition]);
+
+  // Auto-dock idle timer (Auto-hide into corner edge after 3.5s of inactivity)
+  const startIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => {
+      if (!isDragging && !open) {
+        setIsDocked(true);
+      }
+    }, 3500);
+  }, [isDragging, open]);
+
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    setIsDocked(false);
+    startIdleTimer();
+  }, [startIdleTimer]);
+
+  useEffect(() => {
+    if (!open && !isDragging && !isHovered) {
+      startIdleTimer();
+    } else {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      setIsDocked(false);
+    }
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [open, isDragging, isHovered, startIdleTimer]);
+
+  // Load chat history when opened
+  useEffect(() => {
+    if (!open || !user) return;
     api.get("/assistant/history").then(({ data }) => {
       if ((data.messages || []).length === 0) {
         setMsgs([
           {
             _id: "welcome",
             role: "assistant",
-            text: `Hi ${user.firstName || "there"}! 👋 I'm **HireHelper Assistant**, your interactive app guide.\n\nAsk me anything about posting tasks, mandatory fields, payment currencies, requests, chat, profile, or security rules!`,
+            text: `Hi ${user.firstName || "there"}! 👋 I'm **HireHelper Assistant**, your interactive AI guide.\n\nAsk me anything about posting tasks, mandatory fields, payment currencies, requests, chat, profile, or security rules!`,
           },
         ]);
       } else {
         setMsgs(data.messages);
       }
     }).catch(() => {});
-  }, [open, minimized, user]);
+  }, [open, user]);
 
   useEffect(() => {
     if (listRef.current && open) {
@@ -67,35 +159,168 @@ export default function AssistantWidget() {
     setMsgs([]);
   };
 
+  // Pointer Down Drag Handler
+  const handlePointerDown = (e) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+
+    const rect = buttonRef.current?.getBoundingClientRect();
+    const currentX = rect ? rect.left : position.x;
+    const currentY = rect ? rect.top : position.y;
+
+    dragRef.current = {
+      isDown: true,
+      hasMoved: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      origX: currentX,
+      origY: currentY,
+    };
+
+    try {
+      if (e.target?.setPointerCapture && e.pointerId) {
+        e.target.setPointerCapture(e.pointerId);
+      }
+    } catch {}
+
+    const handlePointerMove = (moveEvent) => {
+      if (!dragRef.current.isDown) return;
+      const dx = moveEvent.clientX - dragRef.current.startX;
+      const dy = moveEvent.clientY - dragRef.current.startY;
+
+      if (!dragRef.current.hasMoved && Math.hypot(dx, dy) > 4) {
+        dragRef.current.hasMoved = true;
+        setIsDragging(true);
+        setIsDocked(false);
+      }
+
+      if (dragRef.current.hasMoved) {
+        const btnW = rect?.width || 150;
+        const btnH = rect?.height || 48;
+        const nextX = dragRef.current.origX + dx;
+        const nextY = dragRef.current.origY + dy;
+        setPosition(clampPosition(nextX, nextY, btnW, btnH));
+      }
+    };
+
+    const handlePointerUp = (upEvent) => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+
+      try {
+        if (upEvent.target?.releasePointerCapture && upEvent.pointerId) {
+          upEvent.target.releasePointerCapture(upEvent.pointerId);
+        }
+      } catch {}
+
+      const hadMoved = dragRef.current.hasMoved;
+      dragRef.current.isDown = false;
+      setIsDragging(false);
+
+      if (hadMoved) {
+        const btnW = rect?.width || 150;
+        const btnH = rect?.height || 48;
+        const dx = upEvent.clientX - dragRef.current.startX;
+        const dy = upEvent.clientY - dragRef.current.startY;
+        const finalPos = clampPosition(dragRef.current.origX + dx, dragRef.current.origY + dy, btnW, btnH);
+        setPosition(finalPos);
+        try {
+          localStorage.setItem("hirehelper_assistant_pos", JSON.stringify(finalPos));
+        } catch {}
+        startIdleTimer();
+      } else {
+        // Tap/click -> Pop up Assistant dialog
+        setOpen(true);
+        setIsDocked(false);
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+  };
+
+  const resetPosition = (e) => {
+    e.stopPropagation();
+    const defaultX = Math.max(12, window.innerWidth - 170);
+    const defaultY = Math.max(12, window.innerHeight - 110);
+    const def = clampPosition(defaultX, defaultY);
+    setPosition(def);
+    try {
+      localStorage.setItem("hirehelper_assistant_pos", JSON.stringify(def));
+    } catch {}
+    setIsDocked(false);
+  };
+
   if (!user) return null;
+
+  const isLeftHalf = typeof window !== "undefined" ? position.x < window.innerWidth / 2 : false;
 
   return (
     <>
-      {/* Floating Corner Peeking/Launcher Badge */}
+      {/* Draggable & Auto-docking Floating Corner Trigger Handle */}
       {!open && (
-        <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2 group animate-in fade-in zoom-in-95 duration-200">
-          <button
-            onClick={() => { setOpen(true); setMinimized(false); }}
-            className="h-12 sm:h-14 pl-3.5 pr-4 sm:pr-5 rounded-full shadow-2xl
-                       bg-gradient-to-r from-brand-600 via-brand-700 to-indigo-700 text-white
-                       flex items-center gap-2.5 hover:scale-105 active:scale-95 transition-all duration-200
-                       border-2 border-white/20 dark:border-slate-700/50 backdrop-blur-md"
-            title="Open HireHelper AI Assistant"
-            aria-label="Open assistant"
-          >
-            <div className="relative">
-              <Sparkles size={20} className="animate-pulse text-amber-300" />
-              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
-            </div>
-            <div className="text-left leading-tight">
-              <div className="text-xs sm:text-sm font-extrabold tracking-wide">Assistant</div>
-              <div className="text-[10px] text-brand-100 opacity-90 hidden sm:block">Ask anything</div>
-            </div>
-          </button>
+        <div
+          ref={buttonRef}
+          onPointerDown={handlePointerDown}
+          onMouseEnter={() => { setIsHovered(true); setIsDocked(false); }}
+          onMouseLeave={() => { setIsHovered(false); resetIdleTimer(); }}
+          style={{
+            position: "fixed",
+            left: isDocked ? (isLeftHalf ? "0px" : `${window.innerWidth}px`) : `${position.x}px`,
+            top: `${position.y}px`,
+            transform: isDocked
+              ? isLeftHalf
+                ? "translateX(calc(-100% + 28px))"
+                : "translateX(-28px)"
+              : "none",
+            touchAction: "none",
+          }}
+          className={`z-40 h-11 sm:h-12 pl-2.5 pr-3.5 rounded-full
+                     bg-gradient-to-r from-brand-600 via-brand-700 to-indigo-700 text-white
+                     flex items-center gap-2 select-none cursor-grab active:cursor-grabbing
+                     transition-all duration-300 ease-out border-2 border-white/20 dark:border-slate-700/50 shadow-2xl
+                     ${isDragging ? "scale-105 ring-2 ring-amber-400 !cursor-grabbing" : ""}
+                     ${isDocked ? "opacity-90 hover:opacity-100 hover:scale-105" : ""}`}
+          title={isDocked ? "Click to pop up HireHelper Assistant" : "Drag anywhere • Click to open Assistant"}
+          role="button"
+          tabIndex={0}
+          aria-label="Open HireHelper Assistant"
+        >
+          {/* Peeking Arrow Indicator when docked */}
+          {isDocked && isLeftHalf && (
+            <ChevronRight size={14} className="text-amber-300 animate-pulse -mr-1" />
+          )}
+
+          <GripVertical size={14} className="opacity-60 shrink-0 -mr-0.5" />
+
+          <div className="relative shrink-0">
+            <Sparkles size={18} className="animate-pulse text-amber-300" />
+            <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white" />
+          </div>
+
+          <div className="text-left leading-tight whitespace-nowrap">
+            <div className="text-xs sm:text-sm font-extrabold tracking-wide">Assistant</div>
+          </div>
+
+          {isHovered && !isDragging && !isDocked && (
+            <button
+              type="button"
+              onClick={resetPosition}
+              className="ml-0.5 p-1 rounded-full hover:bg-white/20 transition text-white/80 hover:text-white"
+              title="Reset position to bottom-right corner"
+            >
+              <RotateCcw size={11} />
+            </button>
+          )}
+
+          {isDocked && !isLeftHalf && (
+            <ChevronLeft size={14} className="text-amber-300 animate-pulse -ml-1" />
+          )}
         </div>
       )}
 
-      {/* Expanded Floating Dialog */}
+      {/* Expanded Floating Assistant Dialog */}
       {open && (
         <div className="fixed z-50 inset-x-2 bottom-2 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-[400px]
                         max-h-[85vh] h-[540px] flex flex-col rounded-3xl overflow-hidden
@@ -120,7 +345,7 @@ export default function AssistantWidget() {
                 <Trash2 size={15} />
               </button>
               <button
-                onClick={() => { setOpen(false); setMinimized(true); }}
+                onClick={() => setOpen(false)}
                 title="Minimize / Dock to corner"
                 className="p-1.5 rounded-xl hover:bg-white/15 transition text-white/80 hover:text-white"
               >

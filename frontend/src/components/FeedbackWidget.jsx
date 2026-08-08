@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { MessageCircle, X, Send, Star, GripVertical, RotateCcw, Minimize2 } from "lucide-react";
+import { MessageCircle, X, Send, Star, GripVertical, RotateCcw, Minimize2, ChevronLeft, ChevronRight } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 // === FeedbackWidget ===
-// Floating, corner-dockable, draggable feedback widget.
-// Tap/click the corner button to pop up the feedback modal, or drag it anywhere.
+// Draggable, corner-dockable, auto-hiding feedback widget.
+// Can be dragged anywhere on screen. Auto-hides into screen edge/corner when idle.
+// Tap/hover to reveal or click to pop up the feedback modal.
 export default function FeedbackWidget() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -20,7 +21,10 @@ export default function FeedbackWidget() {
   const [position, setPosition] = useState({ x: 16, y: 550 });
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isDocked, setIsDocked] = useState(false);
   const buttonRef = useRef(null);
+  const idleTimerRef = useRef(null);
+
   const dragRef = useRef({
     isDown: false,
     hasMoved: false,
@@ -30,10 +34,10 @@ export default function FeedbackWidget() {
     origY: 550,
   });
 
-  // Clamp position to viewport bounds with mobile safe zones
-  const clampPosition = useCallback((x, y, btnW = 120, btnH = 44) => {
+  // Clamp position to viewport bounds
+  const clampPosition = useCallback((x, y, btnW = 130, btnH = 44) => {
     if (typeof window === "undefined") return { x, y };
-    const pad = window.innerWidth < 640 ? 10 : 16;
+    const pad = 12;
     const maxX = Math.max(pad, window.innerWidth - btnW - pad);
     const maxY = Math.max(pad, window.innerHeight - btnH - pad);
     return {
@@ -42,10 +46,10 @@ export default function FeedbackWidget() {
     };
   }, []);
 
-  // Initialize position on mount from localStorage or default to bottom-left
+  // Initialize position on mount (Default: bottom-left corner)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const defaultY = Math.max(20, window.innerHeight - 90);
+    const defaultY = Math.max(12, window.innerHeight - 110);
     const saved = localStorage.getItem("hirehelper_feedback_pos");
     if (saved) {
       try {
@@ -59,11 +63,11 @@ export default function FeedbackWidget() {
     setPosition(clampPosition(16, defaultY));
   }, [clampPosition]);
 
-  // Keep button inside screen on window resize or mobile orientation change
+  // Keep button inside screen on window resize
   useEffect(() => {
     const handleResize = () => {
       const rect = buttonRef.current?.getBoundingClientRect();
-      const btnW = rect?.width || 120;
+      const btnW = rect?.width || 130;
       const btnH = rect?.height || 44;
       setPosition((prev) => clampPosition(prev.x, prev.y, btnW, btnH));
     };
@@ -75,7 +79,35 @@ export default function FeedbackWidget() {
     };
   }, [clampPosition]);
 
-  // Handle pointer down (seamless across mouse and mobile touch)
+  // Auto-dock idle timer (Auto-hide into corner edge after 3.5s of inactivity)
+  const startIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => {
+      if (!isDragging && !open) {
+        setIsDocked(true);
+      }
+    }, 3500);
+  }, [isDragging, open]);
+
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    setIsDocked(false);
+    startIdleTimer();
+  }, [startIdleTimer]);
+
+  useEffect(() => {
+    if (!open && !isDragging && !isHovered) {
+      startIdleTimer();
+    } else {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      setIsDocked(false);
+    }
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [open, isDragging, isHovered, startIdleTimer]);
+
+  // Pointer Down Drag Handler
   const handlePointerDown = (e) => {
     if (e.button !== 0 && e.pointerType === "mouse") return;
 
@@ -106,15 +138,15 @@ export default function FeedbackWidget() {
       if (!dragRef.current.hasMoved && Math.hypot(dx, dy) > 4) {
         dragRef.current.hasMoved = true;
         setIsDragging(true);
+        setIsDocked(false);
       }
 
       if (dragRef.current.hasMoved) {
-        const btnW = rect?.width || 120;
+        const btnW = rect?.width || 130;
         const btnH = rect?.height || 44;
         const nextX = dragRef.current.origX + dx;
         const nextY = dragRef.current.origY + dy;
-        const clamped = clampPosition(nextX, nextY, btnW, btnH);
-        setPosition(clamped);
+        setPosition(clampPosition(nextX, nextY, btnW, btnH));
       }
     };
 
@@ -134,7 +166,7 @@ export default function FeedbackWidget() {
       setIsDragging(false);
 
       if (hadMoved) {
-        const btnW = rect?.width || 120;
+        const btnW = rect?.width || 130;
         const btnH = rect?.height || 44;
         const dx = upEvent.clientX - dragRef.current.startX;
         const dy = upEvent.clientY - dragRef.current.startY;
@@ -143,9 +175,11 @@ export default function FeedbackWidget() {
         try {
           localStorage.setItem("hirehelper_feedback_pos", JSON.stringify(finalPos));
         } catch {}
+        startIdleTimer();
       } else {
-        // Just a tap / click -> pop up feedback modal
+        // Tap/click -> Pop up Feedback modal
         setOpen(true);
+        setIsDocked(false);
       }
     };
 
@@ -156,13 +190,14 @@ export default function FeedbackWidget() {
 
   const resetPosition = (e) => {
     e.stopPropagation();
-    const defaultY = Math.max(20, window.innerHeight - 90);
+    const defaultY = Math.max(12, window.innerHeight - 110);
     const def = clampPosition(16, defaultY);
     setPosition(def);
     try {
       localStorage.setItem("hirehelper_feedback_pos", JSON.stringify(def));
     } catch {}
-    toast.success("Feedback button reset to default position");
+    setIsDocked(false);
+    toast.success("Feedback button reset to bottom-left corner");
   };
 
   if (!user) return null;
@@ -186,43 +221,64 @@ export default function FeedbackWidget() {
     }
   };
 
+  const isLeftHalf = typeof window !== "undefined" ? position.x < window.innerWidth / 2 : true;
+
   return (
     <>
-      {/* Draggable Corner Button Handle */}
-      <div
-        ref={buttonRef}
-        onPointerDown={handlePointerDown}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          position: "fixed",
-          left: `${position.x}px`,
-          top: `${position.y}px`,
-          touchAction: "none",
-        }}
-        className={`z-40 h-10 sm:h-11 pl-2 sm:pl-2.5 pr-3 sm:pr-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900
-                   flex items-center gap-1.5 sm:gap-2 select-none cursor-grab active:cursor-grabbing transition-all duration-150 touch-none border border-slate-700/50 dark:border-slate-300/50
-                   ${isDragging ? "shadow-2xl scale-105 ring-2 ring-brand-500/80 !cursor-grabbing" : "shadow-xl hover:shadow-2xl hover:scale-[1.02]"}`}
-        title="Drag anywhere to reposition • Click to pop up feedback form"
-        role="button"
-        tabIndex={0}
-        aria-label="Send feedback (draggable corner button)"
-      >
-        <GripVertical size={14} className="opacity-50 -mr-0.5 shrink-0" />
-        <MessageCircle size={15} className="shrink-0 text-brand-400 dark:text-brand-600" />
-        <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">Feedback</span>
+      {/* Draggable & Auto-docking Corner Handle */}
+      {!open && (
+        <div
+          ref={buttonRef}
+          onPointerDown={handlePointerDown}
+          onMouseEnter={() => { setIsHovered(true); setIsDocked(false); }}
+          onMouseLeave={() => { setIsHovered(false); resetIdleTimer(); }}
+          style={{
+            position: "fixed",
+            left: isDocked ? (isLeftHalf ? "0px" : `${window.innerWidth}px`) : `${position.x}px`,
+            top: `${position.y}px`,
+            transform: isDocked
+              ? isLeftHalf
+                ? "translateX(calc(-100% + 28px))"
+                : "translateX(-28px)"
+              : "none",
+            touchAction: "none",
+          }}
+          className={`z-40 h-10 sm:h-11 pl-2 sm:pl-2.5 pr-3 sm:pr-4 rounded-full
+                     bg-slate-900 dark:bg-white text-white dark:text-slate-900
+                     flex items-center gap-1.5 sm:gap-2 select-none cursor-grab active:cursor-grabbing
+                     transition-all duration-300 ease-out border border-slate-700/50 dark:border-slate-300/50 shadow-xl
+                     ${isDragging ? "scale-105 ring-2 ring-brand-500/80 !cursor-grabbing shadow-2xl" : "hover:shadow-2xl"}
+                     ${isDocked ? "opacity-90 hover:opacity-100 hover:scale-105" : ""}`}
+          title={isDocked ? "Click to pop up Feedback form" : "Drag anywhere • Click to open Feedback"}
+          role="button"
+          tabIndex={0}
+          aria-label="Send feedback (draggable corner handle)"
+        >
+          {/* Peeking Arrow Indicator when docked */}
+          {isDocked && isLeftHalf && (
+            <ChevronRight size={14} className="text-brand-400 dark:text-brand-600 animate-pulse -mr-1" />
+          )}
 
-        {isHovered && !isDragging && (
-          <button
-            type="button"
-            onClick={resetPosition}
-            className="ml-0.5 p-1 rounded-full text-slate-400 hover:text-white dark:hover:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 transition"
-            title="Reset position to default corner"
-          >
-            <RotateCcw size={11} />
-          </button>
-        )}
-      </div>
+          <GripVertical size={14} className="opacity-50 -mr-0.5 shrink-0" />
+          <MessageCircle size={15} className="shrink-0 text-brand-400 dark:text-brand-600" />
+          <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">Feedback</span>
+
+          {isHovered && !isDragging && !isDocked && (
+            <button
+              type="button"
+              onClick={resetPosition}
+              className="ml-0.5 p-1 rounded-full text-slate-400 hover:text-white dark:hover:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 transition"
+              title="Reset position to bottom-left corner"
+            >
+              <RotateCcw size={11} />
+            </button>
+          )}
+
+          {isDocked && !isLeftHalf && (
+            <ChevronLeft size={14} className="text-brand-400 dark:text-brand-600 animate-pulse -ml-1" />
+          )}
+        </div>
+      )}
 
       {/* Pop Up Modal Form */}
       {open && (
