@@ -4,6 +4,8 @@ import toast from "react-hot-toast";
 import {
   Users, ClipboardList, Activity, TrendingUp, Trash2, LogOut, Sun, Moon,
   ShieldCheck, Ban, CheckCircle2, Menu, X, Plus, Check, AlertCircle, ArrowLeft,
+  MessageSquare, Star, Search, Filter, Bug, Lightbulb, ThumbsUp, HelpCircle,
+  Clock, CheckCircle
 } from "lucide-react";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -12,6 +14,7 @@ import { useTheme } from "../../context/ThemeContext";
 const TABS = [
   { k: "users", label: "Users", icon: Users },
   { k: "tasks", label: "Tasks", icon: ClipboardList },
+  { k: "feedback", label: "Feedback", icon: MessageSquare },
   { k: "analytics", label: "Analytics", icon: TrendingUp },
   { k: "settings", label: "Settings", icon: ShieldCheck },
 ];
@@ -70,10 +73,14 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [recent, setRecent] = useState([]);
+  const [feedbacks, setFeedbacks] = useState([]);
   const [settings, setSettings] = useState(null);
   const [newCat, setNewCat] = useState("");
 
-  const isDirectAdmin = typeof window !== "undefined" && sessionStorage.getItem("hh_admin_direct") === "true";
+  // Feedback filters
+  const [fbStatusFilter, setFbStatusFilter] = useState("all");
+  const [fbTypeFilter, setFbTypeFilter] = useState("all");
+  const [fbSearch, setFbSearch] = useState("");
 
   const handleBackToApp = () => {
     if (window.history.length > 1) {
@@ -85,12 +92,20 @@ export default function AdminDashboard() {
 
   const load = async () => {
     try {
-      const [s, u, t, r, st] = await Promise.all([
-        api.get("/admin/stats"), api.get("/admin/users"), api.get("/admin/tasks"),
-        api.get("/admin/requests/recent"), api.get("/admin/settings"),
+      const [s, u, t, r, st, fb] = await Promise.all([
+        api.get("/admin/stats"),
+        api.get("/admin/users"),
+        api.get("/admin/tasks"),
+        api.get("/admin/requests/recent"),
+        api.get("/admin/settings"),
+        api.get("/feedback").catch(() => ({ data: { feedback: [] } })),
       ]);
-      setStats(s.data); setUsers(u.data.users); setTasks(t.data.tasks);
-      setRecent(r.data.requests); setSettings(st.data.settings);
+      setStats(s.data);
+      setUsers(u.data.users);
+      setTasks(t.data.tasks);
+      setRecent(r.data.requests);
+      setSettings(st.data.settings);
+      setFeedbacks(fb.data.feedback || []);
     } catch {
       toast.error("Failed to load admin data");
     } finally {
@@ -117,6 +132,18 @@ export default function AdminDashboard() {
     } catch { toast.error("Failed"); }
   };
 
+  const updateFeedbackStatus = async (id, status, adminNotes) => {
+    try {
+      await api.patch(`/feedback/${id}`, { status, adminNotes });
+      toast.success(`Feedback status updated to ${status}`);
+      setFeedbacks((prev) =>
+        prev.map((item) => (item._id === id ? { ...item, status, adminNotes: adminNotes ?? item.adminNotes } : item))
+      );
+    } catch {
+      toast.error("Failed to update feedback status");
+    }
+  };
+
   const saveSettings = async (patch) => {
     const optimistic = { ...settings, ...patch };
     setSettings(optimistic);
@@ -131,6 +158,27 @@ export default function AdminDashboard() {
   };
   const removeCategory = (c) =>
     saveSettings({ categories: settings.categories.filter((x) => x !== c) });
+
+  // Filtered feedbacks calculation
+  const filteredFeedbacks = feedbacks.filter((f) => {
+    if (fbStatusFilter !== "all" && (f.status || "new") !== fbStatusFilter) return false;
+    if (fbTypeFilter !== "all" && f.type !== fbTypeFilter) return false;
+    if (fbSearch.trim()) {
+      const q = fbSearch.toLowerCase();
+      const name = `${f.user?.firstName || ""} ${f.user?.lastName || ""}`.toLowerCase();
+      const email = (f.user?.email || "").toLowerCase();
+      const subject = (f.subject || "").toLowerCase();
+      const message = (f.message || "").toLowerCase();
+      return name.includes(q) || email.includes(q) || subject.includes(q) || message.includes(q);
+    }
+    return true;
+  });
+
+  const fbTotal = feedbacks.length;
+  const fbNew = feedbacks.filter((f) => !f.status || f.status === "new").length;
+  const fbResolved = feedbacks.filter((f) => f.status === "resolved").length;
+  const ratings = feedbacks.map((f) => f.rating).filter(Boolean);
+  const fbAvgRating = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "N/A";
 
   if (loading) return <AdminDashboardSkeleton />;
 
@@ -152,7 +200,6 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Back button for users navigating to admin dashboard */}
             <button
               onClick={handleBackToApp}
               className="flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold transition shadow-2xs"
@@ -184,7 +231,7 @@ export default function AdminDashboard() {
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold ${
                   tab === k ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
                             : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                }`}><Icon size={14} /> {label}</button>
+                }`}><Icon size={14} /> {label} {k === "feedback" && fbNew > 0 && <span className="ml-auto px-1.5 py-0.5 text-[10px] bg-rose-500 text-white rounded-full">{fbNew}</span>}</button>
             ))}
           </div>
         )}
@@ -196,7 +243,7 @@ export default function AdminDashboard() {
           <StatCard label="Total Users"      value={stats.users}            Icon={Users}          tone="text-brand-500" />
           <StatCard label="Active Tasks"     value={stats.tasks}            Icon={ClipboardList}  tone="text-amber-500" />
           <StatCard label="Pending Requests" value={stats.requests}         Icon={Activity}       tone="text-rose-500" />
-          <StatCard label="Completion Rate"  value={`${stats.completionPct ?? 0}%`} Icon={TrendingUp} tone="text-emerald-500" />
+          <StatCard label="User Feedback"    value={`${fbTotal} (${fbNew} New)`} Icon={MessageSquare} tone="text-indigo-500" />
         </div>
 
         {/* desktop tabs */}
@@ -206,7 +253,12 @@ export default function AdminDashboard() {
               className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition ${
                 tab === k ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-soft"
                           : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
-              }`}><Icon size={14} /> {label}</button>
+              }`}>
+              <Icon size={14} /> {label}
+              {k === "feedback" && fbNew > 0 && (
+                <span className="px-2 py-0.5 text-xs font-bold bg-rose-500 text-white rounded-full">{fbNew}</span>
+              )}
+            </button>
           ))}
         </div>
 
@@ -292,6 +344,85 @@ export default function AdminDashboard() {
                     ))}
                   </div>
                 )}
+            </div>
+          </div>
+        )}
+
+        {/* ===== FEEDBACK MONITORING TAB ===== */}
+        {tab === "feedback" && (
+          <div className="space-y-6">
+            {/* Feedback Stats Overview */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <Mini label="Total Submissions" value={fbTotal} />
+              <Mini label="New / Unreviewed" value={fbNew} />
+              <Mini label="Resolved Feedbacks" value={fbResolved} />
+              <Mini label="Avg Rating" value={fbAvgRating !== "N/A" ? `${fbAvgRating} ★` : "N/A"} />
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="card p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-soft space-y-4">
+              <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                <div className="relative flex-1">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={fbSearch}
+                    onChange={(e) => setFbSearch(e.target.value)}
+                    placeholder="Search by user name, email, subject, or keywords…"
+                    className="input pl-9 text-xs sm:text-sm h-10 w-full"
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-medium">
+                    {["all", "new", "reviewed", "resolved", "dismissed"].map((st) => (
+                      <button
+                        key={st}
+                        onClick={() => setFbStatusFilter(st)}
+                        className={`px-2.5 py-1 rounded-lg capitalize transition ${
+                          fbStatusFilter === st
+                            ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-bold shadow-xs"
+                            : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+
+                  <select
+                    value={fbTypeFilter}
+                    onChange={(e) => setFbTypeFilter(e.target.value)}
+                    className="input h-10 text-xs sm:text-sm py-1.5 px-3 rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="bug">Bugs</option>
+                    <option value="suggestion">Suggestions</option>
+                    <option value="praise">Praise</option>
+                    <option value="complaint">Complaints</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Feedback List */}
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 pt-2">
+                {filteredFeedbacks.length === 0 ? (
+                  <div className="py-12 text-center text-slate-500 dark:text-slate-400 space-y-2">
+                    <MessageSquare size={32} className="mx-auto text-slate-300 dark:text-slate-600" />
+                    <p className="font-semibold text-sm">No feedback matching your filters</p>
+                    <p className="text-xs">User submissions from the floating feedback widget will appear here.</p>
+                  </div>
+                ) : (
+                  filteredFeedbacks.map((item) => (
+                    <FeedbackCard
+                      key={item._id}
+                      item={item}
+                      onUpdateStatus={(status, adminNotes) => updateFeedbackStatus(item._id, status, adminNotes)}
+                    />
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -382,6 +513,135 @@ export default function AdminDashboard() {
   );
 }
 
+// === Individual Feedback Card Component ===
+function FeedbackCard({ item, onUpdateStatus }) {
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesText, setNotesText] = useState(item.adminNotes || "");
+
+  const user = item.user || {};
+  const fullName = `${user.firstName || "Anonymous"} ${user.lastName || ""}`.trim();
+  const initials = `${user.firstName?.[0] || "A"}${user.lastName?.[0] || ""}`.toUpperCase();
+  const dateStr = item.createdAt ? new Date(item.createdAt).toLocaleString() : "Just now";
+  const currentStatus = item.status || "new";
+
+  const typeConfig = {
+    bug: { bg: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-900/50", icon: Bug },
+    suggestion: { bg: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-900/50", icon: Lightbulb },
+    praise: { bg: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-900/50", icon: ThumbsUp },
+    complaint: { bg: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-900/50", icon: AlertCircle },
+    other: { bg: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700", icon: HelpCircle },
+  };
+
+  const currentType = typeConfig[item.type] || typeConfig.other;
+  const TypeIcon = currentType.icon;
+
+  const handleSaveNotes = () => {
+    onUpdateStatus(currentStatus, notesText);
+    setEditingNotes(false);
+  };
+
+  return (
+    <div className="py-4 space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        {/* User Info & Type */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-10 w-10 rounded-full bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-200 grid place-items-center font-bold text-xs shrink-0">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">{fullName}</span>
+              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border flex items-center gap-1 capitalize shrink-0 ${currentType.bg}`}>
+                <TypeIcon size={10} /> {item.type || "feedback"}
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-500 truncate">{user.email || "No email provided"} • {dateStr}</div>
+          </div>
+        </div>
+
+        {/* Rating & Status controls */}
+        <div className="flex items-center gap-2 shrink-0">
+          {item.rating > 0 && (
+            <div className="flex items-center gap-0.5 text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-1 rounded-lg border border-amber-200 dark:border-amber-900/50 text-xs font-bold">
+              <span>{item.rating}</span>
+              <Star size={12} fill="currentColor" />
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5">
+            {currentStatus === "new" && (
+              <span className="px-2 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                New
+              </span>
+            )}
+            {currentStatus === "reviewed" && (
+              <span className="px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                Reviewed
+              </span>
+            )}
+            {currentStatus === "resolved" && (
+              <span className="px-2 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
+                Resolved
+              </span>
+            )}
+            {currentStatus === "dismissed" && (
+              <span className="px-2 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                Dismissed
+              </span>
+            )}
+
+            <select
+              value={currentStatus}
+              onChange={(e) => onUpdateStatus(e.target.value)}
+              className="text-xs px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
+            >
+              <option value="new">Mark New</option>
+              <option value="reviewed">Mark Reviewed</option>
+              <option value="resolved">Mark Resolved</option>
+              <option value="dismissed">Dismiss</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Subject & Message */}
+      <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 space-y-1">
+        <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">{item.subject}</h4>
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">{item.message}</p>
+      </div>
+
+      {/* Admin Notes Section */}
+      <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+        {editingNotes ? (
+          <div className="flex items-center gap-2 w-full">
+            <input
+              type="text"
+              value={notesText}
+              onChange={(e) => setNotesText(e.target.value)}
+              placeholder="Add admin resolution notes…"
+              className="input text-xs py-1 px-2.5 h-8 flex-1"
+            />
+            <button onClick={handleSaveNotes} className="btn-primary py-1 px-3 text-xs">Save</button>
+            <button onClick={() => setEditingNotes(false)} className="btn-ghost py-1 px-2.5 text-xs">Cancel</button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between w-full">
+            <span className="text-[11px] text-slate-400 italic">
+              {item.adminNotes ? `Admin Note: "${item.adminNotes}"` : "No resolution notes added."}
+            </span>
+            <button
+              onClick={() => setEditingNotes(true)}
+              className="text-brand-600 dark:text-brand-400 font-semibold hover:underline text-[11px]"
+            >
+              {item.adminNotes ? "Edit Note" : "+ Add Admin Note"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function StatCard({ label, value, Icon, tone }) {
   return (
     <div className="card p-4 sm:p-5 flex items-center justify-between border border-slate-200/80 dark:border-slate-800 shadow-xs">
@@ -418,7 +678,6 @@ function Toggle({ label, value, onChange }) {
 }
 
 // === BarChart ===
-// Minimal, dependency-free SVG bar chart used on the analytics tab.
 function BarChart({ data }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   const W = 520, H = 200, pad = 30, gap = 24;

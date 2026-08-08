@@ -87,7 +87,13 @@ export default function AddTask() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!f.title.trim()) return toast.error("Task title is required");
+    if (!f.description.trim()) return toast.error("Description is required");
+    if (!f.location.trim()) return toast.error("Location is required");
     if (!f.startDate || !f.startTime) return toast.error("Pick a start date & time");
+    if (!f.category) return toast.error("Category is mandatory. Please select a category.");
+    if (!f.paymentAmount || Number(f.paymentAmount) <= 0) return toast.error("Payment amount is mandatory. Please enter a valid amount.");
+    if (!f.currency) return toast.error("Currency is mandatory. Please select a currency.");
     if (!f.image) return toast.error("A task image is required");
     const start = new Date(`${f.startDate}T${f.startTime}`);
     const end = f.endDate && f.endTime ? new Date(`${f.endDate}T${f.endTime}`) : undefined;
@@ -95,9 +101,9 @@ export default function AddTask() {
     try {
       await api.post("/tasks", {
         title: f.title, description: f.description, location: f.location,
-        category: f.category || "Other",
+        category: f.category,
         startTime: start, endTime: end,
-        image: f.image, paymentAmount: Number(f.paymentAmount) || 0, currency: f.currency,
+        image: f.image, paymentAmount: Number(f.paymentAmount), currency: f.currency,
         lat: f.lat, lng: f.lng,
       });
       toast.success("Task posted!");
@@ -166,20 +172,20 @@ export default function AddTask() {
           </Field>
         </div>
 
-        <Field label="Category" optional>
-          <select className="input text-xs sm:text-sm" value={f.category} onChange={(e) => set("category", e.target.value)}>
+        <Field label="Category">
+          <select required className="input text-xs sm:text-sm" value={f.category} onChange={(e) => set("category", e.target.value)}>
             <option value="">Select a category</option>
             {categories.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Payment Amount" optional>
-            <input type="number" min="0" step="0.01" className="input text-xs sm:text-sm" value={f.paymentAmount}
+          <Field label="Payment Amount">
+            <input required type="number" min="1" step="0.01" className="input text-xs sm:text-sm" placeholder="e.g. 50" value={f.paymentAmount || ""}
               onChange={(e) => set("paymentAmount", e.target.value)} />
           </Field>
-          <Field label="Currency" optional>
-            <select className="input text-xs sm:text-sm" value={f.currency} onChange={(e) => set("currency", e.target.value)}>
+          <Field label="Currency">
+            <select required className="input text-xs sm:text-sm" value={f.currency} onChange={(e) => set("currency", e.target.value)}>
               {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
             </select>
           </Field>
