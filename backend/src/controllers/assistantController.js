@@ -1,34 +1,46 @@
 const AssistantMessage = require("../models/AssistantMessage");
 const Task = require("../models/Task");
 const Request = require("../models/Request");
+const User = require("../models/User");
+const Feedback = require("../models/Feedback");
 
-// === Rule-based intent matcher ===
-// Kept intentionally simple — an ordered list of {intent, keywords, reply}.
-// First match wins. Replies can be a string OR an async function that
-// receives the requesting user and can look things up in the database, so
-// answers are personalized (e.g. "You have 3 pending requests").
+// === Comprehensive Knowledge Base & Intent Engine ===
 const INTENTS = [
   {
     intent: "greeting",
-    keywords: ["hi", "hello", "hey", "yo", "namaste", "hola"],
+    keywords: ["hi", "hello", "hey", "yo", "namaste", "hola", "greetings", "good morning", "good evening", "who are you", "what can you do"],
     reply: (u) =>
-      `Hi ${u.firstName}! 👋 I'm your Hire-a-Helper assistant. Ask me about posting tasks, requests, payments, messaging, notifications, or your profile.`,
+      `Hi ${u.firstName || "there"}! 👋 I'm **HireHelper Assistant**, your interactive AI guide for the Hire-a-Helper platform.\n\nI can answer questions about:\n• **Posting & Finding Tasks** (categories, required fields, GPS location)\n• **Requests & Approvals** (how to accept/decline requests)\n• **Realtime Messaging** (chatting, blocking/unblocking)\n• **Payments** (Razorpay, currencies, receipts)\n• **Reviews & Ratings** (leaving feedback for helpers)\n• **Account & Security** (password rules, OTP, profile edit)\n• **Admin Dashboard** (user management, feedback monitoring)\n\nWhat would you like help with today?`,
   },
   {
     intent: "post_task",
-    keywords: ["post task", "add task", "create task", "new task", "post a task", "how to post"],
+    keywords: [
+      "post task", "add task", "create task", "new task", "post a task", "how to post", "add a task",
+      "create a task", "task posting", "publish task", "posting task"
+    ],
     reply:
-      "To post a task: open **Add Task** from the sidebar → fill in title, description, category, location, budget (INR) and a photo (photo is required) → click *Post Task*. Helpers nearby will see it instantly on the Feed.",
+      "To post a task on **Hire-a-Helper**:\n\n1. Click **+ Add Task** from the sidebar/navigation.\n2. Enter the **Title** and detailed **Description** of what you need help with.\n3. Enter the **Location** (or tap *Use My GPS* for instant location).\n4. Select **Start Date & Time** (Optional: End Date & Time).\n5. Choose a **Category** (*Mandatory* - e.g. Cleaning, Plumbing, Tutoring).\n6. Set the **Payment Amount** and **Currency** (*Mandatory* - e.g. 500 INR).\n7. Upload a clear **Task Image** (*Mandatory*).\n8. Tap **Post Task** — nearby helpers will immediately see it on their Feed!",
+  },
+  {
+    intent: "task_requirements",
+    keywords: [
+      "mandatory", "required fields", "image required", "category required", "payment required",
+      "currency required", "what is required"
+    ],
+    reply:
+      "When creating a task, the following fields are **strictly mandatory**:\n\n• **Title & Description**\n• **Location** (manual text or GPS auto-fill)\n• **Start Date & Start Time**\n• **Category** (e.g. Repairs, Gardening, Delivery)\n• **Payment Amount** (must be > 0)\n• **Currency** (e.g. INR ₹, USD $, EUR €, GBP £)\n• **Task Image** (JPEG, PNG, WebP up to 10MB)",
   },
   {
     intent: "find_helper",
-    keywords: ["find helper", "hire", "who will help", "nearby", "find people", "find worker"],
+    keywords: ["find helper", "hire", "who will help", "nearby", "find people", "find worker", "browse tasks", "feed", "search task"],
     reply:
-      "Open **Nearby Tasks** to see helpers around you on a live map, or the **Feed** to browse all open tasks. When someone requests your task, you'll get a realtime notification.",
+      "You can find help or tasks in two ways:\n\n• **Feed**: Browse all active tasks posted by community members, filtered by search query or category.\n• **Nearby Tasks**: View interactive map markers showing tasks and helpers near your current GPS location.\n\nWhen you see a task you'd like to do, click **Request to Help** to notify the task creator!",
   },
   {
     intent: "requests_status",
-    keywords: ["my request", "request status", "pending", "requests", "accepted"],
+    keywords: [
+      "my request", "request status", "pending", "requests", "accepted", "declined", "incoming request", "approve request"
+    ],
     reply: async (u) => {
       const myTaskIds = (await Task.find({ user: u._id }).select("_id")).map((t) => t._id);
       const [pending, accepted, sent] = await Promise.all([
@@ -36,79 +48,98 @@ const INTENTS = [
         Request.countDocuments({ task: { $in: myTaskIds }, status: "accepted" }),
         Request.countDocuments({ requester: u._id }),
       ]);
-      return `You have **${pending} pending** and **${accepted} accepted** helper requests on your tasks, and you've sent **${sent}** requests to others. Manage them from the **Requests** and **My Requests** pages.`;
+      return `Here is your current request summary:\n\n• **Pending Requests on Your Tasks:** ${pending}\n• **Accepted Helpers:** ${accepted}\n• **Requests Sent by You:** ${sent}\n\nYou can manage incoming requests on the **Requests** tab and track your sent requests on the **My Requests** tab.`;
     },
   },
   {
     intent: "messages",
-    keywords: ["message", "chat", "talk", "conversation"],
+    keywords: ["message", "chat", "talk", "conversation", "send message", "chatting", "contact helper"],
     reply:
-      "Messaging opens automatically once a request is accepted. Go to **Messages** to chat, share details, or block/unblock a user from the right-side header menu.",
+      "Messaging becomes available as soon as a helper's request is **Accepted** by the task owner.\n\n• Open **Messages** from the sidebar to chat in real-time.\n• Share specific timing, addresses, or additional task photos.\n• You can also block/unblock users directly from the top menu of any chat conversation.",
   },
   {
     intent: "payment",
-    keywords: ["pay", "payment", "money", "charge", "razorpay", "upi", "invoice", "receipt"],
+    keywords: ["pay", "payment", "money", "charge", "razorpay", "upi", "invoice", "receipt", "billing", "currency", "inr"],
     reply:
-      "Payments in Hire-a-Helper are in **Indian Rupees (₹)**. When a worker marks a task complete, the owner will get a *Pay* button that opens a secure Razorpay checkout. Once paid, both sides see a receipt in *Payments*.",
+      "How payments work in Hire-a-Helper:\n\n1. Task creator sets a **Payment Amount** and **Currency** (e.g., INR ₹) when posting.\n2. Once the task is finished, the owner clicks **Pay Now** on the task or payments page.\n3. Checkout opens securely via **Razorpay** (supports UPI, Google Pay, PhonePe, Cards, Net Banking).\n4. After payment, a downloadable receipt is saved in **Payments**.",
   },
   {
     intent: "notifications",
-    keywords: ["notification", "bell", "alert"],
+    keywords: ["notification", "bell", "alert", "unread", "updates"],
     reply:
-      "Every request, message, review and payment update lands in your bell 🔔 at the top-right. Click it to see everything in one place — unread items are marked in red.",
+      "Look for the bell icon 🔔 at the top-right header.\n\nYou receive instant alerts when:\n• Someone requests to help on your task.\n• A task owner accepts or declines your request.\n• You receive a new chat message.\n• A payment or review is completed.",
   },
   {
     intent: "profile",
-    keywords: ["profile", "picture", "cover", "avatar", "update profile", "edit profile"],
+    keywords: ["profile", "picture", "cover", "avatar", "update profile", "edit profile", "phone number", "bio"],
     reply:
-      "Open **Settings → Profile** to update your photo (with the built-in cropper), cover image, phone and bio. Your public profile is what other users see when they view your card.",
+      "Go to **Settings → Profile** to:\n\n• Change your **Avatar / Profile Picture** (includes image cropper).\n• Update your **Cover Photo** and **Bio**.\n• Add or edit your **Phone Number**.\n• View your public profile as seen by other users.",
   },
   {
     intent: "review",
-    keywords: ["review", "rating", "rate", "stars", "feedback on user"],
+    keywords: ["review", "rating", "rate", "stars", "feedback on user", "leave review", "recommend"],
     reply:
-      "You can rate someone after any task is accepted between you. Click their profile from a request or message and use *Leave a review*.",
+      "After an accepted task is completed:\n\n1. Open the user's **Public Profile** (accessible from requests or messages).\n2. Click **Leave a Review**.\n3. Choose 1 to 5 stars and write a short summary.\n4. Their overall rating average updates automatically!",
   },
   {
-    intent: "otp",
-    keywords: ["otp", "verify", "verification", "code"],
+    intent: "security_password",
+    keywords: [
+      "password", "forgot", "reset", "change password", "strong password", "eye", "show password",
+      "password strength", "password requirements"
+    ],
     reply:
-      "OTPs are sent to your phone via SMS. If it doesn't arrive within 60 seconds, tap *Resend*. Make sure the number includes the country code (e.g. +91).",
+      "Password & Security Features:\n\n• **Signup Password Generator**: Tap *Suggest Strong* on the signup form to auto-generate a secure high-entropy password.\n• **Password Eye Toggle**: Tap the eye icon 👁️ in any password field to show/hide text.\n• **Change Password**: Go to **Settings → Security** while logged in to update your password.",
   },
   {
-    intent: "password",
-    keywords: ["password", "forgot", "reset", "change password"],
+    intent: "phone_and_otp",
+    keywords: ["phone", "phone number", "otp", "verify", "verification", "sms", "country code"],
     reply:
-      "You can change your password anytime from **Settings → Security → Change Password**, or use *Forgot password* on the sign-in screen to reset it via email.",
+      "Phone numbers can be entered during signup or under **Settings → Profile**. For SMS verification, ensure you include your full international format (e.g., +91 for India, +1 for US).",
   },
   {
     intent: "block_unblock",
-    keywords: ["block", "unblock", "report"],
+    keywords: ["block", "unblock", "report", "spam", "harassment"],
     reply:
-      "From any chat, open the ⋮ menu on the right-side header → *Block user*. Blocking is instant and both sides can't message until you unblock again.",
+      "To block someone:\n1. Open the chat conversation in **Messages**.\n2. Click the three dots ⋮ in the top right header.\n3. Select **Block User**.\n\nBlocked users cannot message you or request your tasks. You can unblock them anytime from the same menu.",
   },
   {
     intent: "feedback",
-    keywords: ["feedback", "complaint", "bug", "issue", "problem", "suggestion"],
+    keywords: ["feedback", "complaint", "bug", "issue", "problem", "suggestion", "praise", "widget", "send feedback"],
     reply:
-      "Use the 💬 *Send feedback* button (bottom-right of any dashboard page) to send us feedback, complaints or bug reports. Admins reply within 24h.",
+      "You can send feedback anytime using the floating **Feedback** widget in the corner of your screen!\n\n• Choose a category (*Bug, Suggestion, Praise, Complaint, Other*).\n• Write your message and optional 1-5 star rating.\n• Submissions are monitored live by administrators on the Admin Dashboard.",
+  },
+  {
+    intent: "admin_mode",
+    keywords: ["admin", "admin dashboard", "moderation", "manage users", "feedback monitoring", "platform settings"],
+    reply: async (u) => {
+      if (u.role === "admin") {
+        const [totalUsers, totalTasks, totalFb, newFb] = await Promise.all([
+          User.countDocuments(),
+          Task.countDocuments(),
+          Feedback.countDocuments(),
+          Feedback.countDocuments({ $or: [{ status: "new" }, { status: { $exists: false } }] }),
+        ]);
+        return `Hello **Admin ${u.firstName}**! 🛡️\n\nYour Admin Dashboard status:\n• **Total Registered Users:** ${totalUsers}\n• **Total Tasks:** ${totalTasks}\n• **User Feedbacks:** ${totalFb} (${newFb} unreviewed)\n\nUse the **Admin** link in the sidebar to block/unblock users, moderate tasks, review feedback with admin notes, and configure platform settings.`;
+      }
+      return "The **Admin Dashboard** is reserved for platform administrators to moderate tasks, manage user accounts, inspect feedback submissions, and configure platform settings.";
+    },
   },
   {
     intent: "delete_account",
     keywords: ["delete account", "close account", "remove me", "deactivate"],
     reply:
-      "You can delete your account from **Settings → Danger Zone → Delete account**. This removes your tasks, requests and messages permanently.",
+      "To permanently delete your account:\nGo to **Settings → Danger Zone → Delete Account**.\n\n*Warning*: This permanently deletes your profile, posted tasks, sent requests, and chat history.",
   },
   {
     intent: "categories",
-    keywords: ["categories", "category", "types", "kind of task"],
+    keywords: ["categories", "category", "types", "kind of task", "services"],
     reply:
-      "We support 20+ categories including Cleaning, Plumbing, Electrical, Delivery, Tutoring, Photography, Repairs, Moving, Pet Care, Cooking, Gardening and more — pick one when posting a task.",
+      "Hire-a-Helper supports a wide array of task categories:\n\n• Cleaning & Housework\n• Plumbing & Repairs\n• Electrical\n• Gardening & Lawn Care\n• Delivery & Errands\n• Tutoring & Lessons\n• Moving & Heavy Lifting\n• Photography & Video\n• Cooking & Catering\n• Pet Care\n• Electronics & Tech Support\n• Other Custom Tasks",
   },
   {
     intent: "thanks",
-    keywords: ["thank", "thanks", "ty", "cheers"],
-    reply: "You're welcome! 😊 Anything else I can help with?",
+    keywords: ["thank", "thanks", "ty", "cheers", "awesome", "great", "helpful"],
+    reply: "You're very welcome! 😊 Feel free to minimize or dock me in the corner whenever you don't need me.",
   },
 ];
 
@@ -121,7 +152,7 @@ function match(text) {
 }
 
 const FALLBACK =
-  "I'm not 100% sure I understood that. Try asking about: *posting tasks*, *requests*, *payments*, *messaging*, *notifications*, *profile*, *reviews*, *OTP*, or *feedback*. You can also use the 💬 *Send feedback* button to reach a human.";
+  "I'm here to answer any questions about **Hire-a-Helper**!\n\nYou can ask me about:\n• *How to post a task with mandatory fields*\n• *Finding helpers & browsing the Feed*\n• *Accepting or declining requests*\n• *Realtime chat & blocking users*\n• *Razorpay payments & receipts*\n• *Password generator & eye toggle*\n• *Sending feedback & bug reports*\n• *Admin moderation*\n\nHow can I assist you?";
 
 // === GET /api/assistant/history ===
 exports.history = async (req, res) => {

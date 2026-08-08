@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { MessageCircle, X, Send, Star, GripVertical, RotateCcw } from "lucide-react";
+import { MessageCircle, X, Send, Star, GripVertical, RotateCcw, Minimize2 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
 // === FeedbackWidget ===
-// Fully responsive, draggable floating "Send feedback" bubble — users can move
-// and place it anywhere on screen (touch & mouse). Remembers custom position in localStorage.
+// Floating, corner-dockable, draggable feedback widget.
+// Tap/click the corner button to pop up the feedback modal, or drag it anywhere.
 export default function FeedbackWidget() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -17,7 +17,7 @@ export default function FeedbackWidget() {
   const [busy, setBusy] = useState(false);
 
   // Position state (clamped to screen viewport)
-  const [position, setPosition] = useState({ x: 20, y: 550 });
+  const [position, setPosition] = useState({ x: 16, y: 550 });
   const [isDragging, setIsDragging] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const buttonRef = useRef(null);
@@ -26,7 +26,7 @@ export default function FeedbackWidget() {
     hasMoved: false,
     startX: 0,
     startY: 0,
-    origX: 20,
+    origX: 16,
     origY: 550,
   });
 
@@ -77,7 +77,6 @@ export default function FeedbackWidget() {
 
   // Handle pointer down (seamless across mouse and mobile touch)
   const handlePointerDown = (e) => {
-    // Only primary button / primary touch
     if (e.button !== 0 && e.pointerType === "mouse") return;
 
     const rect = buttonRef.current?.getBoundingClientRect();
@@ -93,7 +92,6 @@ export default function FeedbackWidget() {
       origY: currentY,
     };
 
-    // Capture pointer if available for rock-solid dragging
     try {
       if (e.target?.setPointerCapture && e.pointerId) {
         e.target.setPointerCapture(e.pointerId);
@@ -146,7 +144,7 @@ export default function FeedbackWidget() {
           localStorage.setItem("hirehelper_feedback_pos", JSON.stringify(finalPos));
         } catch {}
       } else {
-        // Just a tap / click -> open feedback modal
+        // Just a tap / click -> pop up feedback modal
         setOpen(true);
       }
     };
@@ -156,7 +154,6 @@ export default function FeedbackWidget() {
     window.addEventListener("pointercancel", handlePointerUp);
   };
 
-  // Reset to default bottom-left position
   const resetPosition = (e) => {
     e.stopPropagation();
     const defaultY = Math.max(20, window.innerHeight - 90);
@@ -191,7 +188,7 @@ export default function FeedbackWidget() {
 
   return (
     <>
-      {/* Draggable Launcher Button */}
+      {/* Draggable Corner Button Handle */}
       <div
         ref={buttonRef}
         onPointerDown={handlePointerDown}
@@ -204,67 +201,80 @@ export default function FeedbackWidget() {
           touchAction: "none",
         }}
         className={`z-40 h-10 sm:h-11 pl-2 sm:pl-2.5 pr-3 sm:pr-4 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900
-                   flex items-center gap-1.5 sm:gap-2 select-none cursor-grab active:cursor-grabbing transition-shadow touch-none
+                   flex items-center gap-1.5 sm:gap-2 select-none cursor-grab active:cursor-grabbing transition-all duration-150 touch-none border border-slate-700/50 dark:border-slate-300/50
                    ${isDragging ? "shadow-2xl scale-105 ring-2 ring-brand-500/80 !cursor-grabbing" : "shadow-xl hover:shadow-2xl hover:scale-[1.02]"}`}
-        title="Drag anywhere to reposition • Tap to send feedback"
+        title="Drag anywhere to reposition • Click to pop up feedback form"
         role="button"
         tabIndex={0}
-        aria-label="Send feedback (draggable button)"
+        aria-label="Send feedback (draggable corner button)"
       >
         <GripVertical size={14} className="opacity-50 -mr-0.5 shrink-0" />
         <MessageCircle size={15} className="shrink-0 text-brand-400 dark:text-brand-600" />
         <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">Feedback</span>
 
-        {/* Small reset button shown on hover/tap */}
         {isHovered && !isDragging && (
           <button
             type="button"
             onClick={resetPosition}
             className="ml-0.5 p-1 rounded-full text-slate-400 hover:text-white dark:hover:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 transition"
-            title="Reset position to default"
+            title="Reset position to default corner"
           >
             <RotateCcw size={11} />
           </button>
         )}
       </div>
 
+      {/* Pop Up Modal Form */}
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={() => setOpen(false)}
         >
           <form
             onClick={(e) => e.stopPropagation()}
             onSubmit={submit}
-            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 my-auto animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]"
+            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 my-auto animate-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800 shrink-0">
+            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/50 dark:bg-slate-800/30">
               <div>
-                <div className="font-bold text-base sm:text-lg text-slate-900 dark:text-white">Send us feedback</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Bugs, ideas, or questions — we read everything.</div>
+                <div className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">Send us Feedback</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Bugs, suggestions, or complaints — monitored live by admins.</div>
               </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition"
+                  title="Minimize / Close"
+                  aria-label="Minimize form"
+                >
+                  <Minimize2 size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition"
+                  title="Close"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* Scrollable Content */}
-            <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Feedback Type</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Feedback Type</label>
                 <div className="mt-1.5 grid grid-cols-3 sm:grid-cols-5 gap-1.5">
                   {["bug", "suggestion", "complaint", "praise", "other"].map((t) => (
                     <button
                       type="button"
                       key={t}
                       onClick={() => setType(t)}
-                      className={`text-xs py-2 px-2 rounded-xl capitalize font-medium border transition text-center truncate ${
+                      className={`text-xs py-2 px-2 rounded-xl capitalize font-semibold border transition text-center truncate ${
                         type === t
                           ? "bg-brand-600 text-white border-brand-600 shadow-xs"
                           : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-brand-400"
@@ -277,32 +287,32 @@ export default function FeedbackWidget() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Subject</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Subject</label>
                 <input
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   maxLength={140}
                   required
-                  className="input h-10 mt-1 w-full text-sm"
+                  className="input h-10 mt-1 w-full text-xs sm:text-sm"
                   placeholder="Short summary of what you're sharing"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Message</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Message</label>
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   maxLength={4000}
                   required
                   rows={4}
-                  className="input mt-1 w-full text-sm min-h-[90px] sm:min-h-[110px]"
+                  className="input mt-1 w-full text-xs sm:text-sm min-h-[90px] sm:min-h-[110px]"
                   placeholder="Tell us what happened, what you'd like to improve, or what feels broken…"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Rate your experience <span className="font-normal lowercase text-slate-400">(optional)</span>
                 </label>
                 <div className="mt-1.5 flex items-center gap-1.5">
@@ -311,16 +321,16 @@ export default function FeedbackWidget() {
                       key={n}
                       type="button"
                       onClick={() => setRating(n === rating ? 0 : n)}
-                      className={`p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition ${
+                      className={`p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition ${
                         n <= rating ? "text-amber-400" : "text-slate-300 dark:text-slate-600"
                       }`}
                       aria-label={`Rate ${n} stars`}
                     >
-                      <Star size={24} fill={n <= rating ? "currentColor" : "none"} />
+                      <Star size={22} fill={n <= rating ? "currentColor" : "none"} />
                     </button>
                   ))}
                   {rating > 0 && (
-                    <span className="text-xs text-slate-500 ml-2 font-medium">
+                    <span className="text-xs text-slate-500 font-semibold ml-1">
                       {rating === 5 ? "Loved it!" : rating >= 4 ? "Great" : rating === 3 ? "Okay" : "Needs work"}
                     </span>
                   )}
@@ -329,11 +339,11 @@ export default function FeedbackWidget() {
             </div>
 
             {/* Footer */}
-            <div className="px-4 sm:px-6 py-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
-              <button type="button" onClick={() => setOpen(false)} className="btn-ghost text-sm py-2 px-3.5">
+            <div className="px-5 sm:px-6 py-3.5 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5 shrink-0">
+              <button type="button" onClick={() => setOpen(false)} className="btn-ghost text-xs sm:text-sm py-2 px-4">
                 Cancel
               </button>
-              <button type="submit" disabled={busy} className="btn-primary text-sm py-2 px-4 shadow-sm">
+              <button type="submit" disabled={busy} className="btn-primary text-xs sm:text-sm py-2 px-5 shadow-soft">
                 <Send size={14} /> {busy ? "Sending…" : "Send feedback"}
               </button>
             </div>
@@ -343,4 +353,3 @@ export default function FeedbackWidget() {
     </>
   );
 }
-
