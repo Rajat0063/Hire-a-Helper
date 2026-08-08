@@ -14,7 +14,7 @@ import AddTask from "./pages/dashboard/AddTask";
 import SettingsPage from "./pages/dashboard/Settings";
 import Messages from "./pages/dashboard/Messages";
 import Nearby from "./pages/dashboard/Nearby";
-import Payments from "./pages/dashboard/Payments";
+import Payments from "./pages/dashboard/Payment";
 import PublicProfile from "./pages/dashboard/PublicProfile";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
